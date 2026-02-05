@@ -1548,9 +1548,9 @@ function MatrixView({
   }, [clients, getRowStatus, hasDiscrepancy, getClientTotalForMonth, masterAPIs, getClientAPIData, unmatchedAPIs]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 140px)', minHeight: '800px' }}>
+    <div className="bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
       {/* Header Bar */}
-      <div className="px-4 py-2 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between shrink-0">
+      <div className="px-4 py-1.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-slate-600" />
@@ -1654,12 +1654,13 @@ function MatrixView({
       {viewMode === 'matrix' && (
         <>
           {/* API Matrix Table */}
-          <div className="flex-1 overflow-auto">
+          <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse">
-              <thead className="sticky top-0 z-30 bg-slate-100">
-                <tr className="border-b-2 border-slate-300">
-                  <th className="sticky left-0 z-40 bg-slate-100 text-left px-3 py-2 font-bold text-slate-700 border-r border-slate-300 min-w-[200px]">Client</th>
-                  <th className="sticky left-[200px] z-40 bg-slate-100 text-right px-3 py-2 font-bold text-slate-700 border-r border-slate-300 w-[100px]">Total</th>
+              <thead className="sticky top-0 z-10 bg-slate-100">
+                <tr className="border-b border-slate-300 h-[36px]">
+                  <th className="sticky left-0 z-20 bg-slate-100 text-center font-semibold text-slate-600 border-r border-slate-200 w-[36px] text-[10px]">#</th>
+                  <th className="sticky left-[36px] z-20 bg-slate-100 text-left px-2 font-semibold text-slate-600 border-r border-slate-200 min-w-[180px] text-xs">Client</th>
+                  <th className="sticky left-[216px] z-20 bg-slate-100 text-right px-2 font-semibold text-slate-600 border-r border-slate-200 w-[90px] text-xs">Total</th>
                   {masterAPIs.map(api => {
                     // Split API name into module and submodule for cleaner display
                     const parts = api.split(' - ');
@@ -1669,20 +1670,17 @@ function MatrixView({
                     return (
                       <th
                         key={api}
-                        className={`text-center px-2 py-3 font-semibold border-r border-slate-200 min-w-[140px] max-w-[160px] ${
+                        className={`text-center px-1 font-medium border-r border-slate-200 min-w-[120px] max-w-[140px] align-middle ${
                           isUnmatched ? 'bg-red-50 border-red-200' : 'text-slate-600'
                         }`}
                         title={isUnmatched ? `⚠️ NOT IN api.json: ${api}` : api}
                       >
-                        <div className="flex flex-col items-center gap-1">
-                          {isUnmatched && (
-                            <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full">NOT IN API.JSON</span>
-                          )}
-                          <div className={`text-[10px] font-bold leading-tight text-center break-words ${isUnmatched ? 'text-red-700' : 'text-slate-700'}`}>
+                        <div className="flex flex-col items-center">
+                          <div className={`text-[10px] font-semibold leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-700' : 'text-slate-700'}`}>
                             {moduleName}
                           </div>
                           {subModule && (
-                            <div className={`text-[9px] font-normal leading-tight text-center break-words ${isUnmatched ? 'text-red-500' : 'text-blue-600'}`}>
+                            <div className={`text-[8px] leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-500' : 'text-blue-500'}`}>
                               {subModule}
                             </div>
                           )}
@@ -1700,48 +1698,41 @@ function MatrixView({
                   const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
 
                   return (
-                    <tr key={client.client_name} className={`${rowBg} hover:bg-blue-50 border-b border-slate-100 transition-colors`}>
+                    <tr key={client.client_name} className={`${rowBg} hover:bg-blue-50/50 border-b border-slate-100/50 h-[44px]`}>
+                      {/* Row number */}
+                      <td className={`sticky left-0 z-10 ${rowBg} px-1 text-center border-r border-slate-100 w-[36px] text-slate-400 font-medium text-[10px] align-middle`}>
+                        {(currentPage - 1) * pageSize + idx + 1}
+                      </td>
                       {/* Client name with status - clickable */}
                       <td
-                        className={`sticky left-0 z-20 ${rowBg} px-3 py-2 border-r border-slate-200 min-w-[220px] cursor-pointer hover:bg-blue-100 transition-colors`}
+                        className={`sticky left-[36px] z-10 ${rowBg} px-2 border-r border-slate-100 min-w-[180px] cursor-pointer hover:bg-blue-50 align-middle`}
                         onClick={() => setSelectedClient(client)}
                       >
                         <div className="flex items-center gap-1.5">
-                          {/* Status dot */}
                           {client.isActive ? (
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Active (in clients.json + Jan 2026 data)" />
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Active" />
                           ) : client.isInMasterList ? (
-                            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" title="Master list (no Jan 2026 data)" />
+                            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" title="Master list" />
                           ) : client.hasJan2026Data ? (
-                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="New (Jan 2026 data, not in clients.json)" />
+                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="New" />
                           ) : (
                             <span className="w-2 h-2 rounded-full bg-slate-200 shrink-0" title="Inactive" />
                           )}
-                          <div className="font-semibold text-slate-800 truncate text-[11px] hover:text-blue-600" title={client.client_name}>{client.client_name}</div>
+                          <div className="font-semibold text-slate-800 truncate text-[11px]" title={client.client_name}>{client.client_name}</div>
                         </div>
-                        <div className="text-[9px] text-slate-500 ml-0">{client.profile?.segment || '-'} {client.client_id && <span className="opacity-60">· {client.client_id}</span>}</div>
+                        <div className="text-[9px] text-slate-400 truncate">{client.profile?.segment || '-'} · {client.client_id || ''}</div>
                       </td>
-                      {/* Total with discrepancy indicator */}
+                      {/* Total */}
                       <td
-                        className={`sticky left-[200px] z-20 ${rowBg} px-3 py-2 text-right border-r border-slate-200 w-[100px] ${discrepancy.hasIssue ? 'bg-red-50' : ''}`}
-                        title={discrepancy.hasIssue ? `⚠️ Total: ${formatCurrency(clientTotal, client.profile?.billing_currency || 'INR')} | APIs Sum: ${formatCurrency(discrepancy.apiSum, client.profile?.billing_currency || 'INR')} | Diff: ${formatCurrency(Math.abs(discrepancy.diff), client.profile?.billing_currency || 'INR')}` : ''}
+                        className={`sticky left-[216px] z-10 ${rowBg} px-2 text-right border-r border-slate-100 w-[90px] align-middle ${discrepancy.hasIssue ? 'bg-red-50' : ''}`}
+                        title={needsConversion(client.profile?.billing_currency) ? `≈ ${formatINR(toINR(clientTotal, client.profile?.billing_currency))}` : ''}
                       >
-                        <div className="flex flex-col items-end">
-                          <span className={`font-bold tabular-nums ${clientTotal > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
-                            {clientTotal > 0 ? formatCurrency(clientTotal, client.profile?.billing_currency || 'INR') : '-'}
-                          </span>
-                          {/* Show INR conversion for non-INR currencies */}
-                          {clientTotal > 0 && needsConversion(client.profile?.billing_currency) && (
-                            <span className="text-[8px] text-blue-600 font-medium">
-                              ≈ {formatINR(toINR(clientTotal, client.profile?.billing_currency))}
-                            </span>
-                          )}
-                          {discrepancy.hasIssue && (
-                            <span className="text-[8px] text-red-600 font-medium">
-                              {discrepancy.diff > 0 ? `+${formatCurrency(discrepancy.diff, client.profile?.billing_currency || 'INR')} missing` : `${formatCurrency(Math.abs(discrepancy.diff), client.profile?.billing_currency || 'INR')} over`}
-                            </span>
-                          )}
-                        </div>
+                        <span className={`font-bold tabular-nums text-[11px] ${clientTotal > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
+                          {clientTotal > 0 ? formatCurrency(clientTotal, client.profile?.billing_currency || 'INR') : '-'}
+                        </span>
+                        {clientTotal > 0 && needsConversion(client.profile?.billing_currency) && (
+                          <div className="text-[8px] text-blue-500">≈{formatINR(toINR(clientTotal, client.profile?.billing_currency))}</div>
+                        )}
                       </td>
                       {/* API cells */}
                       {masterAPIs.map(api => {
@@ -1756,11 +1747,11 @@ function MatrixView({
                             key={api}
                             onDoubleClick={() => onStartEdit(client.client_name, api, value)}
                             title={hasUsageNoRev ? `⚠️ ${usage.toLocaleString()} API calls but $0 revenue` : usage > 0 ? `${usage.toLocaleString()} calls` : ''}
-                            className={`px-2 py-2 text-right border-r border-slate-100 min-w-[140px] max-w-[160px] cursor-pointer transition-colors ${
-                              isEditing ? 'bg-yellow-200 ring-2 ring-yellow-400 ring-inset' :
-                              hasEdit ? 'bg-yellow-100' :
-                              hasUsageNoRev ? 'bg-orange-100 hover:bg-orange-200' :
-                              value > 0 ? 'bg-emerald-100/50 hover:bg-emerald-100' : 'hover:bg-slate-100'
+                            className={`px-1.5 text-right border-r border-slate-50 min-w-[120px] max-w-[140px] cursor-pointer align-middle ${
+                              isEditing ? 'bg-yellow-200 ring-1 ring-yellow-400 ring-inset' :
+                              hasEdit ? 'bg-yellow-50' :
+                              hasUsageNoRev ? 'bg-orange-50 hover:bg-orange-100' :
+                              value > 0 ? 'bg-emerald-50/50 hover:bg-emerald-50' : 'hover:bg-slate-50'
                             }`}
                           >
                             {isEditing ? (
@@ -1809,14 +1800,15 @@ function MatrixView({
                 })}
               </tbody>
               {/* Footer totals */}
-              <tfoot className="sticky bottom-0 z-30">
-                <tr className="bg-slate-800 text-white border-t-2 border-slate-600">
-                  <td className="sticky left-0 z-40 bg-slate-800 px-3 py-2 font-bold border-r border-slate-600">TOTALS</td>
-                  <td className="sticky left-[200px] z-40 bg-slate-800 px-3 py-2 text-right font-bold tabular-nums border-r border-slate-600">
+              <tfoot>
+                <tr className="bg-slate-700 text-white h-[36px]">
+                  <td className="bg-slate-700 border-r border-slate-600 w-[36px]"></td>
+                  <td className="bg-slate-700 px-2 font-semibold border-r border-slate-600 text-xs">TOTALS</td>
+                  <td className="bg-slate-700 px-2 text-right font-semibold tabular-nums border-r border-slate-600 text-xs">
                     {formatINR(clients.reduce((s, c) => s + toINR(getClientTotalForMonth(c), c.profile?.billing_currency), 0))}
                   </td>
                   {masterAPIs.map(api => (
-                    <td key={api} className="px-2 py-2 text-right tabular-nums text-slate-300 border-r border-slate-700 text-[11px] font-mono">
+                    <td key={api} className="px-1.5 text-right tabular-nums text-slate-300 border-r border-slate-600 text-[10px] font-mono align-middle">
                       {apiTotals[api] > 0 ? formatINR(apiTotals[api]) : '-'}
                     </td>
                   ))}
@@ -1829,41 +1821,39 @@ function MatrixView({
 
       {/* Footer / Pagination */}
       {viewMode === 'matrix' && (
-        <div className="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600">
-              Showing <strong>{((currentPage - 1) * pageSize) + 1}</strong> - <strong>{Math.min(currentPage * pageSize, sortedClients.length)}</strong> of <strong>{sortedClients.length}</strong> clients
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="px-3 py-1.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+          <span className="text-xs text-slate-500">
+            Showing <strong>{((currentPage - 1) * pageSize) + 1}</strong>-<strong>{Math.min(currentPage * pageSize, sortedClients.length)}</strong> of <strong>{sortedClients.length}</strong> clients
+          </span>
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               First
             </button>
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              ← Prev
+              ←
             </button>
-            <span className="px-4 py-1.5 text-sm bg-slate-800 text-white rounded-lg font-bold">
-              {currentPage} / {totalPages}
+            <span className="px-3 py-1 text-xs bg-slate-700 text-white rounded font-medium">
+              {currentPage}/{totalPages}
             </span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Next →
+              →
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Last
             </button>
