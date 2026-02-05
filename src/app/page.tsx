@@ -1245,6 +1245,17 @@ function MatrixView({
   // Selected client for details panel
   const [selectedClient, setSelectedClient] = useState<ProcessedClient | null>(null);
 
+  // Cell popup state
+  const [cellPopup, setCellPopup] = useState<{
+    isOpen: boolean;
+    clientName: string;
+    apiName: string;
+    revenue: number;
+    usage: number;
+    currency: string;
+    position: { x: number; y: number };
+  } | null>(null);
+
   // API Mapping modal state
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
@@ -1716,12 +1727,26 @@ function MatrixView({
                         const hasUsageNoRev = apiData.hasUsageNoRevenue;
                         const isEditing = editingCell?.clientName === client.client_name && editingCell?.month === api;
                         const hasEdit = hasPendingEdit(client.client_name, api);
+                        const isPopupOpen = cellPopup?.clientName === client.client_name && cellPopup?.apiName === api;
                         return (
                           <td
                             key={api}
-                            onDoubleClick={() => onStartEdit(client.client_name, api, value)}
-                            title={hasUsageNoRev ? `⚠️ ${usage.toLocaleString()} API calls but $0 revenue` : usage > 0 ? `${usage.toLocaleString()} calls` : ''}
-                            className={`px-1.5 text-right border-r border-slate-50 min-w-[120px] max-w-[140px] cursor-pointer align-middle ${
+                            onClick={(e) => {
+                              if (!isEditing) {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setCellPopup({
+                                  isOpen: true,
+                                  clientName: client.client_name,
+                                  apiName: api,
+                                  revenue: value,
+                                  usage: usage,
+                                  currency: client.profile?.billing_currency || 'INR',
+                                  position: { x: rect.left, y: rect.bottom + 4 }
+                                });
+                              }
+                            }}
+                            className={`px-1.5 text-right border-r border-slate-50 min-w-[120px] max-w-[140px] cursor-pointer align-middle relative ${
+                              isPopupOpen ? 'bg-blue-100 ring-2 ring-blue-400 ring-inset' :
                               isEditing ? 'bg-yellow-200 ring-1 ring-yellow-400 ring-inset' :
                               hasEdit ? 'bg-yellow-50' :
                               hasUsageNoRev ? 'bg-orange-50 hover:bg-orange-100' :
@@ -1833,6 +1858,74 @@ function MatrixView({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Cell Details Popup */}
+      {cellPopup && cellPopup.isOpen && (
+        <div
+          className="fixed z-50 bg-white rounded-lg shadow-xl border border-slate-200 p-4 min-w-[240px]"
+          style={{
+            left: Math.min(cellPopup.position.x, window.innerWidth - 260),
+            top: Math.min(cellPopup.position.y, window.innerHeight - 200),
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold text-slate-800 truncate">{cellPopup.clientName}</div>
+              <div className="text-[10px] text-slate-500 truncate">{cellPopup.apiName}</div>
+            </div>
+            <button
+              onClick={() => setCellPopup(null)}
+              className="ml-2 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] text-slate-500">Revenue (MRR)</span>
+              <span className="text-sm font-semibold text-emerald-700">
+                {cellPopup.revenue > 0 ? formatCurrency(cellPopup.revenue, cellPopup.currency) : '-'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] text-slate-500">API Calls</span>
+              <span className="text-sm font-semibold text-slate-700">
+                {cellPopup.usage > 0 ? cellPopup.usage.toLocaleString('en-IN') : '-'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] text-slate-500">Cost per Call</span>
+              <span className="text-sm font-semibold text-blue-700">
+                {cellPopup.usage > 0 && cellPopup.revenue > 0
+                  ? `₹${(cellPopup.revenue / cellPopup.usage).toFixed(2)}`
+                  : '-'}
+              </span>
+            </div>
+          </div>
+
+          {/* Edit Button */}
+          <button
+            onClick={() => {
+              onStartEdit(cellPopup.clientName, cellPopup.apiName, cellPopup.revenue);
+              setCellPopup(null);
+            }}
+            className="mt-3 w-full py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer transition-colors"
+          >
+            Edit Revenue
+          </button>
+        </div>
+      )}
+
+      {/* Backdrop to close popup */}
+      {cellPopup && cellPopup.isOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setCellPopup(null)}
+        />
       )}
 
       {/* API Mapping Modal */}
