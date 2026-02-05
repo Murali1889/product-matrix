@@ -44,10 +44,58 @@ interface ApiCostOverride {
  * ENRICHED WITH: Database overrides (client_overrides, client_api_overrides)
  *
  * Returns client data and summary stats for the dashboard
+ *
+ * Query params:
+ * - page: Page number (default: 1)
+ * - limit: Items per page (default: 50, max: 200)
+ * - all: If "true", returns all data (for Matrix view)
  */
 
-export async function GET() {
+// Cache for processed data (5 minutes)
+let cachedResponse: any = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
+    const returnAll = searchParams.get('all') === 'true';
+
+    // Check cache first
+    const now = Date.now();
+    if (cachedResponse && (now - cacheTimestamp) < CACHE_TTL) {
+      console.log('[Analytics] Returning cached response');
+
+      if (returnAll) {
+        return NextResponse.json(cachedResponse, {
+          headers: {
+            'Cache-Control': 'public, max-age=300', // Browser cache 5 min
+          },
+        });
+      }
+
+      // Return paginated response
+      const startIndex = (page - 1) * limit;
+      const paginatedClients = cachedResponse.clients.slice(startIndex, startIndex + limit);
+
+      return NextResponse.json({
+        ...cachedResponse,
+        clients: paginatedClients,
+        pagination: {
+          page,
+          limit,
+          total: cachedResponse.count,
+          totalPages: Math.ceil(cachedResponse.count / limit),
+          hasMore: startIndex + limit < cachedResponse.count,
+        },
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=300',
+        },
+      });
+    }
     // Load base data from JSON file
     const matrixData = await loadMatrixData();
 
@@ -196,7 +244,39 @@ export async function GET() {
       },
     };
 
-    return NextResponse.json(response);
+    // Cache the full response
+    cachedResponse = response;
+    cacheTimestamp = Date.now();
+    console.log(`[Analytics] Cached ${response.count} clients`);
+
+    // Return based on pagination params
+    if (returnAll) {
+      return NextResponse.json(response, {
+        headers: {
+          'Cache-Control': 'public, max-age=300',
+        },
+      });
+    }
+
+    // Return paginated response
+    const startIndex = (page - 1) * limit;
+    const paginatedClients = clients.slice(startIndex, startIndex + limit);
+
+    return NextResponse.json({
+      ...response,
+      clients: paginatedClients,
+      pagination: {
+        page,
+        limit,
+        total: response.count,
+        totalPages: Math.ceil(response.count / limit),
+        hasMore: startIndex + limit < response.count,
+      },
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=300',
+      },
+    });
   } catch (error) {
     console.error('Analytics API error:', error);
     return NextResponse.json(

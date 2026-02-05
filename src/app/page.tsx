@@ -206,7 +206,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/analytics').then(res => res.json()),
+      fetch('/api/analytics?all=true').then(res => res.json()),
       fetch('/api/apis').then(res => res.json())
     ])
       .then(([analyticsData, apisData]) => {
