@@ -1861,13 +1861,20 @@ function MatrixView({
       )}
 
       {/* Cell Details Popup */}
-      {cellPopup && cellPopup.isOpen && (
+      {cellPopup && cellPopup.isOpen && (() => {
+        const popupHeight = 220;
+        const popupWidth = 260;
+        const spaceBelow = window.innerHeight - cellPopup.position.y;
+        const showAbove = spaceBelow < popupHeight;
+        const left = Math.min(Math.max(8, cellPopup.position.x), window.innerWidth - popupWidth - 8);
+        const top = showAbove
+          ? cellPopup.position.y - popupHeight - 40
+          : cellPopup.position.y;
+
+        return (
         <div
           className="fixed z-50 bg-white rounded-lg shadow-xl border border-slate-200 p-4 min-w-[240px]"
-          style={{
-            left: Math.min(cellPopup.position.x, window.innerWidth - 260),
-            top: Math.min(cellPopup.position.y, window.innerHeight - 200),
-          }}
+          style={{ left, top }}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
@@ -1922,7 +1929,8 @@ function MatrixView({
             Edit Revenue
           </button>
         </div>
-      )}
+        );
+      })()}
 
       {/* Backdrop to close popup */}
       {cellPopup && cellPopup.isOpen && (
