@@ -70,7 +70,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'revenue' | 'latest' | 'name'>('revenue');
-  const [view, setView] = useState<'analytics' | 'matrix' | 'recommendations' | 'sales-intel'>('analytics');
+  const [view, setView] = useState<'analytics' | 'matrix' | 'recommendations' | 'sales-intel'>('matrix');
   const [selectedCell, setSelectedCell] = useState<{ client: string; api: string } | null>(null);
 
   // Pagination state
