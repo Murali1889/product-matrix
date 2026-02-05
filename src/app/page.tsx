@@ -1905,6 +1905,10 @@ function MatrixView({
                   : '-'}
               </span>
             </div>
+            <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-100">
+              <span className="text-[11px] text-slate-500">Contract Expiry</span>
+              <span className="text-xs text-slate-400 italic">Not available</span>
+            </div>
           </div>
 
           {/* Edit Button */}
