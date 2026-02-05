@@ -1,0 +1,1496 @@
+[
+  {
+    "moduleName": "Aadhaar OKYC with OTP",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Aadhaar PAN Link Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "AML",
+    "subModuleName": "Ongoing Monitoring",
+    "billingUnit": "-",
+    "moduleOwner": "pratham.s@hyperverge.co"
+  },
+  {
+    "moduleName": "AML Search",
+    "subModuleName": "Basic AML",
+    "billingUnit": "Per Check",
+    "moduleOwner": "pratham.s@hyperverge.co"
+  },
+  {
+    "moduleName": "Bank Account Verification",
+    "subModuleName": "Reverse Penny Drop",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Bank Account Verification",
+    "subModuleName": "Cheque OCR",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Bank Account Verification",
+    "subModuleName": "Pennyless",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Bank Account Verification",
+    "subModuleName": "Penny Drop",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Bank Account Verification",
+    "subModuleName": "IFSC Verification",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Bank Account Verification",
+    "subModuleName": "Passbook OCR",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Central DB Checks",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "CKYC Mask Aadhaar",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "CKYC Search & Download",
+    "subModuleName": "Search",
+    "billingUnit": "Per Check",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "CKYC Search & Download",
+    "subModuleName": "Download",
+    "billingUnit": "Per Check",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "CKYC Upload",
+    "subModuleName": "-",
+    "billingUnit": "Per API",
+    "moduleOwner": "alisha.b@hyperverge.co"
+  },
+  {
+    "moduleName": "CKYC Validate",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "alisha.b@hyperverge.co"
+  },
+  {
+    "moduleName": "Clear Background Analysis",
+    "subModuleName": "Clear Background Analysis",
+    "billingUnit": "clear_background_analysis",
+    "moduleOwner": "chitransh.jain@hyperverge.co"
+  },
+  {
+    "moduleName": "Clear Report Analysis",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "srinija@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Comprehensive details",
+    "subModuleName": "updateAPI",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Comprehensive details",
+    "subModuleName": "incorporation AOA",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Comprehensive details",
+    "subModuleName": "incorporation CoI",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Comprehensive details",
+    "subModuleName": "incorporation MoA",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Comprehensive details",
+    "subModuleName": "base Detail",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Comprehensive details",
+    "subModuleName": "incorporation",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Verification",
+    "subModuleName": "Fetch Company Info",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Verification",
+    "subModuleName": "Fetch CIN Details",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Company Verification",
+    "subModuleName": "Fetch CIN Details v2",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Credit Score",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Criminal Risk Check",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Criminal Risk Exact",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Criminal Risk Possible",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "CVL KRA",
+    "subModuleName": "Upload",
+    "billingUnit": "Per check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "CVL KRA",
+    "subModuleName": "Async Download",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "CVL KRA",
+    "subModuleName": "Download",
+    "billingUnit": "Per check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "CVL KRA",
+    "subModuleName": "Async Upload",
+    "billingUnit": "Per check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "CVL KRA",
+    "subModuleName": "Verify",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Digilocker",
+    "subModuleName": "Aadhaar Details",
+    "billingUnit": "Per API",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Digilocker",
+    "subModuleName": "Doc Details",
+    "billingUnit": "Per API",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Digilocker",
+    "subModuleName": "Fetch Documents",
+    "billingUnit": "Per API",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Digilocker",
+    "subModuleName": "Fetch All Documents",
+    "billingUnit": "Per API",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Digilocker Account Status",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Director Identification Number from PAN",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Disability Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "DL OCR",
+    "subModuleName": "-",
+    "billingUnit": "Per OCR",
+    "moduleOwner": "pratham.s@hyperverge.co"
+  },
+  {
+    "moduleName": "DL Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "DL Verification",
+    "subModuleName": "Async",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "ECS Classifier",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "eFIR Check",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Email Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Email Verification",
+    "subModuleName": "Email OTP Verification",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Emirates Identity Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Emirates Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Employment Verification",
+    "subModuleName": "Fetch EPFO History",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "eSign",
+    "subModuleName": "fillPDF",
+    "billingUnit": "Per Check",
+    "moduleOwner": "tanisha.g@hyperverge.co"
+  },
+  {
+    "moduleName": "Esign",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "tanisha.g@hyperverge.co"
+  },
+  {
+    "moduleName": "Esign",
+    "subModuleName": "Output",
+    "billingUnit": "esignOutput",
+    "moduleOwner": "tanisha.g@hyperverge.co"
+  },
+  {
+    "moduleName": "eSign V2",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "tanisha.g@hyperverge.co"
+  },
+  {
+    "moduleName": "Face Match",
+    "subModuleName": "Face Match",
+    "billingUnit": "Per Match",
+    "moduleOwner": "alisha.b@hyperverge.co"
+  },
+  {
+    "moduleName": "Face Match",
+    "subModuleName": "Quality Checks",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "Farm Invoice OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "shivank.mittal@hyperverge.co"
+  },
+  {
+    "moduleName": "Farm MMR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "shivank.mittal@hyperverge.co"
+  },
+  {
+    "moduleName": "Farm Vehicle Insurance",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch BVN With Biometric",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch Company Details Advanced",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "fetch Company Details V2",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch Detailed PAN",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch Detailed RC",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch Director Details",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch Epfo Latest",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch Epfo Latest Through UAN",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch GSTIN by PAN",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch RC",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Fetch UPI ID",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Field Match",
+    "subModuleName": "Name Match",
+    "billingUnit": "-",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Fetch",
+    "subModuleName": "ITR OCR",
+    "billingUnit": "-",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Fetch",
+    "subModuleName": "Form 16 OCR",
+    "billingUnit": "-",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Fetch",
+    "subModuleName": "Account Aggregator: One-Time Data Fetch",
+    "billingUnit": "Per Check",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Fetch",
+    "subModuleName": "Payslip Validation",
+    "billingUnit": "-",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Fetch",
+    "subModuleName": "Bank Statement OCR",
+    "billingUnit": "-",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Fetch",
+    "subModuleName": "Account Aggregator: Recurring Data Fetch",
+    "billingUnit": "Per Check",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Fetch",
+    "subModuleName": "Multi Account Aggregator: One-Time Data Fetch",
+    "billingUnit": "-",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Financial Data Intelligence",
+    "subModuleName": "Bank Statement Analysis",
+    "billingUnit": "per check",
+    "moduleOwner": "ritvik.j@hyperverge.co"
+  },
+  {
+    "moduleName": "Find Face",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "Geo Coding",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Geo Coding V2",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Geo IP with VPN",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Geo Location Validation",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Geolocation From IP",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Get Member Details using GSTIN",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Get Mobile Revoke Details",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Get Mobile Revoke History",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "get Mobile Revoke Info",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Get Mobile Revoke Status",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Get Name From PAN Number",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Get Name From Phone",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Get Vehicle Details From Chassis",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "GST Search By PAN",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "GSTINDetailsRetrieval",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "ID Card Validation",
+    "subModuleName": "OCR",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "pratham.s@hyperverge.co"
+  },
+  {
+    "moduleName": "ID Card Validation",
+    "subModuleName": "Quality Checks",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "yazhini.krishnan@hyperverge.co"
+  },
+  {
+    "moduleName": "ID Card Validation",
+    "subModuleName": "Fraud Checks",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "yazhini.krishnan@hyperverge.co"
+  },
+  {
+    "moduleName": "ID Card Validation",
+    "subModuleName": "Aadhaar Masking Successful",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "IEC Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Image Watermarking",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "KYB Documents OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Limited Aadhaar Check",
+    "subModuleName": "-",
+    "billingUnit": "Per check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "LLP Comprehensive details",
+    "subModuleName": "baseDetail",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "LLP Comprehensive details",
+    "subModuleName": "incorporation",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "LLP Comprehensive details",
+    "subModuleName": "Base Detail Base Update Status API",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Margin Money Receipt OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "Match Fields",
+    "subModuleName": "Address Match",
+    "billingUnit": "-",
+    "moduleOwner": "yazhini.krishnan@hyperverge.co"
+  },
+  {
+    "moduleName": "MCA Sales Application",
+    "subModuleName": "Sales Application OCR",
+    "billingUnit": "-",
+    "moduleOwner": "shivank.mittal@hyperverge.co"
+  },
+  {
+    "moduleName": "MCA Sales Application",
+    "subModuleName": "Sales Application Classification",
+    "billingUnit": "-",
+    "moduleOwner": "shivank.mittal@hyperverge.co"
+  },
+  {
+    "moduleName": "Mobile Number Details",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Mobile To Address",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Mobile to Address V2",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "varun.m@hyperverge.co"
+  },
+  {
+    "moduleName": "Mobile To LPG",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Mobile Verification",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Motor Insurance OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "Motor Invoice OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "MRZ Validation",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "manish.poddar@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "Apple",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "Amazon",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "instagram",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "facebook",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "twitter",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "whatsapp",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "flipkart",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "paytm",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Multi Platform User Check",
+    "subModuleName": "github",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "NACH",
+    "subModuleName": "Generate",
+    "billingUnit": "-",
+    "moduleOwner": "narasimha@hyperverge.co"
+  },
+  {
+    "moduleName": "NACH",
+    "subModuleName": "Extract",
+    "billingUnit": "-",
+    "moduleOwner": "narasimha@hyperverge.co"
+  },
+  {
+    "moduleName": "Name Split",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "NFC",
+    "subModuleName": "Read NFC",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "NFC",
+    "subModuleName": "Verify NFC",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "NIN",
+    "subModuleName": "Fetch",
+    "billingUnit": "-",
+    "moduleOwner": "yazhini.krishnan@hyperverge.co"
+  },
+  {
+    "moduleName": "Nominee Creation",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "NSDL Pan Validation",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "OKYC",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "Orion Enrol",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "Orion Face Auth",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "Orion Face Auth",
+    "subModuleName": "Liveness",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "Orion Face Search",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "Orion Face Search with Metadata",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "Orion Search",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "PAN Detailed Fetch Without Phone Number",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "PAN Father Name Fetch",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "PAN Lite",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "PAN Name Fetch",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "PAN Short",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Pan To Cin Details",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Pan to Name and DOB",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Pan To Udyam Details",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "PAN Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Parse QR Vietnam ID",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "Passport Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Payslip OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "Philippines Car Registration",
+    "subModuleName": "OCR",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "PhilSys QR",
+    "subModuleName": "Check",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "PhilSys QR",
+    "subModuleName": "Validation",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "PhilSys Verification",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL Address Split",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL Business Docs",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL COE",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL COR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL Credit Card Statement",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL FDI",
+    "subModuleName": "Loan Statement OCR",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL ITR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL Loan Statement",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL Payslip",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "PHL Utility Bill",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "PHLSurrogateDocument",
+    "subModuleName": "-",
+    "billingUnit": "Per OCR",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "phone basic",
+    "subModuleName": "phoneBasic",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Phone KYC Genrate OTP",
+    "subModuleName": "phoneKYCGenrateOtp",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "phone KYC Submit Otp",
+    "subModuleName": "phoneKYCSubmitOtp",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Prefill By Mobile",
+    "subModuleName": "Data Found",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Prefill By Mobile",
+    "subModuleName": "Others",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Prefill Orchestration",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Prefill PAN",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "QR query Verify",
+    "subModuleName": "qrQueryVerify",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "RC OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "RC Plus Verification",
+    "subModuleName": "RCPlusVerification",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "RC Verification",
+    "subModuleName": "Async",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "RC Verification",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Read Consumer Durable Invoice",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "pratham.s@hyperverge.co"
+  },
+  {
+    "moduleName": "Read Insurance Premium Receipt",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "aravinth.muthu@hyperverge.co"
+  },
+  {
+    "moduleName": "Read WH Receipt",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Rental Agreement OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "shivank.mittal@hyperverge.co"
+  },
+  {
+    "moduleName": "resistant",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Reverse Geo Coding",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "RTGS",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "shivank.mittal@hyperverge.co"
+  },
+  {
+    "moduleName": "Search GSTIN",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "search GSTIN v2",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Selfie Validation",
+    "subModuleName": "Liveness Check",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "alisha.b@hyperverge.co"
+  },
+  {
+    "moduleName": "Selfie Validation",
+    "subModuleName": "Quality Checks",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "alisha.b@hyperverge.co"
+  },
+  {
+    "moduleName": "Selfie Validation",
+    "subModuleName": "Fraud Checks",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "navya.agrawal@hyperverge.co"
+  },
+  {
+    "moduleName": "Send SMS",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Shop And Establishment License",
+    "subModuleName": "Verify",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Shop Image Analysis",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Signature Validation",
+    "subModuleName": "Signature Matching",
+    "billingUnit": "Per Check",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "Signature Validation",
+    "subModuleName": "Signature Detection",
+    "billingUnit": "Per Check",
+    "moduleOwner": "aayush.k@hyperverge.co"
+  },
+  {
+    "moduleName": "SSN Verification",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "TDS Verification",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Text Match",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "narasimha@hyperverge.co"
+  },
+  {
+    "moduleName": "Udyam Aadhaar Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Scan",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Udyam Details",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Udyog Aadhaar Verification",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "UPI Verification",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "USA Driving License Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Utility Bill OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "shivank.mittal@hyperverge.co"
+  },
+  {
+    "moduleName": "Vehicle Permit OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "Vehicle Verification",
+    "subModuleName": "RC Challan Verification",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Vehicle Verification",
+    "subModuleName": "RC Lite Verification",
+    "billingUnit": "-",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "Vendor Validation",
+    "subModuleName": "Nsdl Pan Verification",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Vendor Validation",
+    "subModuleName": "Section 206 AB",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Vendor Validation",
+    "subModuleName": "Check Bank Account",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Vendor Validation",
+    "subModuleName": "Udyam Aadhaar Verification",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Vendor Validation",
+    "subModuleName": "Gstin Details Retrieval",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Verify Aadhaar",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Verify Expiry After X Day",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "Verify FSSAI License",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Verify RC Advance",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "vobbilisetti.v@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC",
+    "subModuleName": "Call Started",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC",
+    "subModuleName": "Call Successfully Completed",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC",
+    "subModuleName": "Location Reverse Geo Coding",
+    "billingUnit": "per check",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC + PD",
+    "subModuleName": "0 - 5 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC + PD",
+    "subModuleName": "5 - 10 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC + PD",
+    "subModuleName": "10 - 15 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC + PD",
+    "subModuleName": "15 - 20 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC + PD",
+    "subModuleName": "20 - 30 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC + PD",
+    "subModuleName": "30+ min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video KYC + PD",
+    "subModuleName": "Video KYC call successfully completed",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video PD",
+    "subModuleName": "0 - 5 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video PD",
+    "subModuleName": "5 - 10 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video PD",
+    "subModuleName": "10 - 15 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video PD",
+    "subModuleName": "15 - 20 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video PD",
+    "subModuleName": "20 - 30 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video PD",
+    "subModuleName": "30 - 1000 min",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video Statement",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video Statement",
+    "subModuleName": "Liveness",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video Statement",
+    "subModuleName": "Face Match",
+    "billingUnit": "-",
+    "moduleOwner": "shruti.balwani@hyperverge.co"
+  },
+  {
+    "moduleName": "Video Statement",
+    "subModuleName": "Media Convert Service",
+    "billingUnit": "-",
+    "moduleOwner": "varun.m@hyperverge.co"
+  },
+  {
+    "moduleName": "Vietnam Driving License",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "manish.poddar@hyperverge.co"
+  },
+  {
+    "moduleName": "Vietnam KYB",
+    "subModuleName": "KYB OCR",
+    "billingUnit": "Per Image / Per Page",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "Vietnam KYB",
+    "subModuleName": "Tax Validation",
+    "billingUnit": "Per API",
+    "moduleOwner": "sandeep.h@hyperverge.co"
+  },
+  {
+    "moduleName": "Visa OCR",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "swapnil.kulkarni@hyperverge.co"
+  },
+  {
+    "moduleName": "Voter ID Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  },
+  {
+    "moduleName": "WH Quality Report",
+    "subModuleName": "-",
+    "billingUnit": "-",
+    "moduleOwner": "mohit.r@hyperverge.co"
+  },
+  {
+    "moduleName": "Work Domain Verification",
+    "subModuleName": "-",
+    "billingUnit": "Per Check",
+    "moduleOwner": "sarvesh@hyperverge.co"
+  }
+]
