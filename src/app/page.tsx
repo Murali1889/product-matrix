@@ -755,63 +755,63 @@ export default function Dashboard() {
     <div className="min-h-screen bg-stone-50 flex flex-col">
       {/* Compact Fixed Navbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200">
-        <div className="px-4 py-2 flex items-center justify-between">
+        <div className="px-2 sm:px-4 py-2 flex items-center justify-between gap-2">
           {/* Left: Tabs */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="flex bg-slate-100 rounded-lg p-0.5">
               <button
                 onClick={() => setView('analytics')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
                   view === 'analytics'
                     ? 'bg-white text-slate-800 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <BarChart3 size={14} />
-                Dashboard
+                <span className="hidden sm:inline">Dashboard</span>
               </button>
               <button
                 onClick={() => setView('matrix')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
                   view === 'matrix'
                     ? 'bg-white text-slate-800 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <LayoutGrid size={14} />
-                Matrix
+                <span className="hidden sm:inline">Matrix</span>
               </button>
             </div>
-            <span className="text-xs text-slate-400">{data.count} clients</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 hidden xs:inline">{data.count} clients</span>
           </div>
 
           {/* Right: User & Save */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Save button when needed */}
             {pendingEdits.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-amber-600 font-medium">{pendingEdits.length} unsaved</span>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span className="text-[10px] sm:text-xs text-amber-600 font-medium hidden sm:inline">{pendingEdits.length} unsaved</span>
               <button
                 onClick={savePendingEdits}
                 disabled={saveStatus === 'saving'}
-                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
                   saveStatus === 'saved'
                     ? 'bg-emerald-500 text-white'
                     : 'bg-amber-500 text-white hover:bg-amber-600'
                 }`}
               >
                 <Save size={12} />
-                {saveStatus === 'saving' ? '...' : 'Save'}
+                <span className="hidden sm:inline">{saveStatus === 'saving' ? '...' : 'Save'}</span>
               </button>
             </div>
             )}
 
             {/* User info & Logout */}
-            <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
-              <span className="text-xs text-slate-500">{currentUser}</span>
+            <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-3 border-l border-slate-200">
+              <span className="text-[10px] sm:text-xs text-slate-500 hidden md:inline">{currentUser}</span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
+                className="flex items-center gap-1 p-1.5 sm:px-2 sm:py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
                 title="Logout"
               >
                 <LogOut size={14} />
@@ -822,7 +822,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <div className={`flex-1 ${view === 'matrix' ? 'px-4 py-3' : 'max-w-7xl mx-auto w-full px-6 py-6'}`}>
+      <div className={`flex-1 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6'}`}>
 
         {/* Matrix View */}
         {view === 'matrix' && (
@@ -886,31 +886,31 @@ export default function Dashboard() {
         {view === 'analytics' && (
           <>
         {/* Key Metrics - Clean 4 cards */}
-        <section className="grid grid-cols-4 gap-6 mb-8">
-          <div className="bg-slate-800 rounded-lg p-5">
-            <div className="text-slate-400 text-xs mb-1">Total Revenue</div>
-            <div className="text-white text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</div>
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-5">
+            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">Total Revenue</div>
+            <div className="text-white text-lg sm:text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</div>
           </div>
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
-            <div className="text-slate-400 text-xs mb-1">Active Clients</div>
-            <div className="text-slate-800 text-2xl font-bold">{summary.activeClients}</div>
+          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
+            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">Active Clients</div>
+            <div className="text-slate-800 text-lg sm:text-2xl font-bold">{summary.activeClients}</div>
           </div>
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
-            <div className="text-slate-400 text-xs mb-1">Avg Revenue/Client</div>
-            <div className="text-slate-800 text-2xl font-bold">{formatCurrency(summary.avgRevenue)}</div>
+          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
+            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">Avg Revenue/Client</div>
+            <div className="text-slate-800 text-lg sm:text-2xl font-bold">{formatCurrency(summary.avgRevenue)}</div>
           </div>
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
-            <div className="text-slate-400 text-xs mb-1">MoM Growth</div>
-            <div className={`text-2xl font-bold ${comprehensiveAnalytics.momGrowthCalc >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
+            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">MoM Growth</div>
+            <div className={`text-lg sm:text-2xl font-bold ${comprehensiveAnalytics.momGrowthCalc >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {comprehensiveAnalytics.momGrowthCalc >= 0 ? '+' : ''}{comprehensiveAnalytics.momGrowthCalc.toFixed(1)}%
             </div>
           </div>
         </section>
 
         {/* Monthly Trend - Simple bar chart */}
-        <section className="mb-8">
-          <h2 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Monthly Revenue Trend</h2>
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 sm:mb-4">Monthly Revenue Trend</h2>
+          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
             {comprehensiveAnalytics.monthlyTrend.length > 0 ? (
               (() => {
                 const trendData = comprehensiveAnalytics.monthlyTrend.slice(-6);
@@ -942,26 +942,26 @@ export default function Dashboard() {
         </section>
 
         {/* Two columns: Top Clients + Segments */}
-        <section className="grid grid-cols-2 gap-6 mb-8">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Top 10 Clients */}
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
-            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Top 10 Clients</h3>
-            <div className="space-y-2">
+          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
+            <h3 className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 sm:mb-4">Top 10 Clients</h3>
+            <div className="space-y-1 sm:space-y-2">
               {comprehensiveAnalytics.top10.map((c, i) => (
-                <div key={c.client_name} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400 w-4">{i + 1}.</span>
-                    <span className="text-xs text-slate-700 truncate max-w-[180px]">{c.client_name}</span>
+                <div key={c.client_name} className="flex items-center justify-between py-1 sm:py-1.5 border-b border-slate-50 last:border-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <span className="text-[10px] text-slate-400 w-4 shrink-0">{i + 1}.</span>
+                    <span className="text-[11px] sm:text-xs text-slate-700 truncate">{c.client_name}</span>
                   </div>
-                  <span className="text-xs font-medium text-slate-800">{formatCurrency(c.totalRevenue, c.profile?.billing_currency || 'INR')}</span>
+                  <span className="text-[11px] sm:text-xs font-medium text-slate-800 shrink-0 ml-2">{formatCurrency(c.totalRevenue, c.profile?.billing_currency || 'INR')}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Segments */}
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
-            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Revenue by Segment</h3>
+          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
+            <h3 className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 sm:mb-4">Revenue by Segment</h3>
             <div className="space-y-3">
               {Object.entries(summary.segments)
                 .sort((a, b) => b[1].revenue - a[1].revenue)
@@ -986,28 +986,28 @@ export default function Dashboard() {
 
 
         {/* Clients Table */}
-        <section className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
+        <section className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden">
           {/* Header with improved styling */}
-          <div className="flex justify-between items-center px-6 py-5 border-b border-stone-100 bg-gradient-to-r from-white to-stone-50/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center shadow-sm">
-                <Users size={14} className="text-white" />
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-3 sm:px-6 py-3 sm:py-5 border-b border-stone-100 bg-gradient-to-r from-white to-stone-50/50 gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center shadow-sm">
+                <Users size={12} className="text-white sm:w-[14px] sm:h-[14px]" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-800">All Clients</h2>
-                <p className="text-[11px] text-slate-400">
-                  {processedClients.length} total · Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, processedClients.length)}
+                <h2 className="text-xs sm:text-sm font-semibold text-slate-800">All Clients</h2>
+                <p className="text-[10px] sm:text-[11px] text-slate-400">
+                  {processedClients.length} total · {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, processedClients.length)}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
               {/* Sort Options */}
-              <div className="flex items-center gap-1 bg-stone-100/80 rounded-lg p-1">
+              <div className="flex items-center gap-0.5 sm:gap-1 bg-stone-100/80 rounded-lg p-0.5 sm:p-1">
                 {(['revenue', 'latest', 'name'] as const).map(option => (
                   <button
                     key={option}
                     onClick={() => setSortBy(option)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all ${
                       sortBy === option
                         ? 'bg-white text-slate-800 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
@@ -1018,15 +1018,14 @@ export default function Dashboard() {
                 ))}
               </div>
               {/* Page Size Selector */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400">Show</span>
+              <div className="flex items-center gap-1 sm:gap-2">
                 <select
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-white border border-stone-200 rounded-md px-2 py-1.5 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 cursor-pointer transition-all"
+                  className="bg-white border border-stone-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-slate-600 focus:outline-none cursor-pointer"
                 >
                   {pageSizeOptions.map(size => (
                     <option key={size} value={size}>{size}</option>
@@ -1036,8 +1035,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Table Header - Enhanced */}
-          <div className="grid grid-cols-[32px_1fr_140px_140px_140px_80px] px-6 py-3 bg-stone-50/80 border-b border-stone-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+          {/* Table Header - Hidden on mobile, shown on larger screens */}
+          <div className="hidden sm:grid grid-cols-[32px_1fr_140px_140px_140px_80px] px-6 py-3 bg-stone-50/80 border-b border-stone-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
             <span></span>
             <span className="flex items-center gap-1">
               Client
@@ -1550,105 +1549,80 @@ function MatrixView({
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
       {/* Header Bar */}
-      <div className="px-4 py-1.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="px-2 sm:px-4 py-1.5 border-b border-slate-200 bg-slate-50 shrink-0">
+        {/* Top row: Title and Stats */}
+        <div className="flex items-center justify-between mb-2 sm:mb-0">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-slate-600" />
-            <span className="font-bold text-slate-800 text-sm">Revenue Matrix</span>
+            <span className="font-bold text-slate-800 text-xs sm:text-sm">Revenue Matrix</span>
           </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-medium rounded-full bg-slate-100 text-slate-700">
+              {stats.total}
+            </span>
+            <span className="text-[9px] sm:text-[10px] text-slate-600 hidden sm:inline">
+              Total: <span className="font-bold text-slate-800">{formatCurrency(stats.totalRevenue)}</span>
+            </span>
+            {stats.withDiscrepancy > 0 && (
+              <span className="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-medium rounded-full bg-amber-100 text-amber-700 hidden md:inline" title="Clients where Total ≠ Sum of APIs">
+                {stats.withDiscrepancy} review
+              </span>
+            )}
+          </div>
+        </div>
 
-          {/* Month Selector */}
-          {viewMode === 'matrix' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Month:</span>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white min-w-[120px]"
-              >
-                <option value="">Latest Data</option>
-                {allMonths.map(month => (
-                  <option key={month} value={month}>{month}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Sort Toggle */}
-          {viewMode === 'matrix' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Sort:</span>
-              <select
-                value={sortMode}
-                onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
-                className="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white"
-              >
-                <option value="revenue">Revenue ↓</option>
-                <option value="status">Status</option>
-                <option value="name">Name A-Z</option>
-              </select>
-            </div>
-          )}
-
-          {/* Segment Filter */}
-          {viewMode === 'matrix' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Industry:</span>
-              <select
-                value={selectedSegment}
-                onChange={(e) => {
-                  setSelectedSegment(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white min-w-[100px]"
-              >
-                <option value="">All</option>
-                {uniqueSegments.map(seg => (
-                  <option key={seg} value={seg}>{seg}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Search Filter */}
-          {viewMode === 'matrix' && (
-            <div className="flex items-center gap-2">
+        {/* Filters Row - scrollable on mobile */}
+        {viewMode === 'matrix' && (
+          <div className="flex items-center gap-2 mt-2 overflow-x-auto pb-1 scrollbar-hide">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="text-[10px] sm:text-xs border border-slate-200 rounded px-1.5 sm:px-2 py-1 bg-white shrink-0"
+            >
+              <option value="">Latest</option>
+              {allMonths.map(month => (
+                <option key={month} value={month}>{month}</option>
+              ))}
+            </select>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
+              className="text-[10px] sm:text-xs border border-slate-200 rounded px-1.5 sm:px-2 py-1 bg-white shrink-0"
+            >
+              <option value="revenue">Revenue ↓</option>
+              <option value="status">Status</option>
+              <option value="name">Name A-Z</option>
+            </select>
+            <select
+              value={selectedSegment}
+              onChange={(e) => {
+                setSelectedSegment(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="text-[10px] sm:text-xs border border-slate-200 rounded px-1.5 sm:px-2 py-1 bg-white shrink-0"
+            >
+              <option value="">All Industries</option>
+              {uniqueSegments.map(seg => (
+                <option key={seg} value={seg}>{seg}</option>
+              ))}
+            </select>
+            <div className="flex items-center gap-1 shrink-0">
               <input
                 type="text"
-                placeholder="Search client..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="text-xs border border-slate-200 rounded-md px-3 py-1 bg-white w-40 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                className="text-[10px] sm:text-xs border border-slate-200 rounded px-2 py-1 bg-white w-24 sm:w-32 focus:outline-none focus:ring-1 focus:ring-slate-400"
               />
               {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="text-slate-400 hover:text-slate-600 text-xs"
-                >
-                  ✕
-                </button>
+                <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
               )}
             </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Simple Stats */}
-          <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-700">
-            {stats.total} clients
-          </span>
-          <span className="text-[10px] text-slate-600">
-            Total: <span className="font-bold text-slate-800">{formatCurrency(stats.totalRevenue)}</span>
-          </span>
-          {stats.withDiscrepancy > 0 && (
-            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-100 text-amber-700" title="Clients where Total ≠ Sum of APIs">
-              {stats.withDiscrepancy} clients need review
-            </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {viewMode === 'matrix' && (
@@ -1821,39 +1795,39 @@ function MatrixView({
 
       {/* Footer / Pagination */}
       {viewMode === 'matrix' && (
-        <div className="px-3 py-1.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
-          <span className="text-xs text-slate-500">
-            Showing <strong>{((currentPage - 1) * pageSize) + 1}</strong>-<strong>{Math.min(currentPage * pageSize, sortedClients.length)}</strong> of <strong>{sortedClients.length}</strong> clients
+        <div className="px-2 sm:px-3 py-1.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0 gap-2">
+          <span className="text-[10px] sm:text-xs text-slate-500 shrink-0">
+            <span className="hidden sm:inline">Showing </span><strong>{((currentPage - 1) * pageSize) + 1}</strong>-<strong>{Math.min(currentPage * pageSize, sortedClients.length)}</strong><span className="hidden sm:inline"> of <strong>{sortedClients.length}</strong></span>
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1 sm:px-2 sm:py-1 text-[10px] sm:text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed hidden sm:block"
             >
               First
             </button>
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 sm:px-2 sm:py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               ←
             </button>
-            <span className="px-3 py-1 text-xs bg-slate-700 text-white rounded font-medium">
+            <span className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs bg-slate-700 text-white rounded font-medium">
               {currentPage}/{totalPages}
             </span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 sm:px-2 sm:py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               →
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="px-2 py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1 sm:px-2 sm:py-1 text-[10px] sm:text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed hidden sm:block"
             >
               Last
             </button>
@@ -2555,25 +2529,50 @@ function ClientRow({
     >
       <div
         onClick={onToggle}
-        className={`grid grid-cols-[32px_1fr_140px_140px_140px_80px] px-6 py-4 cursor-pointer transition-all duration-200 items-center ${
+        className={`sm:grid sm:grid-cols-[32px_1fr_140px_140px_140px_80px] px-3 sm:px-6 py-3 sm:py-4 cursor-pointer transition-all items-center ${
           expanded
             ? 'bg-gradient-to-r from-amber-50 to-amber-50/30'
             : 'hover:bg-gradient-to-r hover:from-stone-50 hover:to-transparent'
         }`}
       >
-        {/* Expand Icon */}
-        <span className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 ${
+        {/* Mobile Layout */}
+        <div className="sm:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
+                expanded ? 'bg-amber-100 text-amber-600' : 'text-slate-300'
+              }`}>
+                <ChevronRight size={12} className={`transition-transform ${expanded ? 'rotate-90' : ''}`} />
+              </span>
+              <span className="text-xs font-medium text-slate-800 truncate">{client.client_name}</span>
+            </div>
+            <span className="text-xs font-semibold text-slate-800 tabular-nums shrink-0">
+              {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'INR')}
+            </span>
+          </div>
+          <div className="flex items-center justify-between pl-7">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+              client.profile?.segment === 'Digital Lenders' ? 'bg-blue-50 text-blue-700' :
+              client.profile?.segment === 'NBFC' ? 'bg-purple-50 text-purple-700' :
+              client.profile?.segment === 'Banks' ? 'bg-emerald-50 text-emerald-700' :
+              'bg-stone-100 text-slate-600'
+            }`}>
+              {client.profile?.segment || '-'}
+            </span>
+            <span className="text-[10px] text-slate-400">{client.latestMonth}: {formatCurrency(client.latestRevenue, client.profile?.billing_currency || 'INR')}</span>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <span className={`hidden sm:flex w-6 h-6 rounded-md items-center justify-center transition-all ${
           expanded ? 'bg-amber-100 text-amber-600' : 'text-slate-300 group-hover:text-slate-500 group-hover:bg-stone-100'
         }`}>
-          <ChevronRight
-            size={14}
-            className={`transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
-          />
+          <ChevronRight size={14} className={`transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </span>
 
-        {/* Client Name & Geography */}
-        <span className="flex flex-col min-w-0">
-          <span className="text-sm font-medium text-slate-800 truncate group-hover:text-slate-900 transition-colors">
+        {/* Client Name & Geography - Desktop */}
+        <span className="hidden sm:flex flex-col min-w-0">
+          <span className="text-sm font-medium text-slate-800 truncate group-hover:text-slate-900">
             {client.client_name}
           </span>
           {client.profile?.geography && (
@@ -2584,9 +2583,9 @@ function ClientRow({
           )}
         </span>
 
-        {/* Segment Badge */}
-        <span>
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+        {/* Segment Badge - Desktop */}
+        <span className="hidden sm:block">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium ${
             client.profile?.segment === 'Digital Lenders' ? 'bg-blue-50 text-blue-700' :
             client.profile?.segment === 'NBFC' ? 'bg-purple-50 text-purple-700' :
             client.profile?.segment === 'Banks' ? 'bg-emerald-50 text-emerald-700' :
@@ -2599,17 +2598,17 @@ function ClientRow({
           </span>
         </span>
 
-        {/* Total Revenue */}
-        <span className="flex flex-col">
+        {/* Total Revenue - Desktop */}
+        <span className="hidden sm:flex flex-col">
           <span className="text-sm font-semibold text-slate-800 tabular-nums">
             {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'INR')}
           </span>
           <span className="text-[10px] text-slate-400">{client.months} months</span>
         </span>
 
-        {/* Latest Month Revenue - Editable */}
+        {/* Latest Month Revenue - Editable - Desktop only */}
         <span
-          className="flex flex-col"
+          className="hidden sm:flex flex-col"
           onDoubleClick={(e) => {
             e.stopPropagation();
             if (client.latestMonth && client.latestMonth !== '-') {
@@ -2645,8 +2644,8 @@ function ClientRow({
           )}
         </span>
 
-        {/* Growth Indicator */}
-        <span className="text-right">
+        {/* Growth Indicator - Desktop only */}
+        <span className="hidden sm:block text-right">
           {client.latestRevenue > 0 ? (
             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium ${
               isGrowing ? 'bg-emerald-50 text-emerald-600' :
@@ -2664,8 +2663,8 @@ function ClientRow({
 
       {/* Expanded Details */}
       {expanded && (
-        <div className="px-6 py-8 bg-stone-50/70 border-t border-stone-100">
-          <div className="grid grid-cols-2 gap-12 mb-10">
+        <div className="px-3 sm:px-6 py-4 sm:py-8 bg-stone-50/70 border-t border-stone-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 mb-6 sm:mb-10">
             <div>
               <h4 className="text-[10px] font-medium uppercase tracking-widest text-slate-400 mb-4">
                 Profile

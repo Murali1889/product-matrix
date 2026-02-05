@@ -5,12 +5,14 @@ import { createClient } from '@supabase/supabase-js';
 // Replace these with your actual Supabase credentials
 // ============================================
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Create Supabase client (untyped for now until Supabase is configured)
+// Only create client if configured (prevents build errors)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const supabase = createClient(supabaseUrl, supabaseAnonKey) as any;
+export const supabase = supabaseUrl && supabaseUrl.startsWith('https://')
+  ? createClient(supabaseUrl, supabaseAnonKey) as any
+  : null;
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = (): boolean => {
@@ -170,3 +172,5 @@ export async function batchInsertMonthlyRevenue(
 
   if (error) throw error;
 }
+
+// Note: Product feedback functions are in /api/feedback route
