@@ -221,6 +221,26 @@ export default function Dashboard() {
   const [slackSettings, setSlackSettings] = useState<SlackSettings>({ webhookUrl: '', notifyOnComment: true, notifyOnEdit: true, notifyOnCrossSell: true });
   const [testingSlack, setTestingSlack] = useState(false);
 
+  // Keyboard shortcuts: Option+1 = Dashboard, Option+2 = Matrix, Option+N = Nav toggle
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.altKey && !e.metaKey && !e.ctrlKey) {
+        if (e.key === '1') {
+          e.preventDefault();
+          setView('analytics');
+        } else if (e.key === '2') {
+          e.preventDefault();
+          setView('matrix');
+        } else if (e.key === 'n' || e.key === 'N') {
+          e.preventDefault();
+          setNavOpen(o => !o);
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   // Load Slack settings
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -449,6 +469,18 @@ export default function Dashboard() {
       const latest = monthlyData[0]?.total_revenue_usd || 0;
       const previous = monthlyData[1]?.total_revenue_usd || 0;
       const growth = previous > 0 ? ((latest - previous) / previous) * 100 : (latest > 0 ? 100 : 0);
+      // Top APIs this client uses (from latest month)
+      const topAPIs = (monthlyData[0]?.apis || [])
+        .filter((a: { revenue_usd?: number }) => a.revenue_usd && a.revenue_usd > 0)
+        .sort((a: { revenue_usd: number }, b: { revenue_usd: number }) => b.revenue_usd - a.revenue_usd)
+        .slice(0, 3)
+        .map((a: { name: string }) => a.name);
+      // Previous month APIs (for churned clients)
+      const prevAPIs = (monthlyData[1]?.apis || [])
+        .filter((a: { revenue_usd?: number }) => a.revenue_usd && a.revenue_usd > 0)
+        .sort((a: { revenue_usd: number }, b: { revenue_usd: number }) => b.revenue_usd - a.revenue_usd)
+        .slice(0, 3)
+        .map((a: { name: string }) => a.name);
       return {
         name: c.client_name,
         segment: c.profile?.segment,
@@ -456,7 +488,9 @@ export default function Dashboard() {
         previous,
         growth,
         totalRevenue: c.totalRevenue,
-        months: c.months
+        months: c.months,
+        topAPIs,
+        prevAPIs,
       };
     });
 
@@ -764,92 +798,63 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen bg-stone-50 flex flex-col overflow-hidden">
-      {/* Collapsible Navbar — click to toggle */}
-      <header className="sticky top-0 z-40">
-        {/* Toggle strip — minimal */}
-        <div
-          onClick={() => setNavOpen(o => !o)}
-          className="h-[3px] bg-slate-100 cursor-pointer hover:bg-slate-200 hover:h-[6px] transition-all duration-150 relative"
+      {/* Floating view switcher — no layout space */}
+      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full px-1 py-1 shadow-lg">
+        <button
+          onClick={() => setView('analytics')}
+          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium rounded-full transition-all cursor-pointer ${
+            view === 'analytics'
+              ? 'bg-slate-800 text-white shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+          }`}
         >
-          {pendingEdits.length > 0 && !navOpen && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-500" />
-          )}
-        </div>
-        {/* Full navbar — slides down/up */}
-        <div
-          className="overflow-hidden transition-all duration-300 ease-in-out bg-white/95 backdrop-blur-sm border-b border-slate-200"
-          style={{ maxHeight: navOpen ? '60px' : '0px', opacity: navOpen ? 1 : 0 }}
+          <BarChart3 size={12} />
+          Dashboard
+        </button>
+        <button
+          onClick={() => setView('matrix')}
+          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium rounded-full transition-all cursor-pointer ${
+            view === 'matrix'
+              ? 'bg-slate-800 text-white shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+          }`}
         >
-          <div className="px-2 sm:px-4 py-2 flex items-center justify-between gap-2">
-            {/* Left: Tabs */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="flex bg-slate-100 rounded-lg p-0.5">
-                <button
-                  onClick={() => setView('analytics')}
-                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                    view === 'analytics'
-                      ? 'bg-white text-slate-800 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <BarChart3 size={14} />
-                  <span className="hidden sm:inline">Dashboard</span>
-                </button>
-                <button
-                  onClick={() => setView('matrix')}
-                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                    view === 'matrix'
-                      ? 'bg-white text-slate-800 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <LayoutGrid size={14} />
-                  <span className="hidden sm:inline">Matrix</span>
-                </button>
-              </div>
-              <span className="text-[10px] sm:text-xs text-slate-400 hidden xs:inline">{data.count} clients</span>
-            </div>
+          <LayoutGrid size={12} />
+          Matrix
+        </button>
+      </div>
 
-            {/* Right: User & Save */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              {pendingEdits.length > 0 && (
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span className="text-[10px] sm:text-xs text-amber-600 font-medium hidden sm:inline">{pendingEdits.length} unsaved</span>
-                <button
-                  onClick={savePendingEdits}
-                  disabled={saveStatus === 'saving'}
-                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    saveStatus === 'saved'
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-amber-500 text-white hover:bg-amber-600'
-                  }`}
-                >
-                  <Save size={12} />
-                  <span className="hidden sm:inline">{saveStatus === 'saving' ? '...' : 'Save'}</span>
-                </button>
-              </div>
-              )}
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
-                title="Settings"
-              >
-                <Settings size={14} />
-              </button>
-              <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-3 border-l border-slate-200">
-                <span className="text-[10px] sm:text-xs text-slate-500 hidden md:inline">{currentUser}</span>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-1 p-1.5 sm:px-2 sm:py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
-                  title="Logout"
-                >
-                  <LogOut size={14} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Floating nav actions — settings, save, logout */}
+      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
+        {pendingEdits.length > 0 && (
+          <button
+            onClick={savePendingEdits}
+            disabled={saveStatus === 'saving'}
+            className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium rounded-full shadow-lg transition-all cursor-pointer ${
+              saveStatus === 'saved'
+                ? 'bg-emerald-500 text-white'
+                : 'bg-amber-500 text-white hover:bg-amber-600'
+            }`}
+          >
+            <Save size={11} />
+            {pendingEdits.length} {saveStatus === 'saving' ? '...' : 'Save'}
+          </button>
+        )}
+        <button
+          onClick={() => setShowSettings(true)}
+          className="p-1.5 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full shadow-lg text-slate-400 hover:text-slate-600 cursor-pointer transition-all"
+          title="Settings"
+        >
+          <Settings size={13} />
+        </button>
+        <button
+          onClick={handleLogout}
+          className="p-1.5 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full shadow-lg text-slate-400 hover:text-slate-600 cursor-pointer transition-all"
+          title="Logout"
+        >
+          <LogOut size={13} />
+        </button>
+      </div>
 
       {/* Main Content */}
       <div className={`flex-1 min-h-0 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto'}`}>
@@ -979,312 +984,241 @@ export default function Dashboard() {
 
         {/* Analytics View - Simplified */}
         {view === 'analytics' && (
-          <>
-        {/* Key Metrics - Clean 4 cards */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-slate-800 rounded-lg p-3 sm:p-5">
-            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">Total Revenue</div>
-            <div className="text-white text-lg sm:text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</div>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
-            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">Active Clients</div>
-            <div className="text-slate-800 text-lg sm:text-2xl font-bold">{summary.activeClients}</div>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
-            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">Avg Revenue/Client</div>
-            <div className="text-slate-800 text-lg sm:text-2xl font-bold">{formatCurrency(summary.avgRevenue)}</div>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
-            <div className="text-slate-400 text-[10px] sm:text-xs mb-1">MoM Growth</div>
-            <div className={`text-lg sm:text-2xl font-bold ${comprehensiveAnalytics.momGrowthCalc >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {comprehensiveAnalytics.momGrowthCalc >= 0 ? '+' : ''}{comprehensiveAnalytics.momGrowthCalc.toFixed(1)}%
-            </div>
-            {comprehensiveAnalytics.latestMonthData && comprehensiveAnalytics.prevMonthData && (
-              <div className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5">
-                {comprehensiveAnalytics.latestMonthData.month} vs {comprehensiveAnalytics.prevMonthData.month}
+          <div className="h-full grid grid-rows-[auto_1fr] gap-3 overflow-hidden">
+            {/* Row 1: KPI strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+              <div className="bg-slate-800 rounded-lg px-3 py-2.5">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">Revenue</div>
+                <div className="text-white text-sm sm:text-base font-bold rev-num mt-0.5">{formatCurrency(summary.totalRevenue)}</div>
               </div>
-            )}
-          </div>
-        </section>
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">Clients</div>
+                <div className="text-slate-800 text-sm sm:text-base font-bold mt-0.5">{summary.activeClients}<span className="text-[10px] text-slate-400 font-normal">/{processedClients.length}</span></div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">Avg/Client</div>
+                <div className="text-slate-800 text-sm sm:text-base font-bold rev-num mt-0.5">{formatCurrency(summary.avgRevenue)}</div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">MoM</div>
+                <div className={`text-sm sm:text-base font-bold mt-0.5 ${comprehensiveAnalytics.momGrowthCalc >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {comprehensiveAnalytics.momGrowthCalc >= 0 ? '+' : ''}{comprehensiveAnalytics.momGrowthCalc.toFixed(1)}%
+                </div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5 hidden lg:block">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">Top 10 Share</div>
+                <div className="text-slate-800 text-sm font-bold mt-0.5">{comprehensiveAnalytics.top10Percent.toFixed(0)}%</div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5 hidden lg:block">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">APIs Used</div>
+                <div className="text-slate-800 text-sm font-bold mt-0.5">{apiInsights.usedAPIs.length}<span className="text-[10px] text-slate-400 font-normal">/{apiInsights.masterAPICount}</span></div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5 hidden lg:block">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">At Risk</div>
+                <div className={`text-sm font-bold mt-0.5 ${comprehensiveAnalytics.zeroRevenue.length > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{comprehensiveAnalytics.zeroRevenue.length}</div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5 hidden lg:block">
+                <div className="text-slate-400 text-[9px] uppercase tracking-wider">New</div>
+                <div className="text-blue-600 text-sm font-bold mt-0.5">{comprehensiveAnalytics.newClients.length}</div>
+              </div>
+            </div>
 
-        {/* Monthly Trend - Simple bar chart */}
-        <section className="mb-6 sm:mb-8">
-          <h2 className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 sm:mb-4">Monthly Revenue Trend</h2>
-          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
-            {comprehensiveAnalytics.monthlyTrend.length > 0 ? (
-              (() => {
-                const trendData = comprehensiveAnalytics.monthlyTrend.slice(-6);
-                const maxRev = Math.max(...trendData.map(x => x.revenue), 1);
-                return (
-                  <div className="flex items-end gap-3 h-32">
-                    {trendData.map((m) => {
-                      const barHeight = Math.max((m.revenue / maxRev) * 100, 4);
-                      return (
-                        <div key={m.month} className="flex-1 flex flex-col items-center justify-end group">
-                          <div className="text-[10px] text-slate-500 mb-1 opacity-0 group-hover:opacity-100">
-                            {formatCurrency(m.revenue)}
+            {/* Row 2: Main content grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 min-h-0 overflow-y-auto">
+
+              {/* Monthly Trend */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col">
+                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Monthly Trend</div>
+                {comprehensiveAnalytics.monthlyTrend.length > 0 ? (() => {
+                  const trendData = comprehensiveAnalytics.monthlyTrend.slice(-8);
+                  const maxRev = Math.max(...trendData.map(x => x.revenue), 1);
+                  return (
+                    <div className="flex items-end gap-2 h-[160px]">
+                      {trendData.map((m, i) => {
+                        const barHeight = Math.max((m.revenue / maxRev) * 100, 4);
+                        const prev = trendData[i - 1];
+                        const isUp = prev ? m.revenue >= prev.revenue : true;
+                        return (
+                          <div key={m.month} className="flex-1 flex flex-col items-center justify-end group h-full">
+                            <div className="text-[9px] text-slate-500 mb-1 opacity-0 group-hover:opacity-100 text-center rev-num">
+                              {formatCurrency(m.revenue)}
+                            </div>
+                            <div
+                              className={`w-full rounded-t transition-all ${isUp ? 'bg-slate-700 group-hover:bg-slate-800' : 'bg-slate-400 group-hover:bg-slate-500'}`}
+                              style={{ height: `${barHeight}%` }}
+                            />
+                            <span className="text-[9px] text-slate-400 mt-1.5">{m.month.split(' ')[0]?.slice(0, 3)}</span>
                           </div>
-                          <div
-                            className="w-full bg-slate-700 rounded-t transition-all group-hover:bg-slate-800"
-                            style={{ height: `${barHeight}%` }}
-                          />
-                          <span className="text-[10px] text-slate-400 mt-2">{m.month.split(' ')[0]?.slice(0, 3)}</span>
+                        );
+                      })}
+                    </div>
+                  );
+                })() : (
+                  <div className="h-[160px] flex items-center justify-center text-slate-400 text-xs">No data</div>
+                )}
+              </div>
+
+              {/* Top Clients */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col">
+                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Top 10 Clients</div>
+                <div className="space-y-0.5 flex-1 overflow-y-auto">
+                  {comprehensiveAnalytics.top10.map((c, i) => {
+                    const share = summary.totalRevenue > 0 ? (c.totalRevenue / summary.totalRevenue) * 100 : 0;
+                    return (
+                      <div key={c.client_name} className="flex items-center gap-2 py-1.5 group hover:bg-slate-50 rounded px-1 -mx-1">
+                        <span className="text-[10px] text-slate-300 w-4 shrink-0 text-right tabular-nums">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[11px] text-slate-700 truncate font-medium">{c.client_name}</div>
+                          <div className="h-[3px] bg-slate-100 rounded-full mt-1 overflow-hidden">
+                            <div className="h-full bg-slate-600 rounded-full" style={{ width: `${share}%` }} />
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-800 rev-num shrink-0">{formatCurrency(c.totalRevenue, c.profile?.billing_currency || 'USD')}</span>
+                        <span className="text-[9px] text-slate-400 shrink-0 w-8 text-right tabular-nums">{share.toFixed(0)}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Segments + Geography */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col">
+                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Segments</div>
+                <div className="space-y-2 flex-1">
+                  {Object.entries(summary.segments)
+                    .sort((a, b) => b[1].revenue - a[1].revenue)
+                    .slice(0, 6)
+                    .map(([name, seg], i) => {
+                      const share = summary.totalRevenue > 0 ? (seg.revenue / summary.totalRevenue) * 100 : 0;
+                      return (
+                        <div key={name} className="flex items-center gap-2">
+                          <span className="text-[11px] text-slate-600 w-[100px] truncate shrink-0">{name}</span>
+                          <div className="flex-1 h-[14px] bg-slate-50 rounded overflow-hidden relative">
+                            <div className={`h-full ${SEGMENT_COLORS[i]} rounded`} style={{ width: `${share}%` }} />
+                            {share > 15 && <span className="absolute inset-0 flex items-center pl-2 text-[8px] font-bold text-white">{share.toFixed(0)}%</span>}
+                          </div>
+                          <span className="text-[10px] font-medium text-slate-700 rev-num shrink-0 w-[70px] text-right">{formatCurrency(seg.revenue)}</span>
+                          <span className="text-[9px] text-slate-400 shrink-0">{seg.count}c</span>
                         </div>
                       );
                     })}
-                  </div>
-                );
-              })()
-            ) : (
-              <div className="h-32 flex items-center justify-center text-slate-400 text-sm">No data</div>
-            )}
-          </div>
-        </section>
-
-        {/* Two columns: Top Clients + Segments */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {/* Top 10 Clients */}
-          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
-            <h3 className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 sm:mb-4">Top 10 Clients</h3>
-            <div className="space-y-1 sm:space-y-2">
-              {comprehensiveAnalytics.top10.map((c, i) => (
-                <div key={c.client_name} className="flex items-center justify-between py-1 sm:py-1.5 border-b border-slate-50 last:border-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                    <span className="text-[10px] text-slate-400 w-4 shrink-0">{i + 1}.</span>
-                    <span className="text-[11px] sm:text-xs text-slate-700 truncate">{c.client_name}</span>
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-medium text-slate-800 shrink-0 ml-2">{formatCurrency(c.totalRevenue, c.profile?.billing_currency || 'USD')}</span>
                 </div>
-              ))}
-            </div>
-          </div>
+                {/* Geography mini section */}
+                <div className="mt-4 pt-3 border-t border-slate-100">
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Geography</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {comprehensiveAnalytics.geography.slice(0, 6).map(([geo, data]) => (
+                      <span key={geo} className="text-[10px] px-2 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-600">
+                        {geo} <span className="font-semibold text-slate-800">{data.count}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-          {/* Segments */}
-          <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-5">
-            <h3 className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 sm:mb-4">Revenue by Segment</h3>
-            <div className="space-y-3">
-              {Object.entries(summary.segments)
-                .sort((a, b) => b[1].revenue - a[1].revenue)
-                .slice(0, 6)
-                .map(([name, data], i) => {
-                  const share = summary.totalRevenue > 0 ? (data.revenue / summary.totalRevenue) * 100 : 0;
-                  return (
-                    <div key={name}>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-slate-600">{name}</span>
-                        <span className="font-medium text-slate-700">{formatCurrency(data.revenue)}</span>
+              {/* Growing Clients */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <TrendingUp size={12} className="text-emerald-500" />
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Growing</span>
+                </div>
+                <div className="space-y-0.5 flex-1 overflow-y-auto">
+                  {comprehensiveAnalytics.topGrowing.length > 0 ? comprehensiveAnalytics.topGrowing.map(c => (
+                    <div key={c.name} className="py-1.5 hover:bg-emerald-50/50 rounded px-1 -mx-1">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] text-slate-700 truncate">{c.name}</div>
+                        </div>
+                        <div className="text-right shrink-0 ml-2">
+                          <span className="text-[11px] font-bold text-emerald-600 tabular-nums">+{c.growth.toFixed(0)}%</span>
+                        </div>
                       </div>
-                      <div className="h-1.5 bg-slate-100 rounded overflow-hidden">
-                        <div className={`h-full ${SEGMENT_COLORS[i]} rounded`} style={{ width: `${share}%` }} />
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[9px] text-slate-400">{c.segment}</span>
+                        <span className="text-[9px] text-slate-300">·</span>
+                        <span className="text-[9px] text-slate-400 rev-num">{formatCurrency(c.previous)} → {formatCurrency(c.latest)}</span>
                       </div>
+                      {c.topAPIs.length > 0 && (
+                        <div className="flex flex-wrap gap-0.5 mt-1">
+                          {c.topAPIs.map((api: string) => (
+                            <span key={api} className="text-[8px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">{api}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
-            </div>
-          </div>
-        </section>
+                  )) : <div className="text-[11px] text-slate-400 flex-1 flex items-center justify-center">No growing clients</div>}
+                </div>
+              </div>
 
-
-        {/* Clients Table */}
-        <section className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden">
-          {/* Header with improved styling */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-3 sm:px-6 py-3 sm:py-5 border-b border-stone-100 bg-gradient-to-r from-white to-stone-50/50 gap-3">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center shadow-sm">
-                <Users size={12} className="text-white sm:w-[14px] sm:h-[14px]" />
-              </div>
-              <div>
-                <h2 className="text-xs sm:text-sm font-semibold text-slate-800">All Clients</h2>
-                <p className="text-[10px] sm:text-[11px] text-slate-400">
-                  {processedClients.length} total · {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, processedClients.length)}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              {/* Sort Options */}
-              <div className="flex items-center gap-0.5 sm:gap-1 bg-stone-100/80 rounded-lg p-0.5 sm:p-1">
-                {(['revenue', 'latest', 'name'] as const).map(option => (
-                  <button
-                    key={option}
-                    onClick={() => setSortBy(option)}
-                    className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all ${
-                      sortBy === option
-                        ? 'bg-white text-slate-800 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </button>
-                ))}
-              </div>
-              {/* Page Size Selector */}
-              <div className="flex items-center gap-1 sm:gap-2">
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="bg-white border border-stone-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-slate-600 focus:outline-none cursor-pointer"
-                >
-                  {pageSizeOptions.map(size => (
-                    <option key={size} value={size}>{size}</option>
+              {/* Declining / At Risk */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <TrendingDown size={12} className="text-rose-500" />
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Declining / At Risk</span>
+                </div>
+                <div className="space-y-0.5 flex-1 overflow-y-auto">
+                  {[...comprehensiveAnalytics.declining.map(c => ({ ...c, type: 'declining' as const })),
+                    ...comprehensiveAnalytics.zeroRevenue.map(c => ({ ...c, type: 'zero' as const }))
+                  ].slice(0, 8).map(c => (
+                    <div key={c.name} className="py-1.5 hover:bg-rose-50/50 rounded px-1 -mx-1">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] text-slate-700 truncate">{c.name}</div>
+                        </div>
+                        <span className={`text-[11px] font-bold shrink-0 tabular-nums ml-2 ${c.type === 'zero' ? 'text-rose-500' : 'text-rose-600'}`}>
+                          {c.type === 'zero' ? 'Churned' : `${c.growth.toFixed(0)}%`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[9px] text-slate-400">{c.segment}</span>
+                        <span className="text-[9px] text-slate-300">·</span>
+                        <span className="text-[9px] text-slate-400 rev-num">
+                          {c.type === 'zero'
+                            ? `was ${formatCurrency(c.previous)}`
+                            : `${formatCurrency(c.previous)} → ${formatCurrency(c.latest)}`}
+                        </span>
+                      </div>
+                      {(c.type === 'zero' ? c.prevAPIs : c.topAPIs).length > 0 && (
+                        <div className="flex flex-wrap gap-0.5 mt-1">
+                          {(c.type === 'zero' ? c.prevAPIs : c.topAPIs).map((api: string) => (
+                            <span key={api} className="text-[8px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-100">{api}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Table Header - Hidden on mobile, shown on larger screens */}
-          <div className="hidden sm:grid grid-cols-[32px_1fr_140px_140px_140px_80px] px-6 py-3 bg-stone-50/80 border-b border-stone-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-            <span></span>
-            <span className="flex items-center gap-1">
-              Client
-              <Sparkles size={10} className="text-amber-400" />
-            </span>
-            <span>Segment</span>
-            <span>Total Revenue</span>
-            <span>Latest Month</span>
-            <span className="text-right">Activity</span>
-          </div>
-
-          {/* Table Body with smooth animations */}
-          <div className="divide-y divide-stone-100">
-            {paginatedClients.map((client, idx) => (
-              <ClientRow
-                key={client.client_name}
-                client={client}
-                expanded={expandedClient === client.client_name}
-                onToggle={() => setExpandedClient(
-                  expandedClient === client.client_name ? null : client.client_name
-                )}
-                formatCurrency={formatCurrency}
-                index={idx}
-                editingCell={editingCell}
-                editValue={editValue}
-                onStartEdit={(clientName, month, currentValue) => {
-                  setEditingCell({ clientName, month });
-                  setEditValue(currentValue.toString());
-                }}
-                onEditChange={(value) => setEditValue(value)}
-                onEditSave={(clientName, month, oldValue) => {
-                  const newValue = parseFloat(editValue) || 0;
-                  handleCellEdit(clientName, month, newValue, oldValue);
-                }}
-                onEditCancel={() => {
-                  setEditingCell(null);
-                  setEditValue('');
-                }}
-                pendingEdits={pendingEdits}
-              />
-            ))}
-          </div>
-
-          {/* Empty State */}
-          {processedClients.length === 0 && (
-            <div className="py-20 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-stone-100 flex items-center justify-center">
-                <Search size={24} className="text-slate-300" />
-              </div>
-              <p className="text-slate-500 text-sm font-medium">No clients found</p>
-              <p className="text-slate-400 text-xs mt-1">Try adjusting your search term</p>
-            </div>
-          )}
-
-          {/* Pagination Controls - World Class */}
-          {processedClients.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-stone-50/50 to-white border-t border-stone-100">
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="font-medium text-slate-700">{processedClients.length}</span> clients total
-                {pendingEdits.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-medium animate-pulse">
-                    {pendingEdits.length} unsaved
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                {/* First Page */}
-                <button
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-                  title="First page"
-                >
-                  <ChevronsLeft size={16} />
-                </button>
-                {/* Previous Page */}
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-                  title="Previous page"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-
-                {/* Page Numbers */}
-                <div className="flex items-center gap-1 mx-2">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 ${
-                          currentPage === pageNum
-                            ? 'bg-slate-800 text-white shadow-sm'
-                            : 'text-slate-500 hover:bg-stone-100'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  {totalPages > 5 && currentPage < totalPages - 2 && (
-                    <>
-                      <span className="text-slate-300 px-1">...</span>
-                      <button
-                        onClick={() => setCurrentPage(totalPages)}
-                        className="w-8 h-8 rounded-lg text-xs font-medium text-slate-500 hover:bg-stone-100 transition-all duration-200"
-                      >
-                        {totalPages}
-                      </button>
-                    </>
+                  {comprehensiveAnalytics.declining.length === 0 && comprehensiveAnalytics.zeroRevenue.length === 0 && (
+                    <div className="text-[11px] text-slate-400 flex-1 flex items-center justify-center">All healthy</div>
                   )}
                 </div>
-
-                {/* Next Page */}
-                <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-                  title="Next page"
-                >
-                  <ChevronRight size={16} />
-                </button>
-                {/* Last Page */}
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-                  title="Last page"
-                >
-                  <ChevronsRight size={16} />
-                </button>
               </div>
+
+              {/* Top APIs */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col">
+                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Top APIs by Revenue</div>
+                <div className="space-y-1.5 flex-1 overflow-y-auto">
+                  {apiInsights.usedAPIs.slice(0, 8).map((api, i) => {
+                    const maxApiRev = apiInsights.usedAPIs[0]?.totalRevenue || 1;
+                    const pct = (api.totalRevenue / maxApiRev) * 100;
+                    return (
+                      <div key={api.name} className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-300 w-3 shrink-0 text-right">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] text-slate-600 truncate">{api.name}</div>
+                          <div className="h-[3px] bg-slate-100 rounded-full mt-0.5 overflow-hidden">
+                            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-semibold text-slate-700 rev-num shrink-0">{formatCurrency(api.totalRevenue)}</span>
+                        <span className="text-[9px] text-slate-400 shrink-0">{api.clientCount}c</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
-          )}
-        </section>
-          </>
+          </div>
         )}
       </div>
     </div>
