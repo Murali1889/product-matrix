@@ -213,6 +213,34 @@ button:focus-visible {
   font-feature-settings: "tnum";
 }
 
+/* =============================================
+   Matrix Table Typography System
+   ============================================= */
+
+/* Revenue numbers - the hero of every cell */
+.rev-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.01em;
+}
+
+/* Column header labels */
+.col-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+/* Matrix table base - tighter line height for density */
+.matrix-table {
+  line-height: 1.35;
+}
+
+.matrix-table td,
+.matrix-table th {
+  vertical-align: middle;
+}
+
 /* Better table row hover */
 tr.row-hover {
   transition: background-color 0.15s ease;

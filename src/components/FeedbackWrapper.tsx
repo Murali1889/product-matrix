@@ -9,10 +9,6 @@ const FeedbackProvider = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const FeedbackButtonDynamic = dynamic(
-  () => import('./FeedbackButton'),
-  { ssr: false, loading: () => null }
-);
 
 interface ProductFeedback {
   id?: string;
@@ -187,7 +183,6 @@ export default function FeedbackWrapper({
       defaultOpen={false}
     >
       {children}
-      <FeedbackButtonDynamic />
     </FeedbackProvider>
   );
 }

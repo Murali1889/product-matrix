@@ -1,7 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useFeedback } from 'react-visual-feedback';
+import { computeSegmentAdoption, findCrossSellOpportunities, buildCrossSellLookup } from '@/lib/adoption-analytics';
+import type { CrossSellOpportunity } from '@/lib/adoption-analytics';
+import { getCellComments, addCellComment, deleteCellComment, getCommentedCellKeys, getClientComments, addClientComment, deleteClientComment, getCommentedClientNames } from '@/lib/comments-store';
+import type { CellComment as CellCommentType, ClientComment as ClientCommentType } from '@/types/comments';
+import { getSlackSettings, saveSlackSettings, testSlackWebhook, notifyComment, notifyRevenueEdit } from '@/lib/slack';
+import type { SlackSettings } from '@/lib/slack';
 import RecommendationsView from '@/components/RecommendationsView';
 import AIRecommendationsView from '@/components/AIRecommendationsView';
 import SalesIntelView from '@/components/SalesIntelView';
@@ -142,6 +149,10 @@ export default function Dashboard() {
 
   // Handle cell edit
   const handleCellEdit = useCallback((clientName: string, month: string, newValue: number, oldValue: number) => {
+    // Slack notification for revenue edit
+    if (newValue !== oldValue) {
+      notifyRevenueEdit(currentUser || 'admin', clientName, month, oldValue, newValue);
+    }
     const edit: CellEdit = {
       clientName,
       month,
@@ -203,6 +214,19 @@ export default function Dashboard() {
 
   // Track unmatched APIs (used by clients but not in api.json)
   const [unmatchedAPIList, setUnmatchedAPIList] = useState<string[]>([]);
+
+  // Settings modal state
+  const [showSettings, setShowSettings] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [slackSettings, setSlackSettings] = useState<SlackSettings>({ webhookUrl: '', notifyOnComment: true, notifyOnEdit: true, notifyOnCrossSell: true });
+  const [testingSlack, setTestingSlack] = useState(false);
+
+  // Load Slack settings
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSlackSettings(getSlackSettings());
+    }
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -603,59 +627,46 @@ export default function Dashboard() {
     };
   }, [processedClients, summary.totalRevenue, apiInsights.usedAPIs]);
 
-  // Conversion rates to INR (approximate)
-  const CONVERSION_TO_INR: Record<string, number> = {
-    'USD': 83.5,    // 1 USD = 83.5 INR
-    'NGN': 0.052,   // 1 NGN = 0.052 INR (approx)
-    'NGR': 0.052,   // Same as NGN
-    'INR': 1,
+  // Conversion rates to USD
+  const CONVERSION_TO_USD: Record<string, number> = {
+    'USD': 1,
+    'INR': 0.012,    // 1 INR ≈ 0.012 USD
+    'NGN': 0.00062,  // 1 NGN ≈ 0.00062 USD
+    'NGR': 0.00062,  // Same as NGN
   };
 
-  const formatCurrency = (num: number, currency: string = 'INR'): string => {
-    // Handle different currencies
-    const curr = currency?.toUpperCase() || 'INR';
-
-    if (curr === 'USD') {
-      // USD formatting - use K, M for large numbers
-      if (num >= 1000000) return `$${(num / 1000000).toFixed(2)}M`;
-      if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
-      return `$${num.toLocaleString('en-US')}`;
-    }
-
-    if (curr === 'NGN' || curr === 'NGR') {
-      // Nigerian Naira
-      if (num >= 1000000) return `₦${(num / 1000000).toFixed(2)}M`;
-      if (num >= 1000) return `₦${(num / 1000).toFixed(1)}K`;
-      return `₦${num.toLocaleString('en-NG')}`;
-    }
-
-    // Default: INR formatting - use L (Lakhs) and Cr (Crores)
-    if (num >= 10000000) return `₹${(num / 10000000).toFixed(2)}Cr`;
-    if (num >= 100000) return `₹${(num / 100000).toFixed(2)}L`;
-    if (num >= 1000) return `₹${(num / 1000).toFixed(1)}K`;
-    return `₹${num.toLocaleString('en-IN')}`;
+  // All values displayed in USD
+  const formatCurrency = (num: number, currency: string = 'USD'): string => {
+    const curr = currency?.toUpperCase() || 'USD';
+    // Convert to USD first if not already
+    const usdAmount = num * (CONVERSION_TO_USD[curr] || CONVERSION_TO_USD['USD']);
+    if (usdAmount >= 1000000) return `$${(usdAmount / 1000000).toFixed(2)}M`;
+    if (usdAmount >= 1000) return `$${(usdAmount / 1000).toFixed(1)}K`;
+    if (usdAmount >= 1) return `$${Math.round(usdAmount).toLocaleString('en-US')}`;
+    return `$${usdAmount.toFixed(2)}`;
   };
 
-  // Format INR only (for converted amounts)
-  const formatINR = (num: number): string => {
-    if (num >= 10000000) return `₹${(num / 10000000).toFixed(2)}Cr`;
-    if (num >= 100000) return `₹${(num / 100000).toFixed(2)}L`;
-    if (num >= 1000) return `₹${(num / 1000).toFixed(1)}K`;
-    return `₹${num.toLocaleString('en-IN')}`;
+  // Format USD (for already-converted amounts)
+  const formatUSD = (num: number): string => {
+    if (num >= 1000000) return `$${(num / 1000000).toFixed(2)}M`;
+    if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
+    if (num >= 1) return `$${Math.round(num).toLocaleString('en-US')}`;
+    return `$${num.toFixed(2)}`;
   };
+  // Keep formatINR as alias for compatibility
+  const formatINR = formatUSD;
 
-  // Convert to INR
-  const toINR = (amount: number, currency?: string | null): number => {
-    const curr = (currency || 'INR').toUpperCase();
-    const rate = CONVERSION_TO_INR[curr] || 1;
+  // Convert to USD
+  const toUSD = (amount: number, currency?: string | null): number => {
+    const curr = (currency || 'USD').toUpperCase();
+    const rate = CONVERSION_TO_USD[curr] || 1;
     return amount * rate;
   };
+  // Keep toINR as alias for compatibility
+  const toINR = toUSD;
 
-  // Check if currency needs conversion display
-  const needsConversion = (currency?: string | null): boolean => {
-    const curr = (currency || 'INR').toUpperCase();
-    return curr !== 'INR';
-  };
+  // No longer needed - everything is in USD now
+  const needsConversion = (): boolean => false;
 
   if (loading) {
     return (
@@ -752,77 +763,96 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
-      {/* Compact Fixed Navbar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200">
-        <div className="px-2 sm:px-4 py-2 flex items-center justify-between gap-2">
-          {/* Left: Tabs */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="flex bg-slate-100 rounded-lg p-0.5">
-              <button
-                onClick={() => setView('analytics')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                  view === 'analytics'
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <BarChart3 size={14} />
-                <span className="hidden sm:inline">Dashboard</span>
-              </button>
-              <button
-                onClick={() => setView('matrix')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                  view === 'matrix'
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <LayoutGrid size={14} />
-                <span className="hidden sm:inline">Matrix</span>
-              </button>
+    <div className="h-screen bg-stone-50 flex flex-col overflow-hidden">
+      {/* Collapsible Navbar — click to toggle */}
+      <header className="sticky top-0 z-40">
+        {/* Toggle strip — minimal */}
+        <div
+          onClick={() => setNavOpen(o => !o)}
+          className="h-[3px] bg-slate-100 cursor-pointer hover:bg-slate-200 hover:h-[6px] transition-all duration-150 relative"
+        >
+          {pendingEdits.length > 0 && !navOpen && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-500" />
+          )}
+        </div>
+        {/* Full navbar — slides down/up */}
+        <div
+          className="overflow-hidden transition-all duration-300 ease-in-out bg-white/95 backdrop-blur-sm border-b border-slate-200"
+          style={{ maxHeight: navOpen ? '60px' : '0px', opacity: navOpen ? 1 : 0 }}
+        >
+          <div className="px-2 sm:px-4 py-2 flex items-center justify-between gap-2">
+            {/* Left: Tabs */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="flex bg-slate-100 rounded-lg p-0.5">
+                <button
+                  onClick={() => setView('analytics')}
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                    view === 'analytics'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <BarChart3 size={14} />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </button>
+                <button
+                  onClick={() => setView('matrix')}
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                    view === 'matrix'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <LayoutGrid size={14} />
+                  <span className="hidden sm:inline">Matrix</span>
+                </button>
+              </div>
+              <span className="text-[10px] sm:text-xs text-slate-400 hidden xs:inline">{data.count} clients</span>
             </div>
-            <span className="text-[10px] sm:text-xs text-slate-400 hidden xs:inline">{data.count} clients</span>
-          </div>
 
-          {/* Right: User & Save */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Save button when needed */}
-            {pendingEdits.length > 0 && (
-            <div className="flex items-center gap-1 sm:gap-2">
-              <span className="text-[10px] sm:text-xs text-amber-600 font-medium hidden sm:inline">{pendingEdits.length} unsaved</span>
+            {/* Right: User & Save */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {pendingEdits.length > 0 && (
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-[10px] sm:text-xs text-amber-600 font-medium hidden sm:inline">{pendingEdits.length} unsaved</span>
+                <button
+                  onClick={savePendingEdits}
+                  disabled={saveStatus === 'saving'}
+                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    saveStatus === 'saved'
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-amber-500 text-white hover:bg-amber-600'
+                  }`}
+                >
+                  <Save size={12} />
+                  <span className="hidden sm:inline">{saveStatus === 'saving' ? '...' : 'Save'}</span>
+                </button>
+              </div>
+              )}
               <button
-                onClick={savePendingEdits}
-                disabled={saveStatus === 'saving'}
-                className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  saveStatus === 'saved'
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-amber-500 text-white hover:bg-amber-600'
-                }`}
+                onClick={() => setShowSettings(true)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
+                title="Settings"
               >
-                <Save size={12} />
-                <span className="hidden sm:inline">{saveStatus === 'saving' ? '...' : 'Save'}</span>
+                <Settings size={14} />
               </button>
-            </div>
-            )}
-
-            {/* User info & Logout */}
-            <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-3 border-l border-slate-200">
-              <span className="text-[10px] sm:text-xs text-slate-500 hidden md:inline">{currentUser}</span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1 p-1.5 sm:px-2 sm:py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
-                title="Logout"
-              >
-                <LogOut size={14} />
-              </button>
+              <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-3 border-l border-slate-200">
+                <span className="text-[10px] sm:text-xs text-slate-500 hidden md:inline">{currentUser}</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1 p-1.5 sm:px-2 sm:py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
+                  title="Logout"
+                >
+                  <LogOut size={14} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className={`flex-1 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6'}`}>
+      <div className={`flex-1 min-h-0 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto'}`}>
 
         {/* Matrix View */}
         {view === 'matrix' && (
@@ -860,7 +890,72 @@ export default function Dashboard() {
             }}
             pendingEdits={pendingEdits}
             unmatchedAPIs={unmatchedAPIList}
+            currentUser={currentUser}
           />
+        )}
+
+        {/* Settings Modal */}
+        {showSettings && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <h3 className="font-bold text-slate-800">Settings</h3>
+                <button onClick={() => setShowSettings(false)} className="p-1 hover:bg-slate-100 rounded cursor-pointer"><X size={18} /></button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Slack Webhook URL</label>
+                  <input
+                    type="url"
+                    value={slackSettings.webhookUrl}
+                    onChange={(e) => setSlackSettings(s => ({ ...s, webhookUrl: e.target.value }))}
+                    placeholder="https://hooks.slack.com/services/..."
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!slackSettings.webhookUrl) { alert('Enter a webhook URL first'); return; }
+                      setTestingSlack(true);
+                      const ok = await testSlackWebhook(slackSettings.webhookUrl);
+                      setTestingSlack(false);
+                      alert(ok ? 'Slack connected successfully!' : 'Failed to connect. Check your webhook URL.');
+                    }}
+                    disabled={testingSlack}
+                    className="mt-2 px-3 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer disabled:opacity-50"
+                  >
+                    {testingSlack ? 'Testing...' : 'Test Connection'}
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">Notifications</label>
+                  {[
+                    { key: 'notifyOnComment' as const, label: 'Comments added' },
+                    { key: 'notifyOnEdit' as const, label: 'Revenue edited' },
+                    { key: 'notifyOnCrossSell' as const, label: 'Cross-sell opportunities' },
+                  ].map(opt => (
+                    <label key={opt.key} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={slackSettings[opt.key]}
+                        onChange={(e) => setSlackSettings(s => ({ ...s, [opt.key]: e.target.checked }))}
+                        className="rounded border-slate-300"
+                      />
+                      <span className="text-sm text-slate-600">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-slate-50 rounded-b-xl flex justify-end gap-2">
+                <button onClick={() => setShowSettings(false)} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 cursor-pointer">Cancel</button>
+                <button
+                  onClick={() => { saveSlackSettings(slackSettings); setShowSettings(false); }}
+                  className="px-4 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-700 cursor-pointer"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Recommendations View - Commented out for now */}
@@ -904,6 +999,11 @@ export default function Dashboard() {
             <div className={`text-lg sm:text-2xl font-bold ${comprehensiveAnalytics.momGrowthCalc >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {comprehensiveAnalytics.momGrowthCalc >= 0 ? '+' : ''}{comprehensiveAnalytics.momGrowthCalc.toFixed(1)}%
             </div>
+            {comprehensiveAnalytics.latestMonthData && comprehensiveAnalytics.prevMonthData && (
+              <div className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5">
+                {comprehensiveAnalytics.latestMonthData.month} vs {comprehensiveAnalytics.prevMonthData.month}
+              </div>
+            )}
           </div>
         </section>
 
@@ -953,7 +1053,7 @@ export default function Dashboard() {
                     <span className="text-[10px] text-slate-400 w-4 shrink-0">{i + 1}.</span>
                     <span className="text-[11px] sm:text-xs text-slate-700 truncate">{c.client_name}</span>
                   </div>
-                  <span className="text-[11px] sm:text-xs font-medium text-slate-800 shrink-0 ml-2">{formatCurrency(c.totalRevenue, c.profile?.billing_currency || 'INR')}</span>
+                  <span className="text-[11px] sm:text-xs font-medium text-slate-800 shrink-0 ml-2">{formatCurrency(c.totalRevenue, c.profile?.billing_currency || 'USD')}</span>
                 </div>
               ))}
             </div>
@@ -1206,7 +1306,8 @@ function MatrixView({
   onEditSave,
   onEditCancel,
   pendingEdits,
-  unmatchedAPIs = []
+  unmatchedAPIs = [],
+  currentUser = 'admin'
 }: {
   clients: ProcessedClient[];
   masterAPIs: string[];
@@ -1222,9 +1323,13 @@ function MatrixView({
   onEditCancel: () => void;
   pendingEdits: CellEdit[];
   unmatchedAPIs?: string[];
+  currentUser?: string;
 }) {
   // View mode: 'matrix' for API columns, 'mismatches' for fixing API names
   const [viewMode, setViewMode] = useState<'matrix' | 'mismatches'>('matrix');
+
+  // Feedback hook
+  const { isActive: feedbackActive, setIsActive: setFeedbackActive } = useFeedback();
 
   // Sort mode
   const [sortMode, setSortMode] = useState<'revenue' | 'name' | 'status'>('revenue');
@@ -1238,12 +1343,66 @@ function MatrixView({
   // Selected month for filtering (empty = latest/all time)
   const [selectedMonth, setSelectedMonth] = useState<string>('');
 
-  // Pagination - 15 clients per page (no scroll needed)
+  // Pagination - dynamic page size based on screen height
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 15;
+  const [pageSize, setPageSize] = useState(20);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  // Compact mode (32px rows vs 40px)
+  const [compactMode, setCompactMode] = useState(false);
+
+  // Fit rows to screen — measure actual table position dynamically
+  useEffect(() => {
+    const calculate = () => {
+      const rowHeight = compactMode ? 32 : 40;
+      const tableHeaderHeight = 56;
+      const footerRowHeight = 38;
+      if (tableRef.current) {
+        const top = tableRef.current.getBoundingClientRect().top;
+        const available = window.innerHeight - top - tableHeaderHeight - footerRowHeight;
+        const rows = Math.max(5, Math.floor(available / rowHeight));
+        setPageSize(rows);
+      } else {
+        // Fallback before ref is attached
+        const rows = Math.max(5, Math.floor((window.innerHeight - 250) / rowHeight));
+        setPageSize(rows);
+      }
+    };
+    // Small delay so DOM is laid out
+    const timer = setTimeout(calculate, 50);
+    window.addEventListener('resize', calculate);
+    return () => { clearTimeout(timer); window.removeEventListener('resize', calculate); };
+  }, [compactMode]);
 
   // Selected client for details panel
   const [selectedClient, setSelectedClient] = useState<ProcessedClient | null>(null);
+
+  // Geography filter removed per user request
+
+  // New: API column filter
+  const [selectedAPIFilter, setSelectedAPIFilter] = useState<string[]>([]);
+  const [showAPIFilterDropdown, setShowAPIFilterDropdown] = useState(false);
+
+  // New: Cross-sell mode
+  const [crossSellMode, setCrossSellMode] = useState(false);
+
+  // API column search
+  const [apiSearchTerm, setApiSearchTerm] = useState('');
+
+  // Chart panel
+  const [showChart, setShowChart] = useState(false);
+
+  // Not-using filter: click an API in adoption chart to filter matrix
+  const [notUsingFilter, setNotUsingFilter] = useState<string | null>(null);
+
+  // New: Comments state
+  const [commentedCellKeys, setCommentedCellKeys] = useState<Set<string>>(new Set());
+  const [commentRefreshKey, setCommentRefreshKey] = useState(0);
+
+  // Load commented cell keys on mount and when comments change
+  useEffect(() => {
+    getCommentedCellKeys().then(keys => setCommentedCellKeys(keys));
+  }, [commentRefreshKey]);
 
   // Cell popup state
   const [cellPopup, setCellPopup] = useState<{
@@ -1346,6 +1505,23 @@ function MatrixView({
     return { revenue, usage, hasUsageNoRevenue: usage > 0 && revenue === 0 };
   }, [selectedMonth]);
 
+  // Get previous month's API revenue for MoM cell indicators
+  const getPrevMonthAPIRevenue = useCallback((client: ProcessedClient, apiName: string): number => {
+    const months = client.monthly_data || [];
+    if (selectedMonth) {
+      const idx = months.findIndex(m => m.month === selectedMonth);
+      if (idx < 0 || idx >= months.length - 1) return 0;
+      const prevMonth = months[idx + 1];
+      const apiData = prevMonth?.apis?.find((a: { name: string }) => a.name === apiName);
+      return apiData?.revenue_usd || 0;
+    }
+    // Default: compare latest (index 0) to previous (index 1)
+    if (months.length < 2) return 0;
+    const prevMonth = months[1];
+    const apiData = prevMonth?.apis?.find((a: { name: string }) => a.name === apiName);
+    return apiData?.revenue_usd || 0;
+  }, [selectedMonth]);
+
   // Get client's total revenue for selected month
   const getClientTotalForMonth = useCallback((client: ProcessedClient): number => {
     if (!selectedMonth) return client.latestRevenue;
@@ -1391,7 +1567,80 @@ function MatrixView({
     return Array.from(segments).sort();
   }, [clients]);
 
-  // Filter and sort clients: filter by search + segment, then sort with active first
+
+  // Adoption analytics - compute per-segment API adoption rates
+  const segmentAdoption = useMemo(() => {
+    return computeSegmentAdoption(clients, masterAPIs);
+  }, [clients, masterAPIs]);
+
+  // Cross-sell opportunities for selected segment (used in chart panel)
+  const crossSellOppsList = useMemo(() => {
+    if (!selectedSegment) return [];
+    return findCrossSellOpportunities(clients, segmentAdoption, selectedSegment, 0.3);
+  }, [selectedSegment, clients, segmentAdoption]);
+
+  const crossSellOpps = useMemo(() => {
+    if (!crossSellMode || !selectedSegment) return new Map<string, CrossSellOpportunity>();
+    return buildCrossSellLookup(crossSellOppsList);
+  }, [crossSellMode, selectedSegment, crossSellOppsList]);
+
+  // Current segment adoption data
+  const currentSegmentAdoption = useMemo(() => {
+    if (!selectedSegment) return null;
+    return segmentAdoption[selectedSegment] || null;
+  }, [selectedSegment, segmentAdoption]);
+
+  // Compute API column revenue for sorting (before visibleAPIs)
+  const apiColumnRevenue = useMemo(() => {
+    const rev: Record<string, number> = {};
+    masterAPIs.forEach(api => {
+      rev[api] = clients.reduce((sum, c) => {
+        const data = getClientAPIData(c, api);
+        return sum + (data.revenue > 0 ? toINR(data.revenue, c.profile?.billing_currency) : 0);
+      }, 0);
+    });
+    return rev;
+  }, [clients, masterAPIs, getClientAPIData, toINR]);
+
+  // Filtered and sorted APIs: non-empty columns first, then by total revenue descending
+  const visibleAPIs = useMemo(() => {
+    let apis = selectedAPIFilter.length === 0 ? masterAPIs : masterAPIs.filter(api => selectedAPIFilter.includes(api));
+
+    // Filter by API search term
+    if (apiSearchTerm.trim()) {
+      const term = apiSearchTerm.toLowerCase();
+      apis = apis.filter(api => api.toLowerCase().includes(term));
+    }
+
+    // Sort: when a segment is selected, sort by adoption count (most users first)
+    // Otherwise sort by total revenue
+    return [...apis].sort((a, b) => {
+      if (currentSegmentAdoption) {
+        const aCount = currentSegmentAdoption.apiAdoption[a]?.clientCount || 0;
+        const bCount = currentSegmentAdoption.apiAdoption[b]?.clientCount || 0;
+        if (aCount !== bCount) return bCount - aCount;
+        // Tie-break by revenue
+        return (apiColumnRevenue[b] || 0) - (apiColumnRevenue[a] || 0);
+      }
+      const aTotal = apiColumnRevenue[a] || 0;
+      const bTotal = apiColumnRevenue[b] || 0;
+      if (aTotal > 0 && bTotal === 0) return -1;
+      if (aTotal === 0 && bTotal > 0) return 1;
+      if (aTotal > 0 && bTotal > 0) return bTotal - aTotal;
+      return 0;
+    });
+  }, [masterAPIs, selectedAPIFilter, apiColumnRevenue, apiSearchTerm, currentSegmentAdoption]);
+
+  // Count active clients per API column
+  const apiClientCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    visibleAPIs.forEach(api => {
+      counts[api] = clients.filter(c => getClientAPIData(c, api).revenue > 0).length;
+    });
+    return counts;
+  }, [clients, visibleAPIs, getClientAPIData]);
+
+  // Filter and sort clients: filter by search + segment + geography, then sort with active first
   const sortedClients = useMemo(() => {
     // First filter by search term
     let filtered = searchTerm.trim()
@@ -1401,6 +1650,14 @@ function MatrixView({
     // Then filter by segment
     if (selectedSegment) {
       filtered = filtered.filter(c => c.profile?.segment === selectedSegment);
+    }
+
+    // Filter by "not using" API (from adoption chart click)
+    if (notUsingFilter) {
+      filtered = filtered.filter(c => {
+        const data = getClientAPIData(c, notUsingFilter);
+        return data.revenue === 0;
+      });
     }
 
     // Then sort
@@ -1426,7 +1683,7 @@ function MatrixView({
       // Default: sort by revenue within same category
       return b.totalRevenue - a.totalRevenue;
     });
-  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment]);
+  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, notUsingFilter, getClientAPIData]);
 
   const totalPages = Math.ceil(sortedClients.length / pageSize);
 
@@ -1557,116 +1814,548 @@ function MatrixView({
     };
   }, [clients, getRowStatus, hasDiscrepancy, getClientTotalForMonth, masterAPIs, getClientAPIData, unmatchedAPIs]);
 
+  // Export current view to CSV
+  const exportCSV = useCallback(() => {
+    const headers = ['#', 'Client', 'Segment', 'Total', ...visibleAPIs];
+    const rows = sortedClients.map((client, idx) => {
+      const total = getClientTotalForMonth(client);
+      const apiValues = visibleAPIs.map(api => {
+        const data = getClientAPIData(client, api);
+        return data.revenue > 0 ? data.revenue.toString() : '';
+      });
+      return [
+        (idx + 1).toString(),
+        client.client_name,
+        client.profile?.segment || '',
+        total.toString(),
+        ...apiValues,
+      ];
+    });
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `revenue-matrix-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [sortedClients, visibleAPIs, getClientTotalForMonth, getClientAPIData]);
+
+  // Keyboard: Escape to close popups
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (cellPopup) setCellPopup(null);
+        if (selectedClient) setSelectedClient(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [cellPopup, selectedClient]);
+
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-full">
       {/* Header Bar */}
-      <div className="px-2 sm:px-4 py-1.5 border-b border-slate-200 bg-slate-50 shrink-0">
+      <div className="px-3 sm:px-4 py-2 border-b border-slate-200 bg-white shrink-0">
         {/* Top row: Title and Stats */}
         <div className="flex items-center justify-between mb-2 sm:mb-0">
           <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-slate-600" />
-            <span className="font-bold text-slate-800 text-xs sm:text-sm">Revenue Matrix</span>
+            <Database className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-semibold text-slate-700 text-[13px] tracking-[-0.02em]">Revenue Matrix</span>
+            <button
+              onClick={() => setFeedbackActive(!feedbackActive)}
+              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-md transition-all cursor-pointer ${
+                feedbackActive
+                  ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
+              }`}
+              title="Send feedback"
+            >
+              <MessageSquarePlus size={12} />
+              <span className="hidden sm:inline">Feedback</span>
+            </button>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-medium rounded-full bg-slate-100 text-slate-700">
-              {stats.total}
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600 tabular-nums">
+              {stats.total} clients
             </span>
-            <span className="text-[9px] sm:text-[10px] text-slate-600 hidden sm:inline">
-              Total: <span className="font-bold text-slate-800">{formatCurrency(stats.totalRevenue)}</span>
+            <span className="text-[11px] text-slate-500 hidden sm:inline tracking-[-0.01em]">
+              Total: <span className="font-semibold text-slate-700 rev-num">{formatCurrency(stats.totalRevenue)}</span>
             </span>
             {stats.withDiscrepancy > 0 && (
-              <span className="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-medium rounded-full bg-amber-100 text-amber-700 hidden md:inline" title="Clients where Total ≠ Sum of APIs">
+              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-50 text-amber-600 hidden md:inline" title="Clients where Total ≠ Sum of APIs">
                 {stats.withDiscrepancy} review
               </span>
             )}
+            <div className="hidden sm:flex items-center gap-1 ml-1 pl-2 border-l border-slate-200">
+              {/* Compact toggle */}
+              <button
+                onClick={() => setCompactMode(!compactMode)}
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                  compactMode ? 'bg-slate-200 text-slate-700' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }`}
+                title={compactMode ? 'Comfortable view' : 'Compact view'}
+              >
+                {compactMode ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
+              </button>
+              {/* Chart toggle */}
+              <button
+                onClick={() => setShowChart(!showChart)}
+                className={`px-2 py-1 text-[10px] font-medium rounded-md transition-all cursor-pointer ${
+                  showChart
+                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
+                }`}
+                title="Toggle revenue chart"
+              >
+                <span className="flex items-center gap-1"><BarChart3 size={11} /> Chart</span>
+              </button>
+              {/* Export CSV */}
+              <button
+                onClick={exportCSV}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
+                title="Export to CSV"
+              >
+                <Download size={13} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Filters Row - scrollable on mobile */}
+        {/* Filters Row */}
         {viewMode === 'matrix' && (
-          <div className="flex items-center gap-2 mt-2 overflow-x-auto pb-1 scrollbar-hide">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="text-[10px] sm:text-xs border border-slate-200 rounded px-1.5 sm:px-2 py-1 bg-white shrink-0"
-            >
-              <option value="">Latest</option>
-              {allMonths.map(month => (
-                <option key={month} value={month}>{month}</option>
-              ))}
-            </select>
-            <select
-              value={sortMode}
-              onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
-              className="text-[10px] sm:text-xs border border-slate-200 rounded px-1.5 sm:px-2 py-1 bg-white shrink-0"
-            >
-              <option value="revenue">Revenue ↓</option>
-              <option value="status">Status</option>
-              <option value="name">Name A-Z</option>
-            </select>
-            <select
-              value={selectedSegment}
-              onChange={(e) => {
-                setSelectedSegment(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="text-[10px] sm:text-xs border border-slate-200 rounded px-1.5 sm:px-2 py-1 bg-white shrink-0"
-            >
-              <option value="">All Industries</option>
-              {uniqueSegments.map(seg => (
-                <option key={seg} value={seg}>{seg}</option>
-              ))}
-            </select>
-            <div className="flex items-center gap-1 shrink-0">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
+          <div className="space-y-2 mt-2.5">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-300"
+              >
+                <option value="">Latest</option>
+                {allMonths.map(month => (
+                  <option key={month} value={month}>{month}</option>
+                ))}
+              </select>
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
+                className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-300"
+              >
+                <option value="revenue">Revenue ↓</option>
+                <option value="status">Status</option>
+                <option value="name">Name A-Z</option>
+              </select>
+              <select
+                value={selectedSegment}
                 onChange={(e) => {
-                  setSearchTerm(e.target.value);
+                  setSelectedSegment(e.target.value);
+                  setNotUsingFilter(null);
                   setCurrentPage(1);
                 }}
-                className="text-[10px] sm:text-xs border border-slate-200 rounded px-2 py-1 bg-white w-24 sm:w-32 focus:outline-none focus:ring-1 focus:ring-slate-400"
-              />
-              {searchTerm && (
-                <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                className={`text-[11px] border rounded-md px-2 py-1.5 shrink-0 focus:outline-none focus:ring-1 focus:ring-slate-300 ${
+                  selectedSegment ? 'border-blue-400 bg-blue-50 text-blue-600 font-medium' : 'border-slate-200 bg-white text-slate-600'
+                }`}
+              >
+                <option value="">All Industries</option>
+                {uniqueSegments.map(seg => {
+                  const count = clients.filter(c => c.profile?.segment === seg).length;
+                  return <option key={seg} value={seg}>{seg} ({count})</option>;
+                })}
+              </select>
+              <div className="flex items-center gap-1 shrink-0">
+                <Search size={12} className="text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Client..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white w-24 sm:w-32 focus:outline-none focus:ring-1 focus:ring-slate-300 text-slate-600 placeholder:text-slate-400"
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600 text-[11px] cursor-pointer">✕</button>
+                )}
+              </div>
+              {/* API column search */}
+              <div className="flex items-center gap-1 shrink-0">
+                <Database size={11} className="text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="API..."
+                  value={apiSearchTerm}
+                  onChange={(e) => setApiSearchTerm(e.target.value)}
+                  className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white w-20 sm:w-28 focus:outline-none focus:ring-1 focus:ring-slate-300 text-slate-600 placeholder:text-slate-400"
+                />
+                {apiSearchTerm && (
+                  <button onClick={() => setApiSearchTerm('')} className="text-slate-400 hover:text-slate-600 text-[11px] cursor-pointer">✕</button>
+                )}
+              </div>
+              {/* Active filter count */}
+              {(selectedSegment || searchTerm || apiSearchTerm || notUsingFilter) && (
+                <button
+                  onClick={() => {
+                    setSelectedSegment('');
+                    setSearchTerm('');
+                    setApiSearchTerm('');
+                    setNotUsingFilter(null);
+                    setCurrentPage(1);
+                  }}
+                  className="text-[10px] text-slate-400 hover:text-red-500 shrink-0 cursor-pointer tracking-wide transition-colors"
+                >
+                  Clear all
+                </button>
+              )}
+
+              {/* Inline pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1 ml-auto shrink-0 pl-2 border-l border-slate-200">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    ←
+                  </button>
+                  <span className="text-[10px] text-slate-500 tabular-nums font-medium">{currentPage}/{totalPages}</span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    →
+                  </button>
+                </div>
               )}
             </div>
           </div>
         )}
       </div>
 
+      {/* Chart Panel - Revenue or Segment Adoption Gap */}
+      {viewMode === 'matrix' && showChart && (
+        <div className="border-b border-slate-200 bg-white px-5 py-4 shrink-0">
+          {(() => {
+            // --- Segment Adoption Gap Analysis ---
+            if (selectedSegment && currentSegmentAdoption) {
+              const segTotal = currentSegmentAdoption.totalClients;
+              const adoptionList = Object.entries(currentSegmentAdoption.apiAdoption)
+                .map(([api, info]) => ({
+                  name: api,
+                  using: info.clientCount,
+                  total: segTotal,
+                  rate: info.adoptionRate,
+                  gap: segTotal - info.clientCount,
+                  revenue: info.totalRevenue,
+                  avgRev: info.avgRevenuePerClient,
+                  potentialRev: info.avgRevenuePerClient * (segTotal - info.clientCount),
+                  clients: info.clients,
+                }))
+                .sort((a, b) => b.using - a.using);
+
+              const totalPotential = adoptionList.reduce((s, a) => s + a.potentialRev, 0);
+
+              return (
+                <>
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Target size={15} className="text-amber-500" />
+                        <span className="text-[13px] font-bold text-slate-800 tracking-[-0.02em]">{selectedSegment} — API Adoption & Opportunities</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[11px] text-slate-500">{segTotal} clients in segment</span>
+                        <span className="text-[11px] text-slate-300">·</span>
+                        <span className="text-[11px] text-slate-500">{adoptionList.length} APIs adopted</span>
+                        <span className="text-[11px] text-slate-300">·</span>
+                        <span className="text-[11px] font-semibold text-amber-600 rev-num">~{formatINR(totalPotential)} potential</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowChart(false)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><X size={15} /></button>
+                  </div>
+
+                  {/* Active not-using filter badge */}
+                  {notUsingFilter && (
+                    <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                      <Filter size={12} className="text-amber-600" />
+                      <span className="text-[11px] text-amber-800 font-medium">Showing clients NOT using: <span className="font-bold">{notUsingFilter}</span></span>
+                      <button
+                        onClick={() => { setNotUsingFilter(null); setCurrentPage(1); }}
+                        className="ml-auto text-[10px] px-2 py-0.5 rounded bg-amber-200 text-amber-800 hover:bg-amber-300 cursor-pointer font-medium"
+                      >
+                        Clear filter
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Adoption bars — click to filter */}
+                  <div className="space-y-[5px] max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+                    {adoptionList.map((api) => {
+                      const adoptPct = Math.round(api.rate * 100);
+                      const parts = api.name.split(' - ');
+                      const barColor = adoptPct >= 80 ? 'bg-emerald-500' : adoptPct >= 50 ? 'bg-blue-500' : adoptPct >= 30 ? 'bg-amber-500' : 'bg-slate-400';
+                      const gapColor = adoptPct >= 80 ? 'bg-emerald-100' : adoptPct >= 50 ? 'bg-blue-100' : adoptPct >= 30 ? 'bg-amber-100' : 'bg-slate-100';
+                      const isActiveFilter = notUsingFilter === api.name;
+                      return (
+                        <div
+                          key={api.name}
+                          className={`flex items-center gap-3 group py-[2px] rounded-md px-1 cursor-pointer transition-colors ${
+                            isActiveFilter ? 'bg-amber-50 ring-1 ring-amber-300' : 'hover:bg-slate-50'
+                          }`}
+                          onClick={() => {
+                            if (api.gap > 0) {
+                              if (isActiveFilter) {
+                                setNotUsingFilter(null);
+                              } else {
+                                setNotUsingFilter(api.name);
+                                setCurrentPage(1);
+                              }
+                            }
+                          }}
+                          title={api.gap > 0 ? `Click to filter: show ${api.gap} clients not using ${api.name}` : 'All clients use this API'}
+                        >
+                          {/* API Name */}
+                          <div className="w-[160px] shrink-0 text-right pr-1">
+                            <div className={`text-[11px] font-medium truncate leading-tight ${isActiveFilter ? 'text-amber-800' : 'text-slate-700'}`} title={api.name}>{parts[0]}</div>
+                            {parts[1] && <div className="text-[9px] text-slate-400 truncate leading-tight">{parts[1]}</div>}
+                          </div>
+                          {/* Adoption bar */}
+                          <div className={`flex-1 h-[26px] ${gapColor} rounded overflow-hidden relative flex items-center`}>
+                            <div
+                              className={`h-full ${barColor} rounded-l transition-all duration-500 ease-out flex items-center`}
+                              style={{ width: `${adoptPct}%` }}
+                            >
+                              {adoptPct >= 25 && (
+                                <span className="text-[10px] font-bold text-white pl-2.5 whitespace-nowrap">{api.using}/{api.total}</span>
+                              )}
+                            </div>
+                            {adoptPct < 25 && (
+                              <span className="text-[10px] font-bold text-slate-500 pl-2 whitespace-nowrap">{api.using}/{api.total}</span>
+                            )}
+                            {/* Gap indicator */}
+                            {api.gap > 0 && adoptPct < 85 && (
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-medium text-slate-500 whitespace-nowrap">
+                                {api.gap} not using {isActiveFilter && '(filtered)'}
+                              </span>
+                            )}
+                          </div>
+                          {/* Adoption % */}
+                          <div className="w-[44px] shrink-0 text-center">
+                            <span className={`text-[12px] font-bold tabular-nums ${
+                              adoptPct >= 80 ? 'text-emerald-600' : adoptPct >= 50 ? 'text-blue-600' : adoptPct >= 30 ? 'text-amber-600' : 'text-slate-500'
+                            }`}>{adoptPct}%</span>
+                          </div>
+                          {/* Opportunity + filter button */}
+                          <div className="w-[90px] shrink-0 text-right">
+                            {api.gap > 0 ? (
+                              <>
+                                <div className="text-[10px] font-semibold text-amber-600 rev-num">~{formatINR(api.potentialRev)}</div>
+                                <div className="text-[9px] text-slate-400">from {api.gap} clients</div>
+                              </>
+                            ) : (
+                              <div className="text-[10px] text-emerald-600 font-medium">Full adoption</div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {adoptionList.length === 0 && (
+                      <div className="text-center text-[11px] text-slate-400 py-8">No API usage in {selectedSegment}</div>
+                    )}
+                  </div>
+
+                  {/* --- Action Items: Top Opportunities --- */}
+                  {crossSellOppsList.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Target size={14} className="text-amber-500" />
+                        <span className="text-[12px] font-bold text-slate-800">Top Opportunities — Who to Target Next</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">{crossSellOppsList.length} total</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="border-b border-slate-200">
+                              <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Client</th>
+                              <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">API to Pitch</th>
+                              <th className="text-center py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Segment Adoption</th>
+                              <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Est. Revenue</th>
+                              <th className="text-center py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Priority</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {crossSellOppsList.slice(0, 20).map((opp, i) => (
+                              <tr key={`${opp.clientName}::${opp.apiName}`} className={`${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'} hover:bg-amber-50/50 transition-colors`}>
+                                <td className="py-1.5 px-2 font-medium text-slate-800">{opp.clientName}</td>
+                                <td className="py-1.5 px-2 text-slate-600">{opp.apiName}</td>
+                                <td className="py-1.5 px-2 text-center">
+                                  <span className="tabular-nums">{opp.segmentClientsUsing}/{opp.segmentTotalClients}</span>
+                                  <span className="text-slate-400 ml-1">({Math.round(opp.segmentAdoptionRate * 100)}%)</span>
+                                </td>
+                                <td className="py-1.5 px-2 text-right font-semibold text-amber-700 rev-num">~{formatINR(opp.estimatedRevenue)}/mo</td>
+                                <td className="py-1.5 px-2 text-center">
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                    opp.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                    opp.priority === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-slate-100 text-slate-600'
+                                  }`}>{opp.priority}</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {crossSellOppsList.length > 20 && (
+                        <div className="text-[10px] text-slate-400 text-center mt-2">Showing top 20 of {crossSellOppsList.length} opportunities</div>
+                      )}
+                    </div>
+                  )}
+                </>
+              );
+            }
+
+            // --- Default: Revenue by API ---
+            const chartAPIs = visibleAPIs
+              .map(api => ({ name: api, revenue: apiTotals[api] || 0, clients: apiClientCounts[api] || 0 }))
+              .filter(a => a.revenue > 0)
+              .sort((a, b) => b.revenue - a.revenue)
+              .slice(0, 20);
+            const maxRev = chartAPIs[0]?.revenue || 1;
+            const totalChartRev = chartAPIs.reduce((s, a) => s + a.revenue, 0);
+            const barColors = [
+              'from-slate-700 to-slate-600',
+              'from-slate-600 to-slate-500',
+              'from-blue-600 to-blue-500',
+              'from-indigo-600 to-indigo-500',
+              'from-violet-600 to-violet-500',
+            ];
+            return (
+              <>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <BarChart3 size={15} className="text-slate-500" />
+                      <span className="text-[13px] font-bold text-slate-800 tracking-[-0.02em]">Revenue by API Product</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[11px] text-slate-400">{chartAPIs.length} APIs with revenue</span>
+                      <span className="text-[11px] text-slate-400">·</span>
+                      <span className="text-[11px] font-medium text-slate-600 rev-num">{formatINR(totalChartRev)} total</span>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowChart(false)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><X size={15} /></button>
+                </div>
+
+                {/* Chart */}
+                <div className="space-y-[6px] max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+                  {chartAPIs.map((api, i) => {
+                    const barWidth = Math.max((api.revenue / maxRev) * 100, 3);
+                    const share = totalChartRev > 0 ? ((api.revenue / totalChartRev) * 100).toFixed(1) : '0';
+                    const parts = api.name.split(' - ');
+                    const colorIdx = i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : i < 13 ? 3 : 4;
+                    return (
+                      <div key={api.name} className="flex items-center gap-3 group py-[2px]">
+                        <span className="w-[18px] text-[10px] text-slate-400 text-right shrink-0 tabular-nums">{i + 1}</span>
+                        <div className="w-[160px] shrink-0 text-right pr-1">
+                          <div className="text-[11px] font-medium text-slate-700 truncate leading-tight" title={api.name}>{parts[0]}</div>
+                          {parts[1] && <div className="text-[9px] text-slate-400 truncate leading-tight">{parts[1]}</div>}
+                        </div>
+                        <div className="flex-1 h-[24px] bg-slate-50 rounded overflow-hidden relative border border-slate-100">
+                          <div
+                            className={`h-full bg-gradient-to-r ${barColors[colorIdx]} rounded transition-all duration-500 ease-out group-hover:brightness-110 flex items-center`}
+                            style={{ width: `${barWidth}%` }}
+                          >
+                            {barWidth > 30 && (
+                              <span className="text-[10px] font-semibold text-white/90 pl-2.5 rev-num whitespace-nowrap">{formatINR(api.revenue)}</span>
+                            )}
+                          </div>
+                          {barWidth <= 30 && (
+                            <span className="absolute left-[calc(var(--bar-w)+8px)] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-600 rev-num whitespace-nowrap" style={{ '--bar-w': `${barWidth}%` } as React.CSSProperties}>{formatINR(api.revenue)}</span>
+                          )}
+                        </div>
+                        <div className="w-[90px] shrink-0 text-right">
+                          <div className="text-[10px] font-medium text-slate-600 tabular-nums">{share}%</div>
+                          <div className="text-[9px] text-slate-400">{api.clients} {api.clients === 1 ? 'client' : 'clients'}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {chartAPIs.length === 0 && (
+                    <div className="text-center text-[11px] text-slate-400 py-8">No API revenue data</div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
+
       {viewMode === 'matrix' && (
-        <>
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Not-using filter badge (visible when chart is closed but filter active) */}
+          {notUsingFilter && !showChart && (
+            <div className="flex items-center gap-2 mx-5 mt-2 mb-1 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <Filter size={12} className="text-amber-600" />
+              <span className="text-[11px] text-amber-800 font-medium">Showing {selectedSegment || 'all'} clients NOT using: <span className="font-bold">{notUsingFilter}</span></span>
+              <button
+                onClick={() => { setNotUsingFilter(null); setCurrentPage(1); }}
+                className="ml-auto text-[10px] px-2 py-0.5 rounded bg-amber-200 text-amber-800 hover:bg-amber-300 cursor-pointer font-medium"
+              >
+                Clear filter
+              </button>
+            </div>
+          )}
+
           {/* API Matrix Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-slate-100">
-                <tr className="border-b border-slate-300 h-[36px]">
-                  <th className="sticky left-0 z-20 bg-slate-100 text-center font-semibold text-slate-600 border-r border-slate-200 w-[36px] text-[10px]">#</th>
-                  <th className="sticky left-[36px] z-20 bg-slate-100 text-left px-2 font-semibold text-slate-600 border-r border-slate-200 min-w-[180px] text-xs">Client</th>
-                  <th className="sticky left-[216px] z-20 bg-slate-100 text-right px-2 font-semibold text-slate-600 border-r border-slate-200 w-[90px] text-xs">Total</th>
-                  {masterAPIs.map(api => {
-                    // Split API name into module and submodule for cleaner display
+          <div ref={tableRef} className="overflow-auto flex-1 min-h-0">
+            <table className="matrix-table w-max border-collapse">
+              <thead className="sticky top-0 z-10">
+                <tr className="h-[56px] bg-slate-50">
+                  <th className="sticky left-0 z-20 bg-slate-50 text-center text-[10px] font-medium text-slate-400 w-[44px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">#</th>
+                  <th className="sticky left-[44px] z-20 bg-slate-50 text-left px-3 col-label text-[11px] text-slate-500 w-[200px] max-w-[200px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">Client</th>
+                  <th className="sticky left-[244px] z-20 bg-slate-50 text-center px-3 col-label text-[11px] text-slate-500 w-[100px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">Total</th>
+                  {visibleAPIs.map(api => {
                     const parts = api.split(' - ');
                     const moduleName = parts[0] || api;
                     const subModule = parts[1] || '';
                     const isUnmatched = unmatchedAPIs.includes(api);
+                    const adoption = currentSegmentAdoption?.apiAdoption[api];
+                    const clientCount = apiClientCounts[api] || 0;
                     return (
                       <th
                         key={api}
-                        className={`text-center px-1 font-medium border-r border-slate-200 min-w-[120px] max-w-[140px] align-middle ${
-                          isUnmatched ? 'bg-red-50 border-red-200' : 'text-slate-600'
+                        className={`text-center pl-4 pr-3 border-r border-slate-200 w-[140px] shadow-[inset_0_-2px_0_#cbd5e1] ${
+                          isUnmatched ? 'bg-red-50/60' : ''
                         }`}
-                        title={isUnmatched ? `⚠️ NOT IN api.json: ${api}` : api}
+                        title={isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
                       >
-                        <div className="flex flex-col items-center">
-                          <div className={`text-[10px] font-semibold leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-700' : 'text-slate-700'}`}>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className={`col-label text-[10px] leading-snug text-center truncate max-w-[140px] ${isUnmatched ? 'text-red-600' : 'text-slate-500'}`}>
                             {moduleName}
                           </div>
                           {subModule && (
-                            <div className={`text-[8px] leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-500' : 'text-blue-500'}`}>
+                            <div className={`text-[9px] font-normal leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-400' : 'text-slate-400'}`}>
                               {subModule}
+                            </div>
+                          )}
+                          {/* Client count badge: using / total */}
+                          {!selectedSegment && (
+                            <div className={`text-[9px] px-1.5 py-px rounded-full font-medium ${
+                              clientCount > 0 ? 'bg-slate-100 text-slate-500' : 'bg-slate-50 text-slate-300'
+                            }`}>
+                              {clientCount}/{clients.length}
+                            </div>
+                          )}
+                          {selectedSegment && adoption && (
+                            <div className={`text-[9px] px-1.5 py-px rounded-full font-medium ${
+                              adoption.adoptionRate >= 0.7 ? 'bg-emerald-50 text-emerald-600' :
+                              adoption.adoptionRate >= 0.4 ? 'bg-amber-50 text-amber-600' :
+                              'bg-slate-100 text-slate-400'
+                            }`}>
+                              {adoption.clientCount}/{currentSegmentAdoption!.totalClients}
                             </div>
                           )}
                         </div>
@@ -1679,48 +2368,45 @@ function MatrixView({
                 {paginatedClients.map((client, idx) => {
                   const clientTotal = getClientTotalForMonth(client);
                   const discrepancy = hasDiscrepancy(client);
-                  // Simple alternating row colors: white and light grey
-                  const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+                  const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-[#f8f8f7]';
 
                   return (
-                    <tr key={client.client_name} className={`${rowBg} hover:bg-blue-50/50 border-b border-slate-100/50 h-[44px]`}>
+                    <tr key={client.client_name} className={`${rowBg} ${compactMode ? 'h-[32px]' : 'h-[40px]'} transition-colors duration-100`}>
                       {/* Row number */}
-                      <td className={`sticky left-0 z-10 ${rowBg} px-1 text-center border-r border-slate-100 w-[36px] text-slate-400 font-medium text-[10px] align-middle`}>
+                      <td className={`sticky left-0 z-10 ${rowBg} px-2 text-center w-[44px] text-[10px] text-slate-400 shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-1px_0_#e2e8f0]`}>
                         {(currentPage - 1) * pageSize + idx + 1}
                       </td>
-                      {/* Client name with status - clickable */}
+                      {/* Client name */}
                       <td
-                        className={`sticky left-[36px] z-10 ${rowBg} px-2 border-r border-slate-100 min-w-[180px] cursor-pointer hover:bg-blue-50 align-middle`}
+                        className={`sticky left-[44px] z-10 ${rowBg} px-3 w-[200px] max-w-[200px] cursor-pointer hover:bg-[#eff6ff] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-1px_0_#e2e8f0]`}
                         onClick={() => setSelectedClient(client)}
                       >
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           {client.isActive ? (
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Active" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Active" />
                           ) : client.isInMasterList ? (
-                            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" title="Master list" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" title="Master list" />
                           ) : client.hasJan2026Data ? (
-                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="New" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="New" />
                           ) : (
-                            <span className="w-2 h-2 rounded-full bg-slate-200 shrink-0" title="Inactive" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 shrink-0" title="Inactive" />
                           )}
-                          <div className="font-semibold text-slate-800 truncate text-[11px]" title={client.client_name}>{client.client_name}</div>
+                          <div className="min-w-0">
+                            <div className={`${compactMode ? 'text-[11px]' : 'text-[12px]'} font-medium text-slate-800 truncate leading-tight tracking-[-0.01em]`} title={client.client_name}>{client.client_name}</div>
+                            {!compactMode && <div className="text-[10px] text-slate-400 truncate leading-tight mt-0.5 tracking-wide">{client.profile?.segment || '-'}</div>}
+                          </div>
                         </div>
-                        <div className="text-[9px] text-slate-400 truncate">{client.profile?.segment || '-'} · {client.client_id || ''}</div>
                       </td>
                       {/* Total */}
                       <td
-                        className={`sticky left-[216px] z-10 ${rowBg} px-2 text-right border-r border-slate-100 w-[90px] align-middle ${discrepancy.hasIssue ? 'bg-red-50' : ''}`}
-                        title={needsConversion(client.profile?.billing_currency) ? `≈ ${formatINR(toINR(clientTotal, client.profile?.billing_currency))}` : ''}
+                        className={`sticky left-[244px] z-10 px-3 text-center w-[100px] shadow-[inset_-1px_0_0_#cbd5e1,inset_1px_0_0_#cbd5e1,inset_0_-1px_0_#e2e8f0] ${discrepancy.hasIssue ? 'bg-[#fef2f2]' : rowBg}`}
                       >
-                        <span className={`font-bold tabular-nums text-[11px] ${clientTotal > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
-                          {clientTotal > 0 ? formatCurrency(clientTotal, client.profile?.billing_currency || 'INR') : '-'}
+                        <span className={`rev-num text-[12px] font-semibold tracking-[0.01em] ${clientTotal > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
+                          {clientTotal > 0 ? formatCurrency(clientTotal, client.profile?.billing_currency || 'USD') : '\u2014'}
                         </span>
-                        {clientTotal > 0 && needsConversion(client.profile?.billing_currency) && (
-                          <div className="text-[8px] text-blue-500">≈{formatINR(toINR(clientTotal, client.profile?.billing_currency))}</div>
-                        )}
                       </td>
                       {/* API cells */}
-                      {masterAPIs.map(api => {
+                      {visibleAPIs.map(api => {
                         const apiData = getClientAPIData(client, api);
                         const value = apiData.revenue;
                         const usage = apiData.usage;
@@ -1728,6 +2414,14 @@ function MatrixView({
                         const isEditing = editingCell?.clientName === client.client_name && editingCell?.month === api;
                         const hasEdit = hasPendingEdit(client.client_name, api);
                         const isPopupOpen = cellPopup?.clientName === client.client_name && cellPopup?.apiName === api;
+                        const crossSellOpp = crossSellMode ? crossSellOpps.get(`${client.client_name}::${api}`) : undefined;
+                        const hasComment = commentedCellKeys.has(`${client.client_name}::${api}`);
+                        // Segment potential: show est. revenue for empty cells when segment is selected
+                        const segAdoption = selectedSegment && !value ? currentSegmentAdoption?.apiAdoption[api] : null;
+                        const potential = segAdoption && segAdoption.adoptionRate >= 0.3 ? segAdoption.avgRevenuePerClient : 0;
+                        // MoM indicator
+                        const prevRev = value > 0 ? getPrevMonthAPIRevenue(client, api) : 0;
+                        const momChange = prevRev > 0 && value > 0 ? ((value - prevRev) / prevRev) * 100 : 0;
                         return (
                           <td
                             key={api}
@@ -1740,19 +2434,33 @@ function MatrixView({
                                   apiName: api,
                                   revenue: value,
                                   usage: usage,
-                                  currency: client.profile?.billing_currency || 'INR',
+                                  currency: client.profile?.billing_currency || 'USD',
                                   position: { x: rect.left, y: rect.bottom + 4 }
                                 });
                               }
                             }}
-                            className={`px-1.5 text-right border-r border-slate-50 min-w-[120px] max-w-[140px] cursor-pointer align-middle relative ${
-                              isPopupOpen ? 'bg-blue-100 ring-2 ring-blue-400 ring-inset' :
-                              isEditing ? 'bg-yellow-200 ring-1 ring-yellow-400 ring-inset' :
-                              hasEdit ? 'bg-yellow-50' :
-                              hasUsageNoRev ? 'bg-orange-50 hover:bg-orange-100' :
-                              value > 0 ? 'bg-emerald-50/50 hover:bg-emerald-50' : 'hover:bg-slate-50'
+                            className={`pl-4 pr-3 text-right border-r border-b border-slate-200 w-[140px] cursor-pointer relative transition-colors duration-100 ${
+                              isPopupOpen ? 'bg-blue-50 ring-2 ring-blue-400 ring-inset' :
+                              isEditing ? 'bg-yellow-100 ring-1 ring-yellow-400 ring-inset' :
+                              hasEdit ? 'bg-yellow-50/60' :
+                              crossSellOpp ? 'bg-purple-50/60 hover:bg-purple-50 border-l-2 border-l-purple-400' :
+                              hasUsageNoRev ? 'bg-orange-50/60 hover:bg-orange-50' :
+                              value > 0 ? 'bg-emerald-50/30 hover:bg-emerald-50/50' :
+                              potential > 0 ? 'bg-amber-50/30 hover:bg-amber-50/50' : 'hover:bg-slate-50/50'
                             }`}
+                            title={crossSellOpp ? `${Math.round(crossSellOpp.segmentAdoptionRate * 100)}% of ${selectedSegment} clients use this` : undefined}
                           >
+                            {hasComment && (
+                              <div className="absolute top-0 right-0 w-0 h-0 border-l-[6px] border-l-transparent border-t-[6px] border-t-blue-400 z-[1]" />
+                            )}
+                            {crossSellOpp && !value && (
+                              <div className="absolute top-1 left-1">
+                                <Target size={9} className={`${
+                                  crossSellOpp.priority === 'high' ? 'text-purple-500' :
+                                  crossSellOpp.priority === 'medium' ? 'text-purple-400' : 'text-purple-300'
+                                }`} />
+                              </div>
+                            )}
                             {isEditing ? (
                               <input
                                 type="number"
@@ -1761,32 +2469,48 @@ function MatrixView({
                                 onKeyDown={(e) => handleKeyDown(e, client.client_name, api, value)}
                                 onBlur={() => onEditSave(client.client_name, api, value)}
                                 autoFocus
-                                className="w-full px-1 py-0.5 text-right text-xs border-2 border-yellow-500 rounded outline-none bg-white font-mono"
+                                className="w-full px-1.5 py-0.5 text-right text-[12px] border-2 border-amber-400 rounded outline-none bg-white rev-num"
                               />
                             ) : (
-                              <div className="flex flex-col items-end">
-                                {/* Revenue display */}
-                                <span className={`tabular-nums font-mono text-[11px] ${
-                                  hasEdit ? 'font-bold text-yellow-700' :
-                                  hasUsageNoRev ? 'font-semibold text-orange-600' :
-                                  value > 0 ? 'font-semibold text-emerald-700' : 'text-slate-300'
-                                }`}>
-                                  {value > 0
-                                    ? formatCurrency(value, client.profile?.billing_currency || 'INR')
-                                    : hasUsageNoRev
-                                      ? 'No cost'
-                                      : '-'}
-                                </span>
-                                {/* Show INR conversion for non-INR currencies */}
-                                {value > 0 && needsConversion(client.profile?.billing_currency) && (
-                                  <span className="text-[8px] text-blue-600 font-medium">
-                                    ≈ {formatINR(toINR(value, client.profile?.billing_currency))}
+                              <div className="flex flex-col items-end gap-px">
+                                <div className="flex items-center gap-1">
+                                  {/* MoM indicator */}
+                                  {value > 0 && prevRev > 0 && Math.abs(momChange) > 5 && (
+                                    <span className={`inline-flex items-center ${momChange > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                      {momChange > 0 ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
+                                    </span>
+                                  )}
+                                  <span className={`rev-num ${compactMode ? 'text-[11px]' : 'text-[12px]'} ${
+                                    hasEdit ? 'font-semibold text-amber-700' :
+                                    hasUsageNoRev ? 'font-medium text-orange-500' :
+                                    value > 0 ? 'font-medium text-emerald-700' :
+                                    crossSellOpp ? 'text-purple-400 text-[10px]' :
+                                    potential > 0 ? 'text-amber-400/70 text-[10px]' : 'text-slate-200'
+                                  }`}>
+                                    {value > 0
+                                      ? formatCurrency(value, client.profile?.billing_currency || 'USD')
+                                      : hasUsageNoRev
+                                        ? 'No cost'
+                                        : crossSellOpp
+                                          ? `~${formatCurrency(crossSellOpp.estimatedRevenue, client.profile?.billing_currency || 'USD')}`
+                                          : potential > 0
+                                            ? `~${formatCurrency(potential, 'USD')}`
+                                            : '\u2014'}
+                                  </span>
+                                </div>
+                                {!compactMode && usage > 0 && (
+                                  <span className={`text-[9px] tracking-wide ${hasUsageNoRev ? 'text-orange-500' : 'text-slate-400'}`}>
+                                    {usage.toLocaleString('en-US')}
                                   </span>
                                 )}
-                                {/* Always show usage if available */}
-                                {usage > 0 && (
-                                  <span className={`text-[8px] ${hasUsageNoRev ? 'text-orange-600 font-medium' : 'text-slate-400'}`}>
-                                    {usage.toLocaleString('en-IN')} calls
+                                {crossSellOpp && !value && (
+                                  <span className="text-[9px] text-purple-400 tracking-wide">
+                                    {Math.round(crossSellOpp.segmentAdoptionRate * 100)}% adopt
+                                  </span>
+                                )}
+                                {!crossSellOpp && potential > 0 && !value && segAdoption && (
+                                  <span className="text-[9px] text-amber-400/60 tracking-wide">
+                                    {segAdoption.clientCount}/{currentSegmentAdoption!.totalClients} use
                                   </span>
                                 )}
                               </div>
@@ -1800,137 +2524,41 @@ function MatrixView({
               </tbody>
               {/* Footer totals */}
               <tfoot>
-                <tr className="bg-slate-700 text-white h-[36px]">
-                  <td className="bg-slate-700 border-r border-slate-600 w-[36px]"></td>
-                  <td className="bg-slate-700 px-2 font-semibold border-r border-slate-600 text-xs">TOTALS</td>
-                  <td className="bg-slate-700 px-2 text-right font-semibold tabular-nums border-r border-slate-600 text-xs">
+                <tr className="bg-slate-800 text-white h-[38px]">
+                  <td className="sticky left-0 z-10 bg-slate-800 w-[44px] shadow-[inset_-1px_0_0_#475569,inset_0_1px_0_#475569]"></td>
+                  <td className="sticky left-[44px] z-10 bg-slate-800 px-3 col-label text-[11px] tracking-widest text-slate-300 shadow-[inset_-1px_0_0_#475569,inset_0_1px_0_#475569]">Totals</td>
+                  <td className="sticky left-[244px] z-10 bg-slate-800 px-3 text-center rev-num text-[12px] font-semibold shadow-[inset_-1px_0_0_#475569,inset_1px_0_0_#475569,inset_0_1px_0_#475569]">
                     {formatINR(clients.reduce((s, c) => s + toINR(getClientTotalForMonth(c), c.profile?.billing_currency), 0))}
                   </td>
-                  {masterAPIs.map(api => (
-                    <td key={api} className="px-1.5 text-right tabular-nums text-slate-300 border-r border-slate-600 text-[10px] font-mono align-middle">
-                      {apiTotals[api] > 0 ? formatINR(apiTotals[api]) : '-'}
+                  {visibleAPIs.map(api => (
+                    <td key={api} className="pl-4 pr-3 text-right rev-num text-[11px] text-slate-400 border-r border-t border-slate-700">
+                      {apiTotals[api] > 0 ? formatINR(apiTotals[api]) : '\u2014'}
                     </td>
                   ))}
                 </tr>
               </tfoot>
             </table>
           </div>
-        </>
-      )}
-
-      {/* Footer / Pagination */}
-      {viewMode === 'matrix' && (
-        <div className="px-2 sm:px-3 py-1.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0 gap-2">
-          <span className="text-[10px] sm:text-xs text-slate-500 shrink-0">
-            <span className="hidden sm:inline">Showing </span><strong>{((currentPage - 1) * pageSize) + 1}</strong>-<strong>{Math.min(currentPage * pageSize, sortedClients.length)}</strong><span className="hidden sm:inline"> of <strong>{sortedClients.length}</strong></span>
-          </span>
-          <div className="flex items-center gap-0.5 sm:gap-1">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className="p-1 sm:px-2 sm:py-1 text-[10px] sm:text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed hidden sm:block"
-            >
-              First
-            </button>
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-1.5 sm:px-2 sm:py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              ←
-            </button>
-            <span className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs bg-slate-700 text-white rounded font-medium">
-              {currentPage}/{totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-1.5 sm:px-2 sm:py-1 text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              →
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="p-1 sm:px-2 sm:py-1 text-[10px] sm:text-xs border border-slate-200 rounded bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed hidden sm:block"
-            >
-              Last
-            </button>
-          </div>
         </div>
       )}
 
-      {/* Cell Details Popup */}
-      {cellPopup && cellPopup.isOpen && (() => {
-        const popupHeight = 220;
-        const popupWidth = 260;
-        const spaceBelow = window.innerHeight - cellPopup.position.y;
-        const showAbove = spaceBelow < popupHeight;
-        const left = Math.min(Math.max(8, cellPopup.position.x), window.innerWidth - popupWidth - 8);
-        const top = showAbove
-          ? cellPopup.position.y - popupHeight - 40
-          : cellPopup.position.y;
 
-        return (
-        <div
-          className="fixed z-50 bg-white rounded-lg shadow-xl border border-slate-200 p-4 min-w-[240px]"
-          style={{ left, top }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-slate-800 truncate">{cellPopup.clientName}</div>
-              <div className="text-[10px] text-slate-500 truncate">{cellPopup.apiName}</div>
-            </div>
-            <button
-              onClick={() => setCellPopup(null)}
-              className="ml-2 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
-            >
-              <X size={14} />
-            </button>
-          </div>
-
-          {/* Stats */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] text-slate-500">Revenue (MRR)</span>
-              <span className="text-sm font-semibold text-emerald-700">
-                {cellPopup.revenue > 0 ? formatCurrency(cellPopup.revenue, cellPopup.currency) : '-'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] text-slate-500">API Calls</span>
-              <span className="text-sm font-semibold text-slate-700">
-                {cellPopup.usage > 0 ? cellPopup.usage.toLocaleString('en-IN') : '-'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] text-slate-500">Cost per Call</span>
-              <span className="text-sm font-semibold text-blue-700">
-                {cellPopup.usage > 0 && cellPopup.revenue > 0
-                  ? `₹${(cellPopup.revenue / cellPopup.usage).toFixed(2)}`
-                  : '-'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-100">
-              <span className="text-[11px] text-slate-500">Contract Expiry</span>
-              <span className="text-xs text-slate-400 italic">Not available</span>
-            </div>
-          </div>
-
-          {/* Edit Button */}
-          <button
-            onClick={() => {
-              onStartEdit(cellPopup.clientName, cellPopup.apiName, cellPopup.revenue);
-              setCellPopup(null);
-            }}
-            className="mt-3 w-full py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer transition-colors"
-          >
-            Edit Revenue
-          </button>
-        </div>
-        );
-      })()}
+      {/* Cell Details Popup with Comments */}
+      {cellPopup && cellPopup.isOpen && (
+        <CellPopupWithComments
+          cellPopup={cellPopup}
+          onClose={() => setCellPopup(null)}
+          formatCurrency={formatCurrency}
+          onStartEdit={() => {
+            onStartEdit(cellPopup.clientName, cellPopup.apiName, cellPopup.revenue);
+            setCellPopup(null);
+          }}
+          currentUser={currentUser || 'admin'}
+          onCommentChange={() => setCommentRefreshKey(k => k + 1)}
+          crossSellOpp={crossSellMode ? crossSellOpps.get(`${cellPopup.clientName}::${cellPopup.apiName}`) : undefined}
+          selectedSegment={selectedSegment}
+        />
+      )}
 
       {/* Backdrop to close popup */}
       {cellPopup && cellPopup.isOpen && (
@@ -2077,6 +2705,163 @@ function MatrixView({
   );
 }
 
+// Cell Popup with Comments
+function CellPopupWithComments({
+  cellPopup,
+  onClose,
+  formatCurrency,
+  onStartEdit,
+  currentUser,
+  onCommentChange,
+  crossSellOpp,
+  selectedSegment,
+}: {
+  cellPopup: { clientName: string; apiName: string; revenue: number; usage: number; currency: string; position: { x: number; y: number } };
+  onClose: () => void;
+  formatCurrency: (n: number, currency?: string) => string;
+  onStartEdit: () => void;
+  currentUser: string;
+  onCommentChange: () => void;
+  crossSellOpp?: CrossSellOpportunity;
+  selectedSegment?: string;
+}) {
+  const [comments, setComments] = useState<CellCommentType[]>([]);
+  const [newComment, setNewComment] = useState('');
+
+  useEffect(() => {
+    getCellComments(cellPopup.clientName, cellPopup.apiName).then(setComments);
+  }, [cellPopup.clientName, cellPopup.apiName]);
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    const comment = await addCellComment(cellPopup.clientName, cellPopup.apiName, newComment.trim(), currentUser);
+    setComments(prev => [...prev, comment]);
+    setNewComment('');
+    onCommentChange();
+    notifyComment(currentUser, cellPopup.clientName, cellPopup.apiName, newComment.trim());
+  };
+
+  const handleDeleteComment = async (id: string) => {
+    await deleteCellComment(cellPopup.clientName, cellPopup.apiName, id);
+    setComments(prev => prev.filter(c => c.id !== id));
+    onCommentChange();
+  };
+
+  const popupHeight = 340 + (comments.length * 40);
+  const popupWidth = 300;
+  const spaceBelow = typeof window !== 'undefined' ? window.innerHeight - cellPopup.position.y : 500;
+  const showAbove = spaceBelow < Math.min(popupHeight, 400);
+  const left = typeof window !== 'undefined'
+    ? Math.min(Math.max(8, cellPopup.position.x), window.innerWidth - popupWidth - 8)
+    : cellPopup.position.x;
+  const top = showAbove
+    ? Math.max(8, cellPopup.position.y - Math.min(popupHeight, 400) - 40)
+    : cellPopup.position.y;
+
+  return (
+    <div
+      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-slate-200/80 p-4 min-w-[280px] max-w-[320px] max-h-[420px] overflow-y-auto"
+      style={{ left, top }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100">
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-semibold text-slate-800 truncate tracking-[-0.01em]">{cellPopup.clientName}</div>
+          <div className="text-[11px] text-slate-400 truncate mt-0.5">{cellPopup.apiName}</div>
+        </div>
+        <button onClick={onClose} className="ml-2 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 cursor-pointer">
+          <X size={14} />
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-[11px] text-slate-400 tracking-wide">Revenue</span>
+          <span className="text-[13px] font-semibold text-slate-800 rev-num">
+            {cellPopup.revenue > 0 ? formatCurrency(cellPopup.revenue, cellPopup.currency) : '\u2014'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[11px] text-slate-400 tracking-wide">API Calls</span>
+          <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
+            {cellPopup.usage > 0 ? cellPopup.usage.toLocaleString('en-US') : '\u2014'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[11px] text-slate-400 tracking-wide">Cost / Call</span>
+          <span className="text-[13px] font-semibold text-slate-600 rev-num">
+            {cellPopup.usage > 0 && cellPopup.revenue > 0 ? `$${(cellPopup.revenue / cellPopup.usage).toFixed(2)}` : '\u2014'}
+          </span>
+        </div>
+      </div>
+
+      {/* Cross-sell insight */}
+      {crossSellOpp && (
+        <div className="mt-3 p-2 bg-purple-50 border border-purple-200 rounded text-[10px] text-purple-700">
+          <div className="flex items-center gap-1 font-semibold mb-1">
+            <Target size={10} />
+            Cross-sell Opportunity
+          </div>
+          <div>{Math.round(crossSellOpp.segmentAdoptionRate * 100)}% of {selectedSegment} clients ({crossSellOpp.segmentClientsUsing}/{crossSellOpp.segmentTotalClients}) use this API</div>
+          <div className="mt-0.5">Est. revenue: <strong>{formatCurrency(crossSellOpp.estimatedRevenue, cellPopup.currency)}</strong>/mo</div>
+        </div>
+      )}
+
+      {/* Comments Section */}
+      <div className="mt-3 pt-3 border-t border-slate-100">
+        <div className="flex items-center gap-1 mb-2">
+          <MessageSquare size={12} className="text-slate-400" />
+          <span className="text-[11px] font-medium text-slate-600">Comments ({comments.length})</span>
+        </div>
+        {comments.length > 0 && (
+          <div className="space-y-2 mb-2 max-h-[120px] overflow-y-auto">
+            {comments.map(c => (
+              <div key={c.id} className="bg-slate-50 rounded p-2 group">
+                <div className="text-[11px] text-slate-700">{c.text}</div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[9px] text-slate-400">{c.author} · {new Date(c.createdAt).toLocaleDateString()}</span>
+                  <button
+                    onClick={() => handleDeleteComment(c.id)}
+                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 cursor-pointer"
+                  >
+                    <Trash2 size={10} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-1">
+          <input
+            type="text"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
+            placeholder="Add a comment..."
+            className="flex-1 text-[11px] border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+          <button
+            onClick={handleAddComment}
+            disabled={!newComment.trim()}
+            className="p-1 text-blue-500 hover:text-blue-700 disabled:text-slate-300 cursor-pointer"
+          >
+            <Send size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Edit Button */}
+      <button
+        onClick={onStartEdit}
+        className="mt-3 w-full py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer transition-colors"
+      >
+        Edit Revenue
+      </button>
+    </div>
+  );
+}
+
 // Industry options for dropdown
 const INDUSTRY_OPTIONS = [
   'NBFC',
@@ -2117,7 +2902,7 @@ function ClientDetailsPanel({
   selectedMonth?: string;
   availableMonths?: string[];
 }) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'revenue' | 'legal'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'notes' | 'revenue' | 'legal'>('overview');
   const [panelMonth, setPanelMonth] = useState<string>('');
 
   // Edit state
@@ -2149,6 +2934,7 @@ function ClientDetailsPanel({
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: Building2 },
     { id: 'apis' as const, label: 'APIs', icon: Activity },
+    { id: 'notes' as const, label: 'Notes', icon: StickyNote },
     { id: 'revenue' as const, label: 'Revenue', icon: TrendingUp },
     { id: 'legal' as const, label: 'Legal', icon: CreditCard },
   ];
@@ -2315,14 +3101,9 @@ function ClientDetailsPanel({
                 <div className="text-2xl font-bold">
                   {formatCurrency(
                     currentMonthData?.total_revenue_usd || 0,
-                    client.profile?.billing_currency || 'INR'
+                    client.profile?.billing_currency || 'USD'
                   )}
                 </div>
-                {needsConversion(client.profile?.billing_currency) && (
-                  <div className="text-sm text-blue-300">
-                    ≈ {formatINR(toINR(currentMonthData?.total_revenue_usd || 0, client.profile?.billing_currency))}
-                  </div>
-                )}
               </div>
               <div className="text-right">
                 {/* Month Selector */}
@@ -2408,7 +3189,7 @@ function ClientDetailsPanel({
                 </div>
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-xs text-slate-500 mb-1">Billing Currency</div>
-                  <div className="text-sm font-medium text-slate-800">{client.profile?.billing_currency || 'INR'}</div>
+                  <div className="text-sm font-medium text-slate-800">{client.profile?.billing_currency || 'USD'}</div>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-xs text-slate-500 mb-1">Status</div>
@@ -2450,7 +3231,7 @@ function ClientDetailsPanel({
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-slate-800">{api.name}</div>
                           {(api.usage || 0) > 0 && (
-                            <div className="text-xs text-slate-500 mt-0.5">{(api.usage || 0).toLocaleString('en-IN')} calls</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{(api.usage || 0).toLocaleString('en-US')} calls</div>
                           )}
                         </div>
                         <div className="text-right ml-4">
@@ -2481,13 +3262,8 @@ function ClientDetailsPanel({
                           ) : api.revenue_usd > 0 ? (
                             <>
                               <div className="text-sm font-bold text-emerald-700">
-                                {formatCurrency(api.revenue_usd, client.profile?.billing_currency || 'INR')}
+                                {formatCurrency(api.revenue_usd, client.profile?.billing_currency || 'USD')}
                               </div>
-                              {needsConversion(client.profile?.billing_currency) && (
-                                <div className="text-xs text-blue-600">
-                                  ≈ {formatINR(toINR(api.revenue_usd, client.profile?.billing_currency))}
-                                </div>
-                              )}
                             </>
                           ) : (
                             <button
@@ -2507,6 +3283,11 @@ function ClientDetailsPanel({
             </div>
           )}
 
+          {/* Notes Tab */}
+          {activeTab === 'notes' && (
+            <ClientNotesTab clientName={client.client_name} currentUser="admin" />
+          )}
+
           {/* Revenue Tab */}
           {activeTab === 'revenue' && (
             <div className="space-y-3">
@@ -2515,13 +3296,8 @@ function ClientDetailsPanel({
                   <span className="text-sm font-medium text-slate-700">{month.month}</span>
                   <div className="text-right">
                     <span className="text-sm font-bold text-slate-800">
-                      {formatCurrency(month.total_revenue_usd, client.profile?.billing_currency || 'INR')}
+                      {formatCurrency(month.total_revenue_usd, client.profile?.billing_currency || 'USD')}
                     </span>
-                    {needsConversion(client.profile?.billing_currency) && (
-                      <span className="text-xs text-blue-600 ml-2">
-                        ≈ {formatINR(toINR(month.total_revenue_usd, client.profile?.billing_currency))}
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}
@@ -2543,6 +3319,119 @@ function ClientDetailsPanel({
               </p>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Client Notes Tab Component
+function ClientNotesTab({ clientName, currentUser }: { clientName: string; currentUser: string }) {
+  const [notes, setNotes] = useState<ClientCommentType[]>([]);
+  const [newNote, setNewNote] = useState('');
+  const [newCategory, setNewCategory] = useState<ClientCommentType['category']>('note');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+
+  useEffect(() => {
+    getClientComments(clientName).then(setNotes);
+  }, [clientName]);
+
+  const handleAdd = async () => {
+    if (!newNote.trim()) return;
+    const note = await addClientComment(clientName, newNote.trim(), currentUser, newCategory);
+    setNotes(prev => [...prev, note]);
+    setNewNote('');
+    notifyComment(currentUser, clientName, null, newNote.trim());
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteClientComment(clientName, id);
+    setNotes(prev => prev.filter(n => n.id !== id));
+  };
+
+  const filteredNotes = filterCategory === 'all' ? notes : notes.filter(n => n.category === filterCategory);
+
+  const categoryColors: Record<string, string> = {
+    note: 'bg-slate-100 text-slate-600',
+    action: 'bg-blue-100 text-blue-700',
+    risk: 'bg-red-100 text-red-700',
+    opportunity: 'bg-emerald-100 text-emerald-700',
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Category filter */}
+      <div className="flex gap-1">
+        {['all', 'note', 'action', 'risk', 'opportunity'].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilterCategory(cat)}
+            className={`px-2 py-1 text-[10px] font-medium rounded cursor-pointer ${
+              filterCategory === cat ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+            }`}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Notes list */}
+      {filteredNotes.length > 0 ? (
+        <div className="space-y-2">
+          {filteredNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(note => (
+            <div key={note.id} className="bg-slate-50 rounded-lg p-3 group">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${categoryColors[note.category]}`}>
+                    {note.category}
+                  </span>
+                  <p className="text-sm text-slate-700 mt-1.5">{note.text}</p>
+                </div>
+                <button
+                  onClick={() => handleDelete(note.id)}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 cursor-pointer shrink-0"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+              <div className="text-[10px] text-slate-400 mt-2">
+                {note.author} · {new Date(note.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-sm text-slate-400 text-center py-8">No notes yet</div>
+      )}
+
+      {/* Add note */}
+      <div className="border-t border-slate-100 pt-3 space-y-2">
+        <textarea
+          value={newNote}
+          onChange={(e) => setNewNote(e.target.value)}
+          placeholder="Add a note..."
+          rows={2}
+          className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        <div className="flex items-center justify-between">
+          <select
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value as ClientCommentType['category'])}
+            className="text-xs border border-slate-200 rounded px-2 py-1 bg-white"
+          >
+            <option value="note">Note</option>
+            <option value="action">Action Item</option>
+            <option value="risk">Risk</option>
+            <option value="opportunity">Opportunity</option>
+          </select>
+          <button
+            onClick={handleAdd}
+            disabled={!newNote.trim()}
+            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
+          >
+            <Send size={12} />
+            Add Note
+          </button>
         </div>
       </div>
     </div>
@@ -2652,7 +3541,7 @@ function ClientRow({
               <span className="text-xs font-medium text-slate-800 truncate">{client.client_name}</span>
             </div>
             <span className="text-xs font-semibold text-slate-800 tabular-nums shrink-0">
-              {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'INR')}
+              {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'USD')}
             </span>
           </div>
           <div className="flex items-center justify-between pl-7">
@@ -2664,7 +3553,7 @@ function ClientRow({
             }`}>
               {client.profile?.segment || '-'}
             </span>
-            <span className="text-[10px] text-slate-400">{client.latestMonth}: {formatCurrency(client.latestRevenue, client.profile?.billing_currency || 'INR')}</span>
+            <span className="text-[10px] text-slate-400">{client.latestMonth}: {formatCurrency(client.latestRevenue, client.profile?.billing_currency || 'USD')}</span>
           </div>
         </div>
 
@@ -2706,7 +3595,7 @@ function ClientRow({
         {/* Total Revenue - Desktop */}
         <span className="hidden sm:flex flex-col">
           <span className="text-sm font-semibold text-slate-800 tabular-nums">
-            {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'INR')}
+            {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'USD')}
           </span>
           <span className="text-[10px] text-slate-400">{client.months} months</span>
         </span>
@@ -2739,7 +3628,7 @@ function ClientRow({
                   ? 'text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded'
                   : 'text-slate-700'
               }`}>
-                {formatCurrency(client.latestRevenue, client.profile?.billing_currency || 'INR')}
+                {formatCurrency(client.latestRevenue, client.profile?.billing_currency || 'USD')}
                 {hasPendingEdit(client.latestMonth) && (
                   <Edit3 size={10} className="inline ml-1 text-amber-500" />
                 )}
@@ -2827,7 +3716,7 @@ function ClientRow({
                     ) : (
                       <>
                         <div className="text-[10px] text-slate-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap tabular-nums">
-                          {formatCurrency(month.total_revenue_usd, client.profile?.billing_currency || 'INR')}
+                          {formatCurrency(month.total_revenue_usd, client.profile?.billing_currency || 'USD')}
                         </div>
                         <div
                           className={`w-full rounded-sm mt-auto transition-all ${
@@ -2836,7 +3725,7 @@ function ClientRow({
                               : 'bg-amber-500 group-hover:bg-amber-600'
                           }`}
                           style={{ height: `${Math.max(height, 4)}%` }}
-                          title={`${month.month}: ${formatCurrency(month.total_revenue_usd, client.profile?.billing_currency || 'INR')} - Double-click to edit`}
+                          title={`${month.month}: ${formatCurrency(month.total_revenue_usd, client.profile?.billing_currency || 'USD')} - Double-click to edit`}
                         />
                       </>
                     )}
