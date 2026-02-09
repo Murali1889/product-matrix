@@ -50,6 +50,28 @@ interface APIStats {
   avgPerClient: number;
 }
 
+// Conversion rates to USD (module-level so usable everywhere)
+const CONVERSION_TO_USD: Record<string, number> = {
+  'USD': 1,
+  'INR': 0.012,    // 1 INR ≈ 0.012 USD
+  'NGN': 0.00062,  // 1 NGN ≈ 0.00062 USD
+  'NGR': 0.00062,  // Same as NGN
+};
+
+/** Convert an amount in native currency to USD */
+function convertToUSD(amount: number, currency?: string | null): number {
+  const curr = (currency || 'USD').toUpperCase();
+  return amount * (CONVERSION_TO_USD[curr] || 1);
+}
+
+/** Format a USD amount for display */
+function fmtUSD(num: number): string {
+  if (num >= 1000000) return `$${(num / 1000000).toFixed(2)}M`;
+  if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
+  if (num >= 1) return `$${Math.round(num).toLocaleString('en-US')}`;
+  return `$${num.toFixed(2)}`;
+}
+
 // 60-30-10: Muted earth tones for segments
 const SEGMENT_COLORS = [
   'bg-slate-700',
@@ -371,16 +393,16 @@ export default function Dashboard() {
   const processedClients = useMemo<ProcessedClient[]>(() => {
     return (data.clients || [])
       .map(client => {
-        const totalRevenue = client.monthly_data?.reduce(
-          (sum, m) => sum + (m.total_revenue_usd || 0), 0
-        ) || 0;
+        const curr = client.profile?.billing_currency;
+        // Use only Jan 2026 (latest month) as the single source of truth
+        const jan2026 = client.monthly_data?.find(m => m.month === 'Jan 2026');
+        const totalRevenue = convertToUSD(jan2026?.total_revenue_usd || 0, curr);
         const months = client.monthly_data?.length || 0;
-        const latestMonth = client.monthly_data?.[0];
-        const avgMonthly = months > 0 ? totalRevenue / months : 0;
+        const avgMonthly = months > 0 ? totalRevenue : 0;
 
-        // Build API revenue map from latest month
+        // Build API revenue map from Jan 2026 (keep native currency — converted at display)
         const apiRevenues: Record<string, number> = {};
-        latestMonth?.apis?.forEach(api => {
+        jan2026?.apis?.forEach(api => {
           if (api.name) {
             apiRevenues[api.name] = api.revenue_usd || 0;
           }
@@ -391,8 +413,8 @@ export default function Dashboard() {
           totalRevenue,
           months,
           avgMonthly,
-          latestRevenue: latestMonth?.total_revenue_usd || 0,
-          latestMonth: latestMonth?.month || '-',
+          latestRevenue: totalRevenue,
+          latestMonth: jan2026?.month || '-',
           apiRevenues
         };
       })
@@ -407,7 +429,8 @@ export default function Dashboard() {
 
   const summary = useMemo(() => {
     const totalRevenue = processedClients.reduce((sum, c) => sum + c.totalRevenue, 0);
-    const activeClients = processedClients.filter(c => c.totalRevenue > 0).length;
+    const masterListClients = processedClients.filter(c => c.isInMasterList).length;
+    const activeClients = processedClients.filter(c => c.totalRevenue > 0 && c.isInMasterList).length;
     const avgRevenue = activeClients > 0 ? totalRevenue / activeClients : 0;
 
     const segments: Record<string, { count: number; revenue: number }> = {};
@@ -418,7 +441,7 @@ export default function Dashboard() {
       segments[seg].revenue += c.totalRevenue;
     });
 
-    return { totalRevenue, activeClients, avgRevenue, segments };
+    return { totalRevenue, activeClients, masterListClients, avgRevenue, segments };
   }, [processedClients]);
 
   // Paginated clients for the list view
@@ -466,8 +489,9 @@ export default function Dashboard() {
     // Client health metrics
     const clientHealth = processedClients.map(c => {
       const monthlyData = c.monthly_data || [];
-      const latest = monthlyData[0]?.total_revenue_usd || 0;
-      const previous = monthlyData[1]?.total_revenue_usd || 0;
+      const curr = c.profile?.billing_currency;
+      const latest = convertToUSD(monthlyData[0]?.total_revenue_usd || 0, curr);
+      const previous = convertToUSD(monthlyData[1]?.total_revenue_usd || 0, curr);
       const growth = previous > 0 ? ((latest - previous) / previous) * 100 : (latest > 0 ? 100 : 0);
       // Top APIs this client uses (from latest month)
       const topAPIs = (monthlyData[0]?.apis || [])
@@ -518,12 +542,13 @@ export default function Dashboard() {
     const top10Revenue = sortedByRevenue.slice(0, 10).reduce((s, c) => s + c.totalRevenue, 0);
     const top10Percent = summary.totalRevenue > 0 ? (top10Revenue / summary.totalRevenue) * 100 : 0;
 
-    // Monthly revenue trend (aggregated across all clients)
+    // Monthly revenue trend (aggregated across all clients, converted to USD)
     const monthlyTrend: Record<string, number> = {};
     processedClients.forEach(c => {
+      const curr = c.profile?.billing_currency;
       c.monthly_data?.forEach(m => {
         if (!monthlyTrend[m.month]) monthlyTrend[m.month] = 0;
-        monthlyTrend[m.month] += m.total_revenue_usd || 0;
+        monthlyTrend[m.month] += convertToUSD(m.total_revenue_usd || 0, curr);
       });
     });
 
@@ -545,15 +570,16 @@ export default function Dashboard() {
       statusDist[status] = (statusDist[status] || 0) + 1;
     });
 
-    // Yearly revenue breakdown - only include proper 4-digit years
+    // Yearly revenue breakdown - only include proper 4-digit years (converted to USD)
     const yearlyRevenue: Record<string, number> = {};
     processedClients.forEach(c => {
+      const curr = c.profile?.billing_currency;
       c.monthly_data?.forEach(m => {
         const parts = m.month?.split(' ') || [];
         const year = parts[1];
         // Only accept 4-digit years (2023, 2024, 2025, 2026)
         if (year && year.length === 4 && /^\d{4}$/.test(year)) {
-          yearlyRevenue[year] = (yearlyRevenue[year] || 0) + (m.total_revenue_usd || 0);
+          yearlyRevenue[year] = (yearlyRevenue[year] || 0) + convertToUSD(m.total_revenue_usd || 0, curr);
         }
       });
     });
@@ -661,43 +687,16 @@ export default function Dashboard() {
     };
   }, [processedClients, summary.totalRevenue, apiInsights.usedAPIs]);
 
-  // Conversion rates to USD
-  const CONVERSION_TO_USD: Record<string, number> = {
-    'USD': 1,
-    'INR': 0.012,    // 1 INR ≈ 0.012 USD
-    'NGN': 0.00062,  // 1 NGN ≈ 0.00062 USD
-    'NGR': 0.00062,  // Same as NGN
-  };
-
-  // All values displayed in USD
+  // Format native-currency amount as USD (converts then formats)
   const formatCurrency = (num: number, currency: string = 'USD'): string => {
-    const curr = currency?.toUpperCase() || 'USD';
-    // Convert to USD first if not already
-    const usdAmount = num * (CONVERSION_TO_USD[curr] || CONVERSION_TO_USD['USD']);
-    if (usdAmount >= 1000000) return `$${(usdAmount / 1000000).toFixed(2)}M`;
-    if (usdAmount >= 1000) return `$${(usdAmount / 1000).toFixed(1)}K`;
-    if (usdAmount >= 1) return `$${Math.round(usdAmount).toLocaleString('en-US')}`;
-    return `$${usdAmount.toFixed(2)}`;
+    return fmtUSD(convertToUSD(num, currency));
   };
 
-  // Format USD (for already-converted amounts)
-  const formatUSD = (num: number): string => {
-    if (num >= 1000000) return `$${(num / 1000000).toFixed(2)}M`;
-    if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
-    if (num >= 1) return `$${Math.round(num).toLocaleString('en-US')}`;
-    return `$${num.toFixed(2)}`;
-  };
-  // Keep formatINR as alias for compatibility
-  const formatINR = formatUSD;
+  // Format already-converted USD amount
+  const formatINR = fmtUSD; // Legacy alias — now formats USD
 
-  // Convert to USD
-  const toUSD = (amount: number, currency?: string | null): number => {
-    const curr = (currency || 'USD').toUpperCase();
-    const rate = CONVERSION_TO_USD[curr] || 1;
-    return amount * rate;
-  };
-  // Keep toINR as alias for compatibility
-  const toINR = toUSD;
+  // Convert native currency to USD (legacy alias)
+  const toINR = convertToUSD;
 
   // No longer needed - everything is in USD now
   const needsConversion = (): boolean => false;
@@ -993,7 +992,7 @@ export default function Dashboard() {
               </div>
               <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5">
                 <div className="text-slate-400 text-[9px] uppercase tracking-wider">Clients</div>
-                <div className="text-slate-800 text-sm sm:text-base font-bold mt-0.5">{summary.activeClients}<span className="text-[10px] text-slate-400 font-normal">/{processedClients.length}</span></div>
+                <div className="text-slate-800 text-sm sm:text-base font-bold mt-0.5">{summary.activeClients}<span className="text-[10px] text-slate-400 font-normal">/{summary.masterListClients}</span></div>
               </div>
               <div className="bg-white border border-slate-200 rounded-lg px-3 py-2.5">
                 <div className="text-slate-400 text-[9px] uppercase tracking-wider">Avg/Client</div>
@@ -1329,6 +1328,9 @@ function MatrixView({
   // Not-using filter: click an API in adoption chart to filter matrix
   const [notUsingFilter, setNotUsingFilter] = useState<string | null>(null);
 
+  // Sort clients by a specific API column (click the count badge to toggle)
+  const [sortByAPI, setSortByAPI] = useState<string | null>(null);
+
   // New: Comments state
   const [commentedCellKeys, setCommentedCellKeys] = useState<Set<string>>(new Set());
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
@@ -1421,17 +1423,10 @@ function MatrixView({
   }, [clients]);
 
   // Get API revenue for a client based on selected month
+  // Returns native-currency values (caller must convert for display/aggregation)
   const getClientAPIData = useCallback((client: ProcessedClient, apiName: string): { revenue: number; usage: number; hasUsageNoRevenue: boolean } => {
-    if (!selectedMonth) {
-      // Show latest month data - check for usage without revenue
-      const latestMonth = client.monthly_data?.[0];
-      const apiData = latestMonth?.apis?.find(a => a.name === apiName);
-      const usage = apiData?.usage || 0;
-      const revenue = client.apiRevenues[apiName] || 0;
-      return { revenue, usage, hasUsageNoRevenue: usage > 0 && revenue === 0 };
-    }
-    // Find the specific month's data
-    const monthData = client.monthly_data?.find(m => m.month === selectedMonth);
+    const month = selectedMonth || 'Jan 2026';
+    const monthData = client.monthly_data?.find(m => m.month === month) || client.monthly_data?.[0];
     if (!monthData) return { revenue: 0, usage: 0, hasUsageNoRevenue: false };
     const apiData = monthData.apis?.find(a => a.name === apiName);
     const usage = apiData?.usage || 0;
@@ -1456,10 +1451,10 @@ function MatrixView({
     return apiData?.revenue_usd || 0;
   }, [selectedMonth]);
 
-  // Get client's total revenue for selected month
+  // Get client's total revenue for selected month (native currency)
   const getClientTotalForMonth = useCallback((client: ProcessedClient): number => {
-    if (!selectedMonth) return client.latestRevenue;
-    const monthData = client.monthly_data?.find(m => m.month === selectedMonth);
+    const month = selectedMonth || 'Jan 2026';
+    const monthData = client.monthly_data?.find(m => m.month === month) || client.monthly_data?.[0];
     return monthData?.total_revenue_usd || 0;
   }, [selectedMonth]);
 
@@ -1565,6 +1560,9 @@ function MatrixView({
     });
   }, [masterAPIs, selectedAPIFilter, apiColumnRevenue, apiSearchTerm, currentSegmentAdoption]);
 
+  // Master list client count (for display denominators)
+  const masterListCount = useMemo(() => clients.filter(c => c.isInMasterList).length, [clients]);
+
   // Count active clients per API column
   const apiClientCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -1596,6 +1594,18 @@ function MatrixView({
 
     // Then sort
     return [...filtered].sort((a, b) => {
+      // When sorting by a specific API column, users of that API come first (by that API's revenue desc)
+      if (sortByAPI) {
+        const aData = getClientAPIData(a, sortByAPI);
+        const bData = getClientAPIData(b, sortByAPI);
+        const aHas = aData.revenue > 0 || aData.usage > 0;
+        const bHas = bData.revenue > 0 || bData.usage > 0;
+        if (aHas && !bHas) return -1;
+        if (!aHas && bHas) return 1;
+        if (aHas && bHas) return bData.revenue - aData.revenue;
+        // Both don't use it — fall through to default sort
+      }
+
       // Primary sort: Active clients always first
       if (a.isActive && !b.isActive) return -1;
       if (!a.isActive && b.isActive) return 1;
@@ -1617,7 +1627,7 @@ function MatrixView({
       // Default: sort by revenue within same category
       return b.totalRevenue - a.totalRevenue;
     });
-  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, notUsingFilter, getClientAPIData]);
+  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, notUsingFilter, getClientAPIData, sortByAPI]);
 
   const totalPages = Math.ceil(sortedClients.length / pageSize);
 
@@ -1645,6 +1655,7 @@ function MatrixView({
     const apiStats: Record<string, { clients: Set<string>; revenue: number }> = {};
 
     clients.forEach(c => {
+      const curr = c.profile?.billing_currency;
       c.monthly_data?.forEach(m => {
         m.apis?.forEach(api => {
           if (api.name && api.revenue_usd && api.revenue_usd > 0) {
@@ -1652,7 +1663,7 @@ function MatrixView({
               apiStats[api.name] = { clients: new Set(), revenue: 0 };
             }
             apiStats[api.name].clients.add(c.client_name);
-            apiStats[api.name].revenue += api.revenue_usd;
+            apiStats[api.name].revenue += convertToUSD(api.revenue_usd, curr);
           }
         });
       });
@@ -1719,17 +1730,18 @@ function MatrixView({
       // Count discrepancies
       if (hasDiscrepancy(c).hasIssue) withDiscrepancy++;
 
-      // Revenue calculations
+      // Revenue calculations (convert to USD for correct aggregation)
+      const curr = c.profile?.billing_currency;
       const clientTotal = getClientTotalForMonth(c);
-      totalRevenue += clientTotal;
+      totalRevenue += convertToUSD(clientTotal, curr);
 
       // Sum up revenue from all APIs for this client
       masterAPIs.forEach(api => {
         const apiData = getClientAPIData(c, api);
         if (apiData.revenue > 0) {
-          apiTrackedRevenue += apiData.revenue;
+          apiTrackedRevenue += convertToUSD(apiData.revenue, curr);
           if (unmatchedAPIs.includes(api)) {
-            unmatchedAPIRevenue += apiData.revenue;
+            unmatchedAPIRevenue += convertToUSD(apiData.revenue, curr);
           }
         }
       });
@@ -1739,7 +1751,7 @@ function MatrixView({
 
     return {
       withAPI, withMismatch, withTotal, noData, withDiscrepancy,
-      total: clients.length,
+      total: clients.filter(c => c.isInMasterList).length,
       totalRevenue,
       apiTrackedRevenue,
       missingRevenue,
@@ -2275,20 +2287,40 @@ function MatrixView({
                               {subModule}
                             </div>
                           )}
-                          {/* Client count badge: using / total */}
+                          {/* Client count badge: using / total — click to sort clients by this API */}
                           {!selectedSegment && (
-                            <div className={`text-[9px] px-1.5 py-px rounded-full font-medium ${
-                              clientCount > 0 ? 'bg-slate-100 text-slate-500' : 'bg-slate-50 text-slate-300'
-                            }`}>
-                              {clientCount}/{clients.length}
+                            <div
+                              className={`text-[9px] px-1.5 py-px rounded-full font-medium cursor-pointer transition-colors ${
+                                sortByAPI === api
+                                  ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
+                                  : clientCount > 0 ? 'bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-600' : 'bg-slate-50 text-slate-300'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSortByAPI(prev => prev === api ? null : api);
+                                setCurrentPage(1);
+                              }}
+                              title={sortByAPI === api ? 'Click to reset sort' : `Click to sort clients by ${moduleName} usage`}
+                            >
+                              {clientCount}/{masterListCount}
                             </div>
                           )}
                           {selectedSegment && adoption && (
-                            <div className={`text-[9px] px-1.5 py-px rounded-full font-medium ${
-                              adoption.adoptionRate >= 0.7 ? 'bg-emerald-50 text-emerald-600' :
-                              adoption.adoptionRate >= 0.4 ? 'bg-amber-50 text-amber-600' :
-                              'bg-slate-100 text-slate-400'
-                            }`}>
+                            <div
+                              className={`text-[9px] px-1.5 py-px rounded-full font-medium cursor-pointer transition-colors ${
+                                sortByAPI === api
+                                  ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
+                                  : adoption.adoptionRate >= 0.7 ? 'bg-emerald-50 text-emerald-600 hover:bg-amber-50 hover:text-amber-600' :
+                                    adoption.adoptionRate >= 0.4 ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' :
+                                    'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSortByAPI(prev => prev === api ? null : api);
+                                setCurrentPage(1);
+                              }}
+                              title={sortByAPI === api ? 'Click to reset sort' : `Click to sort clients by ${moduleName} usage`}
+                            >
                               {adoption.clientCount}/{currentSegmentAdoption!.totalClients}
                             </div>
                           )}
@@ -2303,6 +2335,7 @@ function MatrixView({
                   const clientTotal = getClientTotalForMonth(client);
                   const discrepancy = hasDiscrepancy(client);
                   const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-[#f8f8f7]';
+                  const usesSelectedAPI = sortByAPI ? (getClientAPIData(client, sortByAPI).revenue > 0 || getClientAPIData(client, sortByAPI).usage > 0) : false;
 
                   return (
                     <tr key={client.client_name} className={`${rowBg} ${compactMode ? 'h-[32px]' : 'h-[40px]'} transition-colors duration-100`}>
@@ -2326,7 +2359,7 @@ function MatrixView({
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-200 shrink-0" title="Inactive" />
                           )}
                           <div className="min-w-0">
-                            <div className={`${compactMode ? 'text-[11px]' : 'text-[12px]'} font-medium text-slate-800 truncate leading-tight tracking-[-0.01em]`} title={client.client_name}>{client.client_name}</div>
+                            <div className={`${compactMode ? 'text-[11px]' : 'text-[12px]'} font-medium truncate leading-tight tracking-[-0.01em] ${usesSelectedAPI ? 'text-amber-700' : 'text-slate-800'}`} title={client.client_name}>{client.client_name}</div>
                             {!compactMode && <div className="text-[10px] text-slate-400 truncate leading-tight mt-0.5 tracking-wide">{client.profile?.segment || '-'}</div>}
                           </div>
                         </div>
