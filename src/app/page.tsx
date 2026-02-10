@@ -338,7 +338,7 @@ export default function Dashboard() {
           if (!stats[api.name]) {
             stats[api.name] = { revenue: 0, clients: new Set() };
           }
-          stats[api.name].revenue += api.revenue_usd;
+          stats[api.name].revenue += convertToUSD(api.revenue_usd, client.profile?.billing_currency);
           stats[api.name].clients.add(client.client_name);
         }
       });
@@ -366,7 +366,7 @@ export default function Dashboard() {
           if (!clientAPIStats[api.name]) {
             clientAPIStats[api.name] = { revenue: 0, clients: new Set() };
           }
-          clientAPIStats[api.name].revenue += api.revenue_usd;
+          clientAPIStats[api.name].revenue += convertToUSD(api.revenue_usd, client.profile?.billing_currency);
           clientAPIStats[api.name].clients.add(client.client_name);
         }
       });
@@ -693,10 +693,10 @@ export default function Dashboard() {
   };
 
   // Format already-converted USD amount
-  const formatINR = fmtUSD; // Legacy alias — now formats USD
+  const formatUSD = fmtUSD;
 
   // Convert native currency to USD (legacy alias)
-  const toINR = convertToUSD;
+  const toUSD = convertToUSD;
 
   // No longer needed - everything is in USD now
   const needsConversion = (): boolean => false;
@@ -864,8 +864,8 @@ export default function Dashboard() {
             clients={processedClients}
             masterAPIs={allAPIs}
             formatCurrency={formatCurrency}
-            formatINR={formatINR}
-            toINR={toINR}
+            formatUSD={formatUSD}
+            toUSD={toUSD}
             needsConversion={needsConversion}
             editingCell={editingCell}
             editValue={editValue}
@@ -1072,7 +1072,7 @@ export default function Dashboard() {
                             <div className="h-full bg-slate-600 rounded-full" style={{ width: `${share}%` }} />
                           </div>
                         </div>
-                        <span className="text-[11px] font-semibold text-slate-800 rev-num shrink-0">{formatCurrency(c.totalRevenue, c.profile?.billing_currency || 'USD')}</span>
+                        <span className="text-[11px] font-semibold text-slate-800 rev-num shrink-0">{formatCurrency(c.totalRevenue)}</span>
                         <span className="text-[9px] text-slate-400 shrink-0 w-8 text-right tabular-nums">{share.toFixed(0)}%</span>
                       </div>
                     );
@@ -1229,8 +1229,8 @@ function MatrixView({
   clients,
   masterAPIs,
   formatCurrency,
-  formatINR,
-  toINR,
+  formatUSD,
+  toUSD,
   needsConversion,
   editingCell,
   editValue,
@@ -1245,8 +1245,8 @@ function MatrixView({
   clients: ProcessedClient[];
   masterAPIs: string[];
   formatCurrency: (n: number, currency?: string) => string;
-  formatINR: (n: number) => string;
-  toINR: (amount: number, currency?: string | null) => number;
+  formatUSD: (n: number) => string;
+  toUSD: (amount: number, currency?: string | null) => number;
   needsConversion: (currency?: string | null) => boolean;
   editingCell: { clientName: string; month: string } | null;
   editValue: string;
@@ -1525,11 +1525,11 @@ function MatrixView({
     masterAPIs.forEach(api => {
       rev[api] = clients.reduce((sum, c) => {
         const data = getClientAPIData(c, api);
-        return sum + (data.revenue > 0 ? toINR(data.revenue, c.profile?.billing_currency) : 0);
+        return sum + (data.revenue > 0 ? toUSD(data.revenue, c.profile?.billing_currency) : 0);
       }, 0);
     });
     return rev;
-  }, [clients, masterAPIs, getClientAPIData, toINR]);
+  }, [clients, masterAPIs, getClientAPIData, toUSD]);
 
   // Filtered and sorted APIs: non-empty columns first, then by total revenue descending
   const visibleAPIs = useMemo(() => {
@@ -1636,18 +1636,18 @@ function MatrixView({
     return sortedClients.slice(start, start + pageSize);
   }, [sortedClients, currentPage, pageSize]);
 
-  // Calculate API totals for selected month (convert all to INR)
+  // Calculate API totals for selected month (convert all to USD)
   const apiTotals = useMemo(() => {
     const totals: Record<string, number> = {};
     masterAPIs.forEach(api => {
       totals[api] = clients.reduce((sum, c) => {
         const revenue = getClientAPIData(c, api).revenue;
-        // Convert to INR before summing
-        return sum + toINR(revenue, c.profile?.billing_currency);
+        // Convert to USD before summing
+        return sum + toUSD(revenue, c.profile?.billing_currency);
       }, 0);
     });
     return totals;
-  }, [clients, masterAPIs, getClientAPIData, toINR]);
+  }, [clients, masterAPIs, getClientAPIData, toUSD]);
 
   // Find mismatched APIs - APIs in client data that don't match master list
   const mismatchedAPIs = useMemo(() => {
@@ -2016,7 +2016,7 @@ function MatrixView({
                         <span className="text-[11px] text-slate-300">·</span>
                         <span className="text-[11px] text-slate-500">{adoptionList.length} APIs adopted</span>
                         <span className="text-[11px] text-slate-300">·</span>
-                        <span className="text-[11px] font-semibold text-amber-600 rev-num">~{formatINR(totalPotential)} potential</span>
+                        <span className="text-[11px] font-semibold text-amber-600 rev-num">~{formatUSD(totalPotential)} potential</span>
                       </div>
                     </div>
                     <button onClick={() => setShowChart(false)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><X size={15} /></button>
@@ -2097,7 +2097,7 @@ function MatrixView({
                           <div className="w-[90px] shrink-0 text-right">
                             {api.gap > 0 ? (
                               <>
-                                <div className="text-[10px] font-semibold text-amber-600 rev-num">~{formatINR(api.potentialRev)}</div>
+                                <div className="text-[10px] font-semibold text-amber-600 rev-num">~{formatUSD(api.potentialRev)}</div>
                                 <div className="text-[9px] text-slate-400">from {api.gap} clients</div>
                               </>
                             ) : (
@@ -2140,7 +2140,7 @@ function MatrixView({
                                   <span className="tabular-nums">{opp.segmentClientsUsing}/{opp.segmentTotalClients}</span>
                                   <span className="text-slate-400 ml-1">({Math.round(opp.segmentAdoptionRate * 100)}%)</span>
                                 </td>
-                                <td className="py-1.5 px-2 text-right font-semibold text-amber-700 rev-num">~{formatINR(opp.estimatedRevenue)}/mo</td>
+                                <td className="py-1.5 px-2 text-right font-semibold text-amber-700 rev-num">~{formatUSD(opp.estimatedRevenue)}/mo</td>
                                 <td className="py-1.5 px-2 text-center">
                                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                                     opp.priority === 'high' ? 'bg-red-100 text-red-700' :
@@ -2189,7 +2189,7 @@ function MatrixView({
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-[11px] text-slate-400">{chartAPIs.length} APIs with revenue</span>
                       <span className="text-[11px] text-slate-400">·</span>
-                      <span className="text-[11px] font-medium text-slate-600 rev-num">{formatINR(totalChartRev)} total</span>
+                      <span className="text-[11px] font-medium text-slate-600 rev-num">{formatUSD(totalChartRev)} total</span>
                     </div>
                   </div>
                   <button onClick={() => setShowChart(false)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><X size={15} /></button>
@@ -2215,11 +2215,11 @@ function MatrixView({
                             style={{ width: `${barWidth}%` }}
                           >
                             {barWidth > 30 && (
-                              <span className="text-[10px] font-semibold text-white/90 pl-2.5 rev-num whitespace-nowrap">{formatINR(api.revenue)}</span>
+                              <span className="text-[10px] font-semibold text-white/90 pl-2.5 rev-num whitespace-nowrap">{formatUSD(api.revenue)}</span>
                             )}
                           </div>
                           {barWidth <= 30 && (
-                            <span className="absolute left-[calc(var(--bar-w)+8px)] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-600 rev-num whitespace-nowrap" style={{ '--bar-w': `${barWidth}%` } as React.CSSProperties}>{formatINR(api.revenue)}</span>
+                            <span className="absolute left-[calc(var(--bar-w)+8px)] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-600 rev-num whitespace-nowrap" style={{ '--bar-w': `${barWidth}%` } as React.CSSProperties}>{formatUSD(api.revenue)}</span>
                           )}
                         </div>
                         <div className="w-[90px] shrink-0 text-right">
@@ -2495,11 +2495,11 @@ function MatrixView({
                   <td className="sticky left-0 z-10 bg-slate-800 w-[44px] shadow-[inset_-1px_0_0_#475569,inset_0_1px_0_#475569]"></td>
                   <td className="sticky left-[44px] z-10 bg-slate-800 px-3 col-label text-[11px] tracking-widest text-slate-300 shadow-[inset_-1px_0_0_#475569,inset_0_1px_0_#475569]">Totals</td>
                   <td className="sticky left-[244px] z-10 bg-slate-800 px-3 text-center rev-num text-[12px] font-semibold shadow-[inset_-1px_0_0_#475569,inset_1px_0_0_#475569,inset_0_1px_0_#475569]">
-                    {formatINR(clients.reduce((s, c) => s + toINR(getClientTotalForMonth(c), c.profile?.billing_currency), 0))}
+                    {formatUSD(clients.reduce((s, c) => s + toUSD(getClientTotalForMonth(c), c.profile?.billing_currency), 0))}
                   </td>
                   {visibleAPIs.map(api => (
                     <td key={api} className="pl-4 pr-3 text-right rev-num text-[11px] text-slate-400 border-r border-t border-slate-700">
-                      {apiTotals[api] > 0 ? formatINR(apiTotals[api]) : '\u2014'}
+                      {apiTotals[api] > 0 ? formatUSD(apiTotals[api]) : '\u2014'}
                     </td>
                   ))}
                 </tr>
@@ -2663,8 +2663,8 @@ function MatrixView({
         client={selectedClient}
         onClose={() => setSelectedClient(null)}
         formatCurrency={formatCurrency}
-        formatINR={formatINR}
-        toINR={toINR}
+        formatUSD={formatUSD}
+        toUSD={toUSD}
         needsConversion={needsConversion}
         selectedMonth={selectedMonth}
       />
@@ -2854,8 +2854,8 @@ function ClientDetailsPanel({
   client,
   onClose,
   formatCurrency,
-  formatINR,
-  toINR,
+  formatUSD,
+  toUSD,
   needsConversion,
   selectedMonth: initialMonth,
   availableMonths,
@@ -2863,8 +2863,8 @@ function ClientDetailsPanel({
   client: ProcessedClient | null;
   onClose: () => void;
   formatCurrency: (n: number, currency?: string) => string;
-  formatINR: (n: number) => string;
-  toINR: (amount: number, currency?: string | null) => number;
+  formatUSD: (n: number) => string;
+  toUSD: (amount: number, currency?: string | null) => number;
   needsConversion: (currency?: string | null) => boolean;
   selectedMonth?: string;
   availableMonths?: string[];
@@ -3508,7 +3508,7 @@ function ClientRow({
               <span className="text-xs font-medium text-slate-800 truncate">{client.client_name}</span>
             </div>
             <span className="text-xs font-semibold text-slate-800 tabular-nums shrink-0">
-              {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'USD')}
+              {formatCurrency(client.totalRevenue)}
             </span>
           </div>
           <div className="flex items-center justify-between pl-7">
@@ -3520,7 +3520,7 @@ function ClientRow({
             }`}>
               {client.profile?.segment || '-'}
             </span>
-            <span className="text-[10px] text-slate-400">{client.latestMonth}: {formatCurrency(client.latestRevenue, client.profile?.billing_currency || 'USD')}</span>
+            <span className="text-[10px] text-slate-400">{client.latestMonth}: {formatCurrency(client.latestRevenue)}</span>
           </div>
         </div>
 
@@ -3562,7 +3562,7 @@ function ClientRow({
         {/* Total Revenue - Desktop */}
         <span className="hidden sm:flex flex-col">
           <span className="text-sm font-semibold text-slate-800 tabular-nums">
-            {formatCurrency(client.totalRevenue, client.profile?.billing_currency || 'USD')}
+            {formatCurrency(client.totalRevenue)}
           </span>
           <span className="text-[10px] text-slate-400">{client.months} months</span>
         </span>
@@ -3595,7 +3595,7 @@ function ClientRow({
                   ? 'text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded'
                   : 'text-slate-700'
               }`}>
-                {formatCurrency(client.latestRevenue, client.profile?.billing_currency || 'USD')}
+                {formatCurrency(client.latestRevenue)}
                 {hasPendingEdit(client.latestMonth) && (
                   <Edit3 size={10} className="inline ml-1 text-amber-500" />
                 )}
