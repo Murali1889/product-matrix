@@ -72,6 +72,37 @@ function fmtUSD(num: number): string {
   return `$${num.toFixed(2)}`;
 }
 
+// Country code to display name + flag
+const COUNTRY_MAP: Record<string, { name: string; flag: string }> = {
+  'IND': { name: 'India', flag: '🇮🇳' }, 'india': { name: 'India', flag: '🇮🇳' }, 'India': { name: 'India', flag: '🇮🇳' },
+  'USA': { name: 'United States', flag: '🇺🇸' }, 'US': { name: 'United States', flag: '🇺🇸' },
+  'VNM': { name: 'Vietnam', flag: '🇻🇳' }, 'vietnam': { name: 'Vietnam', flag: '🇻🇳' },
+  'NGA': { name: 'Nigeria', flag: '🇳🇬' }, 'nigeria': { name: 'Nigeria', flag: '🇳🇬' },
+  'PHL': { name: 'Philippines', flag: '🇵🇭' }, 'philippines': { name: 'Philippines', flag: '🇵🇭' },
+  'IDN': { name: 'Indonesia', flag: '🇮🇩' }, 'Indonesia': { name: 'Indonesia', flag: '🇮🇩' },
+  'KEN': { name: 'Kenya', flag: '🇰🇪' }, 'kenya': { name: 'Kenya', flag: '🇰🇪' },
+  'MYS': { name: 'Malaysia', flag: '🇲🇾' }, 'malaysia': { name: 'Malaysia', flag: '🇲🇾' },
+  'SGP': { name: 'Singapore', flag: '🇸🇬' }, 'singapore': { name: 'Singapore', flag: '🇸🇬' },
+  'GBR': { name: 'United Kingdom', flag: '🇬🇧' }, 'UK': { name: 'United Kingdom', flag: '🇬🇧' },
+  'ARE': { name: 'UAE', flag: '🇦🇪' }, 'UAE': { name: 'UAE', flag: '🇦🇪' },
+  'BRA': { name: 'Brazil', flag: '🇧🇷' }, 'KHM': { name: 'Cambodia', flag: '🇰🇭' },
+  'THA': { name: 'Thailand', flag: '🇹🇭' }, 'ZAF': { name: 'South Africa', flag: '🇿🇦' },
+  'BGD': { name: 'Bangladesh', flag: '🇧🇩' }, 'NPL': { name: 'Nepal', flag: '🇳🇵' },
+  'LKA': { name: 'Sri Lanka', flag: '🇱🇰' }, 'MMR': { name: 'Myanmar', flag: '🇲🇲' },
+  'JPN': { name: 'Japan', flag: '🇯🇵' }, 'AUS': { name: 'Australia', flag: '🇦🇺' },
+  'CAN': { name: 'Canada', flag: '🇨🇦' }, 'DEU': { name: 'Germany', flag: '🇩🇪' },
+  'FRA': { name: 'France', flag: '🇫🇷' }, 'MEX': { name: 'Mexico', flag: '🇲🇽' },
+  '*': { name: 'Global', flag: '🌍' }, 'global': { name: 'Global', flag: '🌍' }, 'Global': { name: 'Global', flag: '🌍' },
+};
+
+function normalizeCountry(geo?: string | null): { name: string; flag: string; raw: string } {
+  if (!geo || geo === '-' || geo === 'Unknown') return { name: 'Unknown', flag: '🏳️', raw: geo || 'Unknown' };
+  const mapped = COUNTRY_MAP[geo];
+  if (mapped) return { ...mapped, raw: geo };
+  // Try to capitalize the raw value
+  return { name: geo.charAt(0).toUpperCase() + geo.slice(1), flag: '🏳️', raw: geo };
+}
+
 // 60-30-10: Muted earth tones for segments
 const SEGMENT_COLORS = [
   'bg-slate-700',
@@ -1273,8 +1304,17 @@ function MatrixView({
   // Industry/Segment filter
   const [selectedSegment, setSelectedSegment] = useState<string>('');
 
+  // Account owner filter
+  const [selectedOwner, setSelectedOwner] = useState<string>('');
+
+  // Country filter
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+
   // Selected month for filtering (empty = latest/all time)
   const [selectedMonth, setSelectedMonth] = useState<string>('');
+
+  // Search input ref for auto-focus
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Pagination - dynamic page size based on screen height
   const [currentPage, setCurrentPage] = useState(1);
@@ -1339,6 +1379,14 @@ function MatrixView({
   useEffect(() => {
     getCommentedCellKeys().then(keys => setCommentedCellKeys(keys));
   }, [commentRefreshKey]);
+
+  // Auto-focus search box on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Cell popup state
   const [cellPopup, setCellPopup] = useState<{
@@ -1496,6 +1544,30 @@ function MatrixView({
     return Array.from(segments).sort();
   }, [clients]);
 
+  const uniqueOwners = useMemo(() => {
+    const owners = new Set<string>();
+    clients.forEach(c => {
+      if (c.profile?.account_owner) owners.add(c.profile.account_owner);
+    });
+    return Array.from(owners).sort();
+  }, [clients]);
+
+  const uniqueCountries = useMemo(() => {
+    const countryMap = new Map<string, { name: string; flag: string; count: number }>();
+    clients.forEach(c => {
+      const geo = normalizeCountry(c.profile?.geography);
+      if (geo.name !== 'Unknown') {
+        const key = geo.name;
+        const existing = countryMap.get(key);
+        if (existing) {
+          existing.count++;
+        } else {
+          countryMap.set(key, { name: geo.name, flag: geo.flag, count: 1 });
+        }
+      }
+    });
+    return Array.from(countryMap.values()).sort((a, b) => b.count - a.count);
+  }, [clients]);
 
   // Adoption analytics - compute per-segment API adoption rates
   const segmentAdoption = useMemo(() => {
@@ -1584,6 +1656,16 @@ function MatrixView({
       filtered = filtered.filter(c => c.profile?.segment === selectedSegment);
     }
 
+    // Filter by account owner
+    if (selectedOwner) {
+      filtered = filtered.filter(c => c.profile?.account_owner === selectedOwner);
+    }
+
+    // Filter by country
+    if (selectedCountry) {
+      filtered = filtered.filter(c => normalizeCountry(c.profile?.geography).name === selectedCountry);
+    }
+
     // Filter by "not using" API (from adoption chart click)
     if (notUsingFilter) {
       filtered = filtered.filter(c => {
@@ -1627,7 +1709,7 @@ function MatrixView({
       // Default: sort by revenue within same category
       return b.totalRevenue - a.totalRevenue;
     });
-  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, notUsingFilter, getClientAPIData, sortByAPI]);
+  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, selectedOwner, selectedCountry, notUsingFilter, getClientAPIData, sortByAPI]);
 
   const totalPages = Math.ceil(sortedClients.length / pageSize);
 
@@ -1720,7 +1802,7 @@ function MatrixView({
     let withAPI = 0, withMismatch = 0, withTotal = 0, noData = 0, withDiscrepancy = 0;
     let totalRevenue = 0, apiTrackedRevenue = 0, unmatchedAPIRevenue = 0;
 
-    clients.forEach(c => {
+    sortedClients.forEach(c => {
       const status = getRowStatus(c);
       if (status === 'green') withAPI++;
       else if (status === 'yellow') withMismatch++;
@@ -1751,14 +1833,14 @@ function MatrixView({
 
     return {
       withAPI, withMismatch, withTotal, noData, withDiscrepancy,
-      total: clients.filter(c => c.isInMasterList).length,
+      total: sortedClients.filter(c => c.isInMasterList).length,
       totalRevenue,
       apiTrackedRevenue,
       missingRevenue,
       unmatchedAPIRevenue,
       unmatchedAPICount: unmatchedAPIs.length
     };
-  }, [clients, getRowStatus, hasDiscrepancy, getClientTotalForMonth, masterAPIs, getClientAPIData, unmatchedAPIs]);
+  }, [sortedClients, getRowStatus, hasDiscrepancy, getClientTotalForMonth, masterAPIs, getClientAPIData, unmatchedAPIs]);
 
   // Export current view to CSV
   const exportCSV = useCallback(() => {
@@ -1870,12 +1952,37 @@ function MatrixView({
 
         {/* Filters Row */}
         {viewMode === 'matrix' && (
-          <div className="space-y-2 mt-2.5">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="mt-2.5 animate-fade-in">
+            {/* Search bar — prominent, auto-focused */}
+            <div className="relative mb-2">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search clients... (auto-focused)"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full text-xs border border-slate-200 rounded-xl pl-9 pr-8 py-2.5 bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all duration-200 shadow-sm hover:shadow-md"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Filter chips row */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-300"
+                className="text-[11px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all duration-200 hover:border-slate-300 cursor-pointer"
               >
                 <option value="">Latest</option>
                 {allMonths.map(month => (
@@ -1885,12 +1992,16 @@ function MatrixView({
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
-                className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-300"
+                className="text-[11px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all duration-200 hover:border-slate-300 cursor-pointer"
               >
                 <option value="revenue">Revenue ↓</option>
                 <option value="status">Status</option>
                 <option value="name">Name A-Z</option>
               </select>
+
+              <div className="w-px h-5 bg-slate-200 shrink-0" />
+
+              {/* Industry filter */}
               <select
                 value={selectedSegment}
                 onChange={(e) => {
@@ -1898,8 +2009,8 @@ function MatrixView({
                   setNotUsingFilter(null);
                   setCurrentPage(1);
                 }}
-                className={`text-[11px] border rounded-md px-2 py-1.5 shrink-0 focus:outline-none focus:ring-1 focus:ring-slate-300 ${
-                  selectedSegment ? 'border-blue-400 bg-blue-50 text-blue-600 font-medium' : 'border-slate-200 bg-white text-slate-600'
+                className={`text-[11px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all duration-200 cursor-pointer ${
+                  selectedSegment ? 'border-blue-400 bg-blue-50 text-blue-700 font-medium shadow-sm shadow-blue-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
                 <option value="">All Industries</option>
@@ -1908,48 +2019,77 @@ function MatrixView({
                   return <option key={seg} value={seg}>{seg} ({count})</option>;
                 })}
               </select>
-              <div className="flex items-center gap-1 shrink-0">
-                <Search size={12} className="text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Client..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white w-24 sm:w-32 focus:outline-none focus:ring-1 focus:ring-slate-300 text-slate-600 placeholder:text-slate-400"
-                />
-                {searchTerm && (
-                  <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600 text-[11px] cursor-pointer">✕</button>
-                )}
-              </div>
+
+              {/* Country filter */}
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  setSelectedCountry(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`text-[11px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition-all duration-200 cursor-pointer ${
+                  selectedCountry ? 'border-emerald-400 bg-emerald-50 text-emerald-700 font-medium shadow-sm shadow-emerald-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <option value="">All Countries</option>
+                {uniqueCountries.map(c => (
+                  <option key={c.name} value={c.name}>{c.flag} {c.name} ({c.count})</option>
+                ))}
+              </select>
+
+              {/* Owner filter */}
+              <select
+                value={selectedOwner}
+                onChange={(e) => {
+                  setSelectedOwner(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`text-[11px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition-all duration-200 cursor-pointer ${
+                  selectedOwner ? 'border-purple-400 bg-purple-50 text-purple-700 font-medium shadow-sm shadow-purple-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <option value="">All Owners</option>
+                {uniqueOwners.map(owner => {
+                  const count = clients.filter(c => c.profile?.account_owner === owner).length;
+                  return <option key={owner} value={owner}>{owner} ({count})</option>;
+                })}
+              </select>
+
+              <div className="w-px h-5 bg-slate-200 shrink-0" />
+
               {/* API column search */}
-              <div className="flex items-center gap-1 shrink-0">
-                <Database size={11} className="text-slate-400" />
+              <div className="relative shrink-0">
+                <Database size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="API..."
                   value={apiSearchTerm}
                   onChange={(e) => setApiSearchTerm(e.target.value)}
-                  className="text-[11px] border border-slate-200 rounded-md px-2 py-1.5 bg-white w-20 sm:w-28 focus:outline-none focus:ring-1 focus:ring-slate-300 text-slate-600 placeholder:text-slate-400"
+                  className="text-[11px] border border-slate-200 rounded-lg pl-6 pr-6 py-1.5 bg-white w-24 focus:outline-none focus:ring-2 focus:ring-amber-400/40 text-slate-600 placeholder:text-slate-400 transition-all duration-200 hover:border-slate-300"
                 />
                 {apiSearchTerm && (
-                  <button onClick={() => setApiSearchTerm('')} className="text-slate-400 hover:text-slate-600 text-[11px] cursor-pointer">✕</button>
+                  <button onClick={() => setApiSearchTerm('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                    <X size={10} />
+                  </button>
                 )}
               </div>
-              {/* Active filter count */}
-              {(selectedSegment || searchTerm || apiSearchTerm || notUsingFilter) && (
+
+              {/* Active filters — clear all */}
+              {(selectedSegment || selectedOwner || selectedCountry || searchTerm || apiSearchTerm || notUsingFilter) && (
                 <button
                   onClick={() => {
                     setSelectedSegment('');
+                    setSelectedOwner('');
+                    setSelectedCountry('');
                     setSearchTerm('');
                     setApiSearchTerm('');
                     setNotUsingFilter(null);
                     setCurrentPage(1);
+                    searchInputRef.current?.focus();
                   }}
-                  className="text-[10px] text-slate-400 hover:text-red-500 shrink-0 cursor-pointer tracking-wide transition-colors"
+                  className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-600 shrink-0 cursor-pointer tracking-wide transition-all duration-200 hover:bg-red-50 px-2 py-1 rounded-lg"
                 >
+                  <X size={10} />
                   Clear all
                 </button>
               )}
@@ -1960,7 +2100,7 @@ function MatrixView({
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150"
                   >
                     ←
                   </button>
@@ -1968,7 +2108,7 @@ function MatrixView({
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150"
                   >
                     →
                   </button>
@@ -3016,14 +3156,14 @@ function ClientDetailsPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop - no blur, just light overlay */}
+      {/* Backdrop with blur */}
       <div
-        className="absolute inset-0 bg-black/20"
+        className="absolute inset-0 bg-black/15 backdrop-blur-[2px] animate-fade-in"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="relative w-[520px] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full">
+      <div className="relative w-[520px] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full" style={{ boxShadow: '-8px 0 30px rgba(0,0,0,0.08)' }}>
         {/* Header */}
         <div className="shrink-0 bg-white border-b border-slate-200 px-6 py-4">
           <div className="flex items-start justify-between">
@@ -3110,69 +3250,202 @@ function ClientDetailsPanel({
         {/* Content - scrollable */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-xs text-slate-500 mb-1">Legal Name</div>
-                  <div className="text-sm font-medium text-slate-800">{client.profile?.legal_name || '-'}</div>
-                </div>
-
-                {/* Editable Industry Field */}
-                <div className={`rounded-lg p-4 ${isIndustryUnknown ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'}`}>
-                  <div className="text-xs text-slate-500 mb-1 flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      Industry
-                      {isIndustryUnknown && <span className="text-amber-600">(Please select)</span>}
+          {activeTab === 'overview' && (() => {
+            const country = normalizeCountry(client.profile?.geography);
+            return (
+            <div className="stagger-children space-y-4">
+              {/* Owner + Country Hero Cards */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Account Owner */}
+                <div className={`rounded-xl p-4 border transition-all duration-300 hover:shadow-md ${
+                  client.profile?.account_owner
+                    ? 'bg-gradient-to-br from-purple-50 to-white border-purple-100'
+                    : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-110 ${
+                      client.profile?.account_owner ? 'bg-purple-100' : 'bg-slate-200'
+                    }`}>
+                      <Users size={16} className={client.profile?.account_owner ? 'text-purple-600' : 'text-slate-400'} />
                     </div>
-                    {isIndustryUnknown && (
-                      <button
-                        onClick={handleAutoDetectIndustry}
-                        disabled={autoDetecting}
-                        className="flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50 cursor-pointer"
-                      >
-                        <Sparkles size={10} />
-                        {autoDetecting ? 'Detecting...' : 'AI Detect'}
-                      </button>
-                    )}
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Owner</div>
+                      <div className={`text-sm font-semibold truncate ${
+                        client.profile?.account_owner ? 'text-purple-700' : 'text-slate-400'
+                      }`}>
+                        {client.profile?.account_owner || 'Unassigned'}
+                      </div>
+                    </div>
                   </div>
-                  <select
-                    value={editedIndustry}
-                    onChange={(e) => handleIndustryChange(e.target.value)}
-                    className={`w-full text-sm font-medium bg-transparent border-none outline-none cursor-pointer ${
-                      isIndustryUnknown ? 'text-amber-700' : 'text-slate-800'
-                    }`}
-                  >
-                    <option value="">Select Industry...</option>
-                    {INDUSTRY_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-xs text-slate-500 mb-1">Geography</div>
-                  <div className="text-sm font-medium text-slate-800">{client.profile?.geography || '-'}</div>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-xs text-slate-500 mb-1">Billing Currency</div>
-                  <div className="text-sm font-medium text-slate-800">{client.profile?.billing_currency || 'USD'}</div>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-xs text-slate-500 mb-1">Status</div>
-                  <div className={`text-sm font-medium ${client.isActive ? 'text-emerald-600' : 'text-slate-600'}`}>
-                    {client.isActive ? 'Active' : client.isInMasterList ? 'In Master List' : 'New Client'}
-                  </div>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-xs text-slate-500 mb-1">APIs ({panelMonth || 'Latest'})</div>
-                  <div className="text-sm font-medium text-slate-800">
-                    {currentMonthData?.apis?.length || 0}
+                {/* Country */}
+                <div className="rounded-xl p-4 border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white transition-all duration-300 hover:shadow-md">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-lg transition-transform duration-300 hover:scale-110">
+                      {country.flag}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Country</div>
+                      <div className="text-sm font-semibold text-emerald-700 truncate">{country.name}</div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Quick Stats Row */}
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
+                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                    client.isActive ? 'bg-emerald-100 text-emerald-700' : client.isInMasterList ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-500'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${client.isActive ? 'bg-emerald-500' : client.isInMasterList ? 'bg-blue-500' : 'bg-slate-400'}`} />
+                    {client.profile?.status || (client.isActive ? 'Active' : 'Inactive')}
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
+                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">Type</div>
+                  <div className="text-[11px] font-semibold text-slate-700 mt-0.5">{client.profile?.client_type || '-'}</div>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
+                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">APIs</div>
+                  <div className="text-[11px] font-semibold text-slate-700 mt-0.5">{currentMonthData?.apis?.length || 0}</div>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
+                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">Months</div>
+                  <div className="text-[11px] font-semibold text-slate-700 mt-0.5">{client.monthly_data?.length || 0}</div>
+                </div>
+              </div>
+
+              {/* Company Details */}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1.5">
+                  <Building2 size={10} className="text-slate-400" />
+                  Company Details
+                </div>
+                <div className="bg-white rounded-xl border border-slate-100 divide-y divide-slate-50 shadow-sm transition-all duration-300 hover:shadow-md">
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-xs text-slate-500">Legal Name</span>
+                    <span className="text-xs font-semibold text-slate-800 max-w-[60%] text-right">{client.profile?.legal_name || '-'}</span>
+                  </div>
+                  {client.profile?.zoho_name && client.profile.zoho_name !== client.profile.legal_name && (
+                    <div className="flex justify-between items-center px-4 py-3">
+                      <span className="text-xs text-slate-500">Zoho Name</span>
+                      <span className="text-xs font-medium text-slate-700 max-w-[60%] text-right">{client.profile.zoho_name}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-xs text-slate-500">Country</span>
+                    <span className="text-xs font-medium text-slate-800 flex items-center gap-1.5">
+                      <span className="text-sm">{country.flag}</span>
+                      {country.name}
+                    </span>
+                  </div>
+                  {/* Editable Industry */}
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                      Industry
+                      {isIndustryUnknown && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isIndustryUnknown && (
+                        <button
+                          onClick={handleAutoDetectIndustry}
+                          disabled={autoDetecting}
+                          className="flex items-center gap-0.5 px-2 py-0.5 text-[10px] bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 cursor-pointer transition-all duration-200 shadow-sm hover:shadow"
+                        >
+                          <Sparkles size={8} />
+                          {autoDetecting ? '...' : 'AI Detect'}
+                        </button>
+                      )}
+                      <select
+                        value={editedIndustry}
+                        onChange={(e) => handleIndustryChange(e.target.value)}
+                        className={`text-xs font-medium bg-transparent border-none outline-none cursor-pointer text-right transition-colors duration-200 ${
+                          isIndustryUnknown ? 'text-amber-600' : 'text-slate-800'
+                        }`}
+                      >
+                        <option value="">Select...</option>
+                        {INDUSTRY_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Billing & Finance */}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1.5">
+                  <CreditCard size={10} className="text-slate-400" />
+                  Billing & Finance
+                </div>
+                <div className="bg-white rounded-xl border border-slate-100 divide-y divide-slate-50 shadow-sm transition-all duration-300 hover:shadow-md">
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-xs text-slate-500">Currency</span>
+                    <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-700 text-[11px] font-semibold rounded-md">{client.profile?.billing_currency || 'USD'}</span>
+                  </div>
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-xs text-slate-500">Billing Type</span>
+                    <span className="text-xs font-medium text-slate-800">{client.profile?.billing_type || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-xs text-slate-500">Payment Model</span>
+                    <span className="text-xs font-medium text-slate-800">{client.profile?.payment_model || '-'}</span>
+                  </div>
+                  {client.profile?.billing_start_month && (
+                    <div className="flex justify-between items-center px-4 py-3">
+                      <span className="text-xs text-slate-500">Billing Start</span>
+                      <span className="text-xs font-medium text-slate-800">{client.profile.billing_start_month}</span>
+                    </div>
+                  )}
+                  {client.profile?.go_live_date && (
+                    <div className="flex justify-between items-center px-4 py-3">
+                      <span className="text-xs text-slate-500">Go-Live Date</span>
+                      <span className="text-xs font-medium text-emerald-700">{client.profile.go_live_date}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Domains */}
+              {client.profile?.domain_list && client.profile.domain_list.length > 0 && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1.5">
+                    <Globe size={10} className="text-slate-400" />
+                    Domains
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {client.profile.domain_list.map((domain, i) => (
+                      <span key={i} className="inline-flex items-center px-3 py-1.5 bg-white border border-slate-150 text-slate-600 text-[11px] rounded-lg font-mono shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow">
+                        {domain}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Business Units */}
+              {client.profile?.business_units && client.profile.business_units.length > 0 && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1.5">
+                    <Building2 size={10} className="text-slate-400" />
+                    Business Units
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {client.profile.business_units.map((bu, i) => (
+                      <span key={i} className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-blue-700 text-[11px] rounded-lg font-medium shadow-sm transition-all duration-200 hover:shadow hover:border-blue-200">
+                        <Building2 size={10} className="mr-1.5 text-blue-500" />
+                        {bu}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+            );
+          })()}
 
           {/* APIs Tab - with editable costs */}
           {activeTab === 'apis' && (

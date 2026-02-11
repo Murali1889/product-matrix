@@ -21,6 +21,15 @@ export interface ClientProfile {
   billing_currency?: string | null;
   payment_model?: string | null;
   status?: string | null;
+  account_owner?: string | null;
+  client_type?: string | null;
+  billing_type?: string | null;
+  domain_list?: string[];
+  go_live_date?: string | null;
+  billing_start_month?: string | null;
+  zoho_name?: string | null;
+  business_units?: string[];
+  industry?: string | null;
 }
 
 export interface AccountIds {

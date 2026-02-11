@@ -40,6 +40,9 @@ export interface RawClientData {
       billingType?: string;
       billingCurrency?: string;
       accountOwner?: string;
+      domainList?: string[];
+      goLiveDate?: string;
+      billing?: { type?: string; role?: string; startMonth?: string };
     };
     businessUnits: Record<string, {
       BUID: string;
@@ -109,6 +112,13 @@ export interface TransformedClient {
     status: string;
     account_owner?: string;
     billing_currency: string;
+    client_type?: string;
+    billing_type?: string;
+    domain_list?: string[];
+    go_live_date?: string;
+    billing_start_month?: string;
+    zoho_name?: string;
+    business_units?: string[];
   };
   monthly_data: MonthlyData[];
   // Aggregated data
@@ -348,6 +358,13 @@ export function transformClientData(raw: RawClientData): TransformedClient {
       status: company.operationalStatus || 'unknown',
       account_owner: company.accountOwner,
       billing_currency: company.billingCurrency || 'INR',
+      client_type: company.clientType,
+      billing_type: company.billingType,
+      domain_list: company.domainList,
+      go_live_date: company.goLiveDate || company.billing?.startMonth,
+      billing_start_month: company.billing?.startMonth,
+      zoho_name: Object.values(clientDetails.businessUnits || {})[0]?.zohoName,
+      business_units: Object.values(clientDetails.businessUnits || {}).map(bu => bu.name).filter(Boolean),
     },
     monthly_data: monthlyData,
     totalRevenue,
