@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
-// Server-side Supabase client
+// Service-role Supabase client for data operations
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_KEY || ''
@@ -45,6 +46,14 @@ export async function GET(request: Request) {
 // POST - Save API cost override
 export async function POST(request: Request) {
   try {
+    // Get authenticated user from session
+    const authClient = await createServerSupabaseClient();
+    let updatedBy = 'unknown';
+    if (authClient) {
+      const { data: { user } } = await authClient.auth.getUser();
+      updatedBy = user?.email || 'unknown';
+    }
+
     const body = await request.json();
     const {
       client_id,
@@ -54,7 +63,6 @@ export async function POST(request: Request) {
       cost_override,
       usage_override,
       notes,
-      updated_by,
     } = body;
 
     if (!client_id || !client_name || !api_name || !month) {
@@ -64,7 +72,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upsert the override
+    // Upsert the override using service-role client
     const { data, error } = await supabase
       .from('client_api_overrides')
       .upsert(
@@ -76,7 +84,7 @@ export async function POST(request: Request) {
           cost_override: cost_override || 0,
           usage_override,
           notes,
-          updated_by: updated_by || 'unknown',
+          updated_by: updatedBy,
         },
         { onConflict: 'client_id,api_name,month' }
       )

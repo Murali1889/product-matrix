@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
-// Server-side Supabase client
+// Service-role Supabase client for data operations
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_KEY || ''
@@ -78,6 +79,14 @@ export async function GET(request: Request) {
 // POST - Save client override
 export async function POST(request: Request) {
   try {
+    // Get authenticated user from session
+    const authClient = await createServerSupabaseClient();
+    let updatedBy = 'unknown';
+    if (authClient) {
+      const { data: { user } } = await authClient.auth.getUser();
+      updatedBy = user?.email || 'unknown';
+    }
+
     const body = await request.json();
     const {
       client_id,
@@ -88,7 +97,6 @@ export async function POST(request: Request) {
       legal_name,
       billing_currency,
       notes,
-      updated_by,
     } = body;
 
     if (!client_id || !client_name) {
@@ -98,7 +106,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upsert the override
+    // Upsert the override using service-role client
     const { data, error } = await supabase
       .from('client_overrides')
       .upsert(
@@ -111,7 +119,7 @@ export async function POST(request: Request) {
           legal_name,
           billing_currency,
           notes,
-          updated_by: updated_by || 'unknown',
+          updated_by: updatedBy,
         },
         { onConflict: 'client_id' }
       )

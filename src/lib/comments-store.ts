@@ -32,14 +32,17 @@ export async function addCellComment(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'cell', clientName, apiName, text, author }),
   });
+  if (!res.ok) {
+    throw new Error(`Failed to add comment: ${res.status}`);
+  }
   const data = await res.json();
   return {
-    id: data.id,
+    id: data.id || crypto.randomUUID(),
     clientName,
     apiName,
     text,
     author,
-    createdAt: data.createdAt,
+    createdAt: data.createdAt || new Date().toISOString(),
   };
 }
 
@@ -99,13 +102,16 @@ export async function addClientComment(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'client', clientName, text, author, category }),
   });
+  if (!res.ok) {
+    throw new Error(`Failed to add comment: ${res.status}`);
+  }
   const data = await res.json();
   return {
-    id: data.id,
+    id: data.id || crypto.randomUUID(),
     clientName,
     text,
     author,
-    createdAt: data.createdAt,
+    createdAt: data.createdAt || new Date().toISOString(),
     category,
   };
 }

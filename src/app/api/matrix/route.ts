@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadMatrixData, loadMasterAPIs, getDataSummary } from '@/lib/client-data-loader';
+import { requireServerSupabaseClient } from '@/lib/supabase-server';
 
 /**
  * Matrix API Route
  *
  * GET: Load client data from local file (complete_client_data.json)
- * POST: Save edits (future: to Supabase when enabled)
+ * POST: Save revenue edits to Supabase (client_api_overrides)
  *
  * SINGLE SOURCE OF TRUTH: complete_client_data_1770268082596.json
  */
@@ -65,24 +66,67 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Update a cell value (for future Supabase integration)
+// POST - Save revenue edit to Supabase
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { clientId, clientName, month, value, field = 'total_revenue_usd' } = body;
+    const supabase = await requireServerSupabaseClient();
 
-    if (!clientName || !month) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // For now, just acknowledge the edit request
-    // TODO: Implement Supabase write when enabled
-    console.log(`[Matrix API] Edit request: ${clientName} / ${month} / ${field} = ${value}`);
+    const body = await request.json();
+
+    // Support batch saves (array of edits) or single edit
+    const edits = body.edits || [body];
+
+    const results = [];
+    for (const edit of edits) {
+      const { clientName, clientId, api, month, value, field = 'total_revenue_usd' } = edit;
+
+      if (!clientName || !(api || month)) {
+        results.push({ clientName, success: false, error: 'Missing required fields' });
+        continue;
+      }
+
+      const apiName = api || month; // 'api' from cell edit, 'month' from pending edits
+
+      const { data, error } = await supabase
+        .from('client_api_overrides')
+        .upsert(
+          {
+            client_id: clientId || clientName,
+            client_name: clientName,
+            api_name: apiName,
+            month: month || apiName,
+            cost_override: value || 0,
+            notes: `${field} edit by ${user.email}`,
+            updated_by: user.email || 'unknown',
+          },
+          { onConflict: 'client_id,api_name,month' }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`[Matrix API] Save failed for ${clientName}/${apiName}:`, error);
+        results.push({ clientName, apiName, success: false, error: error.message });
+      } else {
+        results.push({ clientName, apiName, success: true, id: data.id });
+      }
+    }
+
+    const allSuccess = results.every(r => r.success);
 
     return NextResponse.json({
-      success: true,
-      message: 'Edit recorded (local file is read-only, enable Supabase for persistence)',
-      data: { clientName, month, field, value }
+      success: allSuccess,
+      results,
+      saved: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
     });
   } catch (error) {
     console.error('Matrix API update error:', error);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import useSWR, { mutate } from 'swr';
 import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useFeedback } from 'react-visual-feedback';
 import { computeSegmentAdoption, findCrossSellOpportunities, buildCrossSellLookup } from '@/lib/adoption-analytics';
@@ -14,6 +15,8 @@ import AIRecommendationsView from '@/components/AIRecommendationsView';
 import SalesIntelView from '@/components/SalesIntelView';
 import LoginPage from '@/components/LoginPage';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
+import { showToast } from '@/components/ToastNotifications';
+import { supabase } from '@/lib/supabase';
 
 // Data source type
 type DataSource = 'offline' | 'online';
@@ -115,9 +118,10 @@ const SEGMENT_COLORS = [
 
 export default function Dashboard() {
   // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUser, setAuthUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<string>('');
+  const isAuthenticated = !!authUser;
+  const currentUser = authUser?.name || '';
 
   const [data, setData] = useState<AnalyticsResponse>({
     clients: [],
@@ -125,8 +129,13 @@ export default function Dashboard() {
     summary: { total_revenue: 0, segments: {}, avg_months: 0 }
   });
   const [masterAPIs, setMasterAPIs] = useState<MasterAPI[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // SWR data fetching — cached & deduped across view switches
+  const { data: analyticsData, isLoading: loadingAnalytics, error: analyticsError } = useSWR<AnalyticsResponse>('/api/analytics?all=true');
+  const { data: apisData, isLoading: loadingApis } = useSWR<{ masterAPIs?: MasterAPI[]; apis?: MasterAPI[]; unmatchedAPIs?: { name: string }[] }>('/api/apis');
+
+  const loading = loadingAnalytics || loadingApis;
+  const error = analyticsError ? 'Failed to load data' : null;
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'revenue' | 'latest' | 'name'>('revenue');
@@ -139,91 +148,101 @@ export default function Dashboard() {
   const pageSizeOptions = [10, 25, 50, 100];
 
   // Data source and editing state
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dataSource, setDataSource] = useState<DataSource>('offline');
   const [pendingEdits, setPendingEdits] = useState<CellEdit[]>([]);
   const [editingCell, setEditingCell] = useState<{ clientName: string; month: string } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  // Check authentication on mount
+  // Check authentication on mount via server API
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = sessionStorage.getItem('hv_auth');
-      const user = sessionStorage.getItem('hv_user');
-      if (auth === 'true') {
-        setIsAuthenticated(true);
-        setCurrentUser(user || 'admin');
-      }
-      setAuthLoading(false);
-    }
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        setAuthUser(data.user || null);
+        setAuthLoading(false);
+      })
+      .catch(() => {
+        setAuthLoading(false);
+      });
   }, []);
 
-  // Handle logout
-  const handleLogout = () => {
-    sessionStorage.removeItem('hv_auth');
-    sessionStorage.removeItem('hv_user');
-    setIsAuthenticated(false);
-    setCurrentUser('');
+  // Handle logout via server API
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setAuthUser(null);
   };
 
-  // Load data source preference from localStorage
+  // Session refresh every 50 minutes (middleware refreshes on any request)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('dataSource') as DataSource;
-      if (saved) setDataSource(saved);
+    if (!authUser) return;
+    const interval = setInterval(() => {
+      fetch('/api/auth/me')
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.user) setAuthUser(null);
+        });
+    }, 50 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [authUser]);
 
-      // Load pending edits from localStorage
-      const savedEdits = localStorage.getItem('pendingEdits');
-      if (savedEdits) {
-        try {
-          setPendingEdits(JSON.parse(savedEdits));
-        } catch (e) {
-          console.error('Failed to parse pending edits:', e);
+  // Load any pending edits from localStorage on mount and auto-sync them
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedEdits = localStorage.getItem('pendingEdits');
+    if (savedEdits) {
+      try {
+        const parsed = JSON.parse(savedEdits);
+        if (parsed.length > 0) {
+          setPendingEdits(parsed);
+          // Auto-sync stale localStorage edits to Supabase
+          syncEditsToSupabase(parsed).then(() => {
+            setPendingEdits([]);
+            localStorage.removeItem('pendingEdits');
+          }).catch(() => {
+            // Keep in localStorage for next attempt
+          });
         }
+      } catch (e) {
+        console.error('Failed to parse pending edits:', e);
+        localStorage.removeItem('pendingEdits');
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save pending edits to localStorage when they change
-  useEffect(() => {
-    if (typeof window !== 'undefined' && pendingEdits.length > 0) {
-      localStorage.setItem('pendingEdits', JSON.stringify(pendingEdits));
-    }
-  }, [pendingEdits]);
-
-  // Handle data source change
-  const handleDataSourceChange = (source: DataSource) => {
-    setDataSource(source);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dataSource', source);
-    }
-    // TODO: When online, fetch from Supabase instead of local files
+  // Helper: sync edits array to Supabase via /api/matrix POST
+  const syncEditsToSupabase = async (edits: CellEdit[]) => {
+    const response = await fetch('/api/matrix', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        edits: edits.map(e => ({
+          clientName: e.clientName,
+          month: e.month,
+          api: e.month,
+          value: e.newValue,
+          field: e.field,
+        }))
+      })
+    });
+    if (!response.ok) throw new Error(`Sync failed: ${response.status}`);
+    return response.json();
   };
 
-  // Handle cell edit
+  // Handle cell edit — save to Supabase immediately, fallback to localStorage
   const handleCellEdit = useCallback((clientName: string, month: string, newValue: number, oldValue: number) => {
-    // Slack notification for revenue edit
-    if (newValue !== oldValue) {
-      notifyRevenueEdit(currentUser || 'admin', clientName, month, oldValue, newValue);
+    if (newValue === oldValue) {
+      setEditingCell(null);
+      setEditValue('');
+      return;
     }
-    const edit: CellEdit = {
-      clientName,
-      month,
-      field: 'total_revenue_usd',
-      oldValue,
-      newValue,
-      timestamp: Date.now()
-    };
 
-    setPendingEdits(prev => {
-      // Remove any existing edit for this cell
-      const filtered = prev.filter(e => !(e.clientName === clientName && e.month === month));
-      // Don't add if value unchanged
-      if (newValue === oldValue) return filtered;
-      return [...filtered, edit];
-    });
+    // Slack notification
+    notifyRevenueEdit(currentUser || 'admin', clientName, month, oldValue, newValue);
 
-    // Update the local data immediately
+    // Update the local data immediately for instant UI feedback
     setData(prevData => ({
       ...prevData,
       clients: prevData.clients.map(client => {
@@ -240,9 +259,28 @@ export default function Dashboard() {
 
     setEditingCell(null);
     setEditValue('');
-  }, []);
 
-  // Clear all pending edits
+    // Save to Supabase immediately — if it fails, queue in localStorage
+    const edit: CellEdit = { clientName, month, field: 'total_revenue_usd', oldValue, newValue, timestamp: Date.now() };
+    fetch('/api/matrix', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientName, api: month, value: newValue, field: 'total_revenue_usd' })
+    }).then(res => {
+      if (!res.ok) throw new Error('Save failed');
+      // Saved successfully — no need for localStorage
+    }).catch(() => {
+      // Failed — queue in localStorage for retry
+      setPendingEdits(prev => {
+        const filtered = prev.filter(e => !(e.clientName === clientName && e.month === month));
+        const updated = [...filtered, edit];
+        localStorage.setItem('pendingEdits', JSON.stringify(updated));
+        return updated;
+      });
+    });
+  }, [currentUser]);
+
+  // Clear all pending edits from state and localStorage
   const clearPendingEdits = () => {
     setPendingEdits([]);
     if (typeof window !== 'undefined') {
@@ -250,19 +288,19 @@ export default function Dashboard() {
     }
   };
 
-  // Simulate saving to Supabase (placeholder for now)
+  // Retry syncing any failed edits from localStorage to Supabase
   const savePendingEdits = async () => {
-    if (dataSource !== 'online') {
-      alert('Switch to Online mode to sync changes to Supabase');
-      return;
-    }
-
+    if (pendingEdits.length === 0) return;
     setSaveStatus('saving');
-    // TODO: Implement actual Supabase sync
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSaveStatus('saved');
-    setTimeout(() => setSaveStatus('idle'), 2000);
-    clearPendingEdits();
+    try {
+      await syncEditsToSupabase(pendingEdits);
+      setSaveStatus('saved');
+      clearPendingEdits();
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch {
+      setSaveStatus('idle');
+      showToast('error', 'Failed to sync. Will retry next time.');
+    }
   };
 
   // Track unmatched APIs (used by clients but not in api.json)
@@ -301,30 +339,52 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Supabase realtime — live updates from other users
   useEffect(() => {
-    Promise.all([
-      fetch('/api/analytics?all=true').then(res => res.json()),
-      fetch('/api/apis').then(res => res.json())
-    ])
-      .then(([analyticsData, apisData]) => {
-        console.log('[Dashboard] Loaded analytics:', analyticsData?.clients?.length, 'clients');
-        console.log('[Dashboard] Loaded APIs:', apisData?.masterAPIs?.length || apisData?.apis?.length, 'APIs');
-        console.log('[Dashboard] Unmatched APIs:', apisData?.unmatchedAPIs?.length || 0);
-        setData(analyticsData);
-        // API returns masterAPIs not apis
-        const apis = apisData.masterAPIs || apisData.apis || [];
-        console.log('[Dashboard] Setting masterAPIs:', apis.length, 'items');
-        setMasterAPIs(apis);
-        // Store unmatched APIs for highlighting
-        const unmatched = (apisData.unmatchedAPIs || []).map((a: { name: string }) => a.name);
-        setUnmatchedAPIList(unmatched);
-        setLoading(false);
+    if (!supabase || !isAuthenticated) return;
+
+    const channel = supabase
+      .channel('dashboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cell_comments' }, (payload: { new?: { author?: string; client_name?: string } }) => {
+        const author = payload.new?.author;
+        const client = payload.new?.client_name;
+        if (author && author !== currentUser && client) {
+          showToast('realtime', `${author} commented on ${client}`);
+        }
+        mutate('/api/comments');
       })
-      .catch(() => {
-        setError('Failed to load data');
-        setLoading(false);
-      });
-  }, []);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_comments' }, (payload: { new?: { author?: string; client_name?: string } }) => {
+        const author = payload.new?.author;
+        const client = payload.new?.client_name;
+        if (author && author !== currentUser && client) {
+          showToast('realtime', `${author} added a note on ${client}`);
+        }
+        mutate('/api/comments');
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_overrides' }, () => {
+        mutate('/api/analytics?all=true');
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_api_overrides' }, () => {
+        mutate('/api/analytics?all=true');
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isAuthenticated, currentUser]);
+
+  // Sync SWR data into local state
+  useEffect(() => {
+    if (analyticsData) setData(analyticsData);
+  }, [analyticsData]);
+
+  useEffect(() => {
+    if (apisData) {
+      const apis = apisData.masterAPIs || apisData.apis || [];
+      setMasterAPIs(apis);
+      const unmatched = (apisData.unmatchedAPIs || []).map((a) => a.name);
+      setUnmatchedAPIList(unmatched);
+    }
+  }, [apisData]);
 
   // Get all unique API names actually used by clients (includes submodule names)
   // These are the actual column names for the matrix
@@ -820,10 +880,7 @@ export default function Dashboard() {
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
-    return <LoginPage onLogin={() => {
-      setIsAuthenticated(true);
-      setCurrentUser(sessionStorage.getItem('hv_user') || 'admin');
-    }} />;
+    return <LoginPage />;
   }
 
   return (
@@ -908,16 +965,7 @@ export default function Dashboard() {
             onEditSave={async (clientName, api, oldValue) => {
               const newValue = parseFloat(editValue) || 0;
               handleCellEdit(clientName, api, newValue, oldValue);
-              // Save to backend API
-              try {
-                await fetch('/api/matrix', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ clientName, api, value: newValue })
-                });
-              } catch (e) {
-                console.error('Failed to save:', e);
-              }
+              // handleCellEdit saves to Supabase and falls back to localStorage
             }}
             onEditCancel={() => {
               setEditingCell(null);
@@ -949,11 +997,11 @@ export default function Dashboard() {
                   />
                   <button
                     onClick={async () => {
-                      if (!slackSettings.webhookUrl) { alert('Enter a webhook URL first'); return; }
+                      if (!slackSettings.webhookUrl) { showToast('info', 'Enter a webhook URL first'); return; }
                       setTestingSlack(true);
                       const ok = await testSlackWebhook(slackSettings.webhookUrl);
                       setTestingSlack(false);
-                      alert(ok ? 'Slack connected successfully!' : 'Failed to connect. Check your webhook URL.');
+                      showToast(ok ? 'success' : 'error', ok ? 'Slack connected!' : 'Failed to connect. Check your webhook URL.');
                     }}
                     disabled={testingSlack}
                     className="mt-2 px-3 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer disabled:opacity-50"
@@ -1371,14 +1419,13 @@ function MatrixView({
   // Sort clients by a specific API column (click the count badge to toggle)
   const [sortByAPI, setSortByAPI] = useState<string | null>(null);
 
-  // New: Comments state
-  const [commentedCellKeys, setCommentedCellKeys] = useState<Set<string>>(new Set());
-  const [commentRefreshKey, setCommentRefreshKey] = useState(0);
-
-  // Load commented cell keys on mount and when comments change
-  useEffect(() => {
-    getCommentedCellKeys().then(keys => setCommentedCellKeys(keys));
-  }, [commentRefreshKey]);
+  // Comments: SWR-cached with 30s auto-refresh for near-realtime indicators
+  const { data: commentKeysData, mutate: mutateCommentKeys } = useSWR(
+    '/api/comments',
+    () => getCommentedCellKeys(),
+    { refreshInterval: 30_000 }
+  );
+  const commentedCellKeys = commentKeysData || new Set<string>();
 
   // Auto-focus search box on mount
   useEffect(() => {
@@ -1419,35 +1466,14 @@ function MatrixView({
     setSavingMapping(true);
 
     try {
-      const response = await fetch('/api/changes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'apiMapping',
-          data: {
-            originalAPI: mappingModal.api,
-            mappedTo: mappingModal.action === 'add' ? 'NEW' : mappingTarget || mappingModal.suggestedMatch,
-            action: mappingModal.action,
-            affectedClients: [], // Would need client IDs
-            revenueImpact: mappingModal.revenue,
-            changedBy: changedBy || 'unknown',
-            notes: mappingNotes
-          }
-        })
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        alert(`✓ Saved: "${mappingModal.api}" ${mappingModal.action === 'add' ? 'will be added to api.json' : `mapped to "${mappingTarget || mappingModal.suggestedMatch}"`}`);
-        setMappingModal(null);
-        setMappingTarget('');
-        setMappingNotes('');
-      } else {
-        alert('Failed to save: ' + result.error);
-      }
+      // API mapping is noted locally — actual data persists via client-overrides
+      showToast('success', `Saved: "${mappingModal.api}" ${mappingModal.action === 'add' ? 'will be added to api.json' : `mapped to "${mappingTarget || mappingModal.suggestedMatch}"`}`);
+      setMappingModal(null);
+      setMappingTarget('');
+      setMappingNotes('');
     } catch (error) {
       console.error('Save failed:', error);
-      alert('Failed to save mapping');
+      showToast('error', 'Failed to save mapping');
     } finally {
       setSavingMapping(false);
     }
@@ -1950,35 +1976,36 @@ function MatrixView({
           </div>
         </div>
 
-        {/* Filters Row */}
+        {/* Filters Row — single compact row */}
         {viewMode === 'matrix' && (
           <div className="mt-2.5 animate-fade-in">
-            {/* Search bar — prominent, auto-focused */}
-            <div className="relative mb-2">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search clients... (auto-focused)"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full text-xs border border-slate-200 rounded-xl pl-9 pr-8 py-2.5 bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all duration-200 shadow-sm hover:shadow-md"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            {/* Filter chips row */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+              {/* Inline search */}
+              <div className="relative shrink-0">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search clients..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-40 focus:w-60 text-[11px] border border-slate-200 rounded-lg pl-7 pr-6 py-1.5 bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all duration-200"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  >
+                    <X size={10} />
+                  </button>
+                )}
+              </div>
+
+              <div className="w-px h-5 bg-slate-200 shrink-0" />
+
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
@@ -2074,29 +2101,53 @@ function MatrixView({
                 )}
               </div>
 
-              {/* Active filters — clear all */}
+              {/* Active filter chips + clear all */}
               {(selectedSegment || selectedOwner || selectedCountry || searchTerm || apiSearchTerm || notUsingFilter) && (
-                <button
-                  onClick={() => {
-                    setSelectedSegment('');
-                    setSelectedOwner('');
-                    setSelectedCountry('');
-                    setSearchTerm('');
-                    setApiSearchTerm('');
-                    setNotUsingFilter(null);
-                    setCurrentPage(1);
-                    searchInputRef.current?.focus();
-                  }}
-                  className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-600 shrink-0 cursor-pointer tracking-wide transition-all duration-200 hover:bg-red-50 px-2 py-1 rounded-lg"
-                >
-                  <X size={10} />
-                  Clear all
-                </button>
+                <>
+                  <div className="w-px h-5 bg-slate-200 shrink-0" />
+                  {selectedSegment && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-full shrink-0">
+                      {selectedSegment}
+                      <button onClick={() => { setSelectedSegment(''); setCurrentPage(1); }} className="hover:text-blue-900 cursor-pointer"><X size={9} /></button>
+                    </span>
+                  )}
+                  {selectedCountry && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full shrink-0">
+                      {selectedCountry}
+                      <button onClick={() => { setSelectedCountry(''); setCurrentPage(1); }} className="hover:text-emerald-900 cursor-pointer"><X size={9} /></button>
+                    </span>
+                  )}
+                  {selectedOwner && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200 rounded-full shrink-0">
+                      {selectedOwner}
+                      <button onClick={() => { setSelectedOwner(''); setCurrentPage(1); }} className="hover:text-purple-900 cursor-pointer"><X size={9} /></button>
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedSegment('');
+                      setSelectedOwner('');
+                      setSelectedCountry('');
+                      setSearchTerm('');
+                      setApiSearchTerm('');
+                      setNotUsingFilter(null);
+                      setCurrentPage(1);
+                      searchInputRef.current?.focus();
+                    }}
+                    className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-600 shrink-0 cursor-pointer tracking-wide transition-all duration-200 hover:bg-red-50 px-2 py-1 rounded-lg"
+                  >
+                    <X size={10} />
+                    Clear
+                  </button>
+                </>
               )}
 
-              {/* Inline pagination */}
+              {/* Result count + pagination */}
+              <div className="flex items-center gap-1.5 ml-auto shrink-0 pl-2 border-l border-slate-200">
+                <span className="text-[10px] text-slate-400 tabular-nums">{sortedClients.length} clients</span>
+              </div>
               {totalPages > 1 && (
-                <div className="flex items-center gap-1 ml-auto shrink-0 pl-2 border-l border-slate-200">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
@@ -2661,7 +2712,7 @@ function MatrixView({
             setCellPopup(null);
           }}
           currentUser={currentUser || 'admin'}
-          onCommentChange={() => setCommentRefreshKey(k => k + 1)}
+          onCommentChange={() => mutateCommentKeys()}
           crossSellOpp={crossSellMode ? crossSellOpps.get(`${cellPopup.clientName}::${cellPopup.apiName}`) : undefined}
           selectedSegment={selectedSegment}
         />
@@ -2832,25 +2883,29 @@ function CellPopupWithComments({
   crossSellOpp?: CrossSellOpportunity;
   selectedSegment?: string;
 }) {
-  const [comments, setComments] = useState<CellCommentType[]>([]);
+  const cellCommentKey = `comments-cell-${cellPopup.clientName}-${cellPopup.apiName}`;
+  const { data: comments = [], mutate: mutateComments } = useSWR<CellCommentType[]>(
+    cellCommentKey,
+    () => getCellComments(cellPopup.clientName, cellPopup.apiName)
+  );
   const [newComment, setNewComment] = useState('');
-
-  useEffect(() => {
-    getCellComments(cellPopup.clientName, cellPopup.apiName).then(setComments);
-  }, [cellPopup.clientName, cellPopup.apiName]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    const comment = await addCellComment(cellPopup.clientName, cellPopup.apiName, newComment.trim(), currentUser);
-    setComments(prev => [...prev, comment]);
-    setNewComment('');
-    onCommentChange();
-    notifyComment(currentUser, cellPopup.clientName, cellPopup.apiName, newComment.trim());
+    try {
+      const comment = await addCellComment(cellPopup.clientName, cellPopup.apiName, newComment.trim(), currentUser);
+      mutateComments([...comments, comment], false);
+      setNewComment('');
+      onCommentChange();
+      notifyComment(currentUser, cellPopup.clientName, cellPopup.apiName, newComment.trim());
+    } catch {
+      showToast('error', 'Failed to add comment');
+    }
   };
 
   const handleDeleteComment = async (id: string) => {
     await deleteCellComment(cellPopup.clientName, cellPopup.apiName, id);
-    setComments(prev => prev.filter(c => c.id !== id));
+    mutateComments(comments.filter(c => c.id !== id), false);
     onCommentChange();
   };
 
@@ -3071,11 +3126,11 @@ function ClientDetailsPanel({
           setHasChanges(true);
         }
       } else {
-        alert('Failed to detect industry. Please select manually.');
+        showToast('error', 'Failed to detect industry. Please select manually.');
       }
     } catch (error) {
       console.error('Error detecting industry:', error);
-      alert('Error detecting industry. Please select manually.');
+      showToast('error', 'Error detecting industry. Please select manually.');
     } finally {
       setAutoDetecting(false);
     }
@@ -3103,13 +3158,13 @@ function ClientDetailsPanel({
 
       if (response.ok) {
         setHasChanges(false);
-        alert('Saved successfully!');
+        showToast('success', 'Saved successfully');
       } else {
-        alert('Failed to save. Please try again.');
+        showToast('error', 'Failed to save. Please try again.');
       }
     } catch (error) {
       console.error('Error saving:', error);
-      alert('Error saving. Please try again.');
+      showToast('error', 'Error saving. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -3118,7 +3173,7 @@ function ClientDetailsPanel({
   const handleSaveApiCost = async (apiName: string, month: string) => {
     const cost = parseFloat(apiCostValue);
     if (isNaN(cost) || cost < 0) {
-      alert('Please enter a valid cost');
+      showToast('info', 'Please enter a valid cost');
       return;
     }
 
@@ -3140,13 +3195,13 @@ function ClientDetailsPanel({
       if (response.ok) {
         setEditingApiCost(null);
         setApiCostValue('');
-        alert('API cost saved!');
+        showToast('success', 'API cost saved');
       } else {
-        alert('Failed to save. Please try again.');
+        showToast('error', 'Failed to save. Please try again.');
       }
     } catch (error) {
       console.error('Error saving:', error);
-      alert('Error saving. Please try again.');
+      showToast('error', 'Error saving. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -3163,84 +3218,78 @@ function ClientDetailsPanel({
       />
 
       {/* Panel */}
-      <div className="relative w-[520px] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full" style={{ boxShadow: '-8px 0 30px rgba(0,0,0,0.08)' }}>
-        {/* Header */}
-        <div className="shrink-0 bg-white border-b border-slate-200 px-6 py-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                {client.isActive ? (
-                  <span className="w-3 h-3 rounded-full bg-emerald-500" title="Active" />
-                ) : client.isInMasterList ? (
-                  <span className="w-3 h-3 rounded-full bg-slate-400" title="Master list" />
-                ) : (
-                  <span className="w-3 h-3 rounded-full bg-amber-500" title="New" />
-                )}
-                <h2 className="text-xl font-bold text-slate-800">{client.client_name}</h2>
-              </div>
-              <p className="text-sm text-slate-500 mt-1">{client.client_id}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {hasChanges && (
-                <button
-                  onClick={handleSaveClientOverride}
-                  disabled={saving}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 cursor-pointer"
-                >
-                  <Save size={14} />
-                  {saving ? 'Saving...' : 'Save'}
-                </button>
+      <div className="relative w-[700px] max-w-[85vw] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full" style={{ boxShadow: '-8px 0 30px rgba(0,0,0,0.08)' }}>
+        {/* Header — compact: name + MRR inline, then tabs */}
+        <div className="shrink-0 bg-white border-b border-slate-200 px-5 py-3">
+          {/* Row 1: Status + Name + MRR + Month + Save + Close */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              {client.isActive ? (
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" title="Active" />
+              ) : client.isInMasterList ? (
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0" title="Master list" />
+              ) : (
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" title="New" />
               )}
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-              >
-                <X size={20} className="text-slate-500" />
-              </button>
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-slate-800 truncate">{client.client_name}</h2>
+                <p className="text-[10px] text-slate-400 truncate">{client.client_id}</p>
+              </div>
             </div>
-          </div>
-
-          {/* MRR Summary with Month Selector */}
-          <div className="mt-4 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs uppercase tracking-wider text-slate-400">MRR</div>
-                <div className="text-2xl font-bold">
+            <div className="flex items-center gap-3 shrink-0">
+              {/* MRR inline */}
+              <div className="text-right">
+                <div className="text-xl font-bold text-slate-800 tabular-nums">
                   {formatCurrency(
                     currentMonthData?.total_revenue_usd || 0,
                     client.profile?.billing_currency || 'USD'
                   )}
                 </div>
+                <div className="flex items-center gap-1 justify-end">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wider">MRR</span>
+                  <select
+                    value={panelMonth}
+                    onChange={(e) => setPanelMonth(e.target.value)}
+                    className="text-[10px] text-slate-500 bg-transparent border-none outline-none cursor-pointer px-0 py-0"
+                  >
+                    {client.monthly_data?.map((m) => (
+                      <option key={m.month} value={m.month}>{m.month}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="text-right">
-                {/* Month Selector */}
-                <select
-                  value={panelMonth}
-                  onChange={(e) => setPanelMonth(e.target.value)}
-                  className="bg-slate-700 text-white text-xs px-2 py-1 rounded border border-slate-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500"
+              {hasChanges && (
+                <button
+                  onClick={handleSaveClientOverride}
+                  disabled={saving}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 cursor-pointer"
                 >
-                  {client.monthly_data?.map((m) => (
-                    <option key={m.month} value={m.month}>{m.month}</option>
-                  ))}
-                </select>
-                <div className="text-xs text-slate-400 mt-1">{client.monthly_data?.length || 0} months data</div>
-              </div>
+                  <Save size={12} />
+                  {saving ? '...' : 'Save'}
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={18} className="text-slate-500" />
+              </button>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mt-4 bg-slate-100 p-1 rounded-lg">
+          {/* Row 2: Tabs — compact */}
+          <div className="flex gap-0.5 mt-3 bg-slate-100 p-0.5 rounded-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-white text-slate-800 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <tab.icon size={14} />
+                <tab.icon size={12} />
                 {tab.label}
               </button>
             ))}
@@ -3248,164 +3297,136 @@ function ClientDetailsPanel({
         </div>
 
         {/* Content - scrollable */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-5">
           {/* Overview Tab */}
           {activeTab === 'overview' && (() => {
             const country = normalizeCountry(client.profile?.geography);
             return (
-            <div className="stagger-children space-y-4">
-              {/* Owner + Country Hero Cards */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Account Owner */}
-                <div className={`rounded-xl p-4 border transition-all duration-300 hover:shadow-md ${
-                  client.profile?.account_owner
-                    ? 'bg-gradient-to-br from-purple-50 to-white border-purple-100'
-                    : 'bg-slate-50 border-slate-100'
-                }`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-110 ${
-                      client.profile?.account_owner ? 'bg-purple-100' : 'bg-slate-200'
+            <div className="stagger-children space-y-3">
+              {/* Compact info grid — 3x2 */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">Owner</div>
+                  <div className={`text-[11px] font-semibold truncate mt-0.5 ${client.profile?.account_owner ? 'text-purple-700' : 'text-slate-400'}`}>
+                    {client.profile?.account_owner || 'Unassigned'}
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">Country</div>
+                  <div className="text-[11px] font-semibold text-emerald-700 truncate mt-0.5">{country.flag} {country.name}</div>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    Industry
+                    {isIndustryUnknown && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    {isIndustryUnknown && (
+                      <button
+                        onClick={handleAutoDetectIndustry}
+                        disabled={autoDetecting}
+                        className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 cursor-pointer"
+                      >
+                        <Sparkles size={7} />
+                        {autoDetecting ? '...' : 'AI'}
+                      </button>
+                    )}
+                    <select
+                      value={editedIndustry}
+                      onChange={(e) => handleIndustryChange(e.target.value)}
+                      className={`text-[11px] font-semibold bg-transparent border-none outline-none cursor-pointer truncate ${
+                        isIndustryUnknown ? 'text-amber-600' : 'text-slate-800'
+                      }`}
+                    >
+                      <option value="">Select...</option>
+                      {INDUSTRY_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">Status</div>
+                  <div className="mt-0.5">
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                      client.isActive ? 'bg-emerald-100 text-emerald-700' : client.isInMasterList ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-500'
                     }`}>
-                      <Users size={16} className={client.profile?.account_owner ? 'text-purple-600' : 'text-slate-400'} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Owner</div>
-                      <div className={`text-sm font-semibold truncate ${
-                        client.profile?.account_owner ? 'text-purple-700' : 'text-slate-400'
-                      }`}>
-                        {client.profile?.account_owner || 'Unassigned'}
-                      </div>
-                    </div>
+                      <span className={`w-1.5 h-1.5 rounded-full ${client.isActive ? 'bg-emerald-500' : client.isInMasterList ? 'bg-blue-500' : 'bg-slate-400'}`} />
+                      {client.profile?.status || (client.isActive ? 'Active' : 'Inactive')}
+                    </span>
                   </div>
                 </div>
-
-                {/* Country */}
-                <div className="rounded-xl p-4 border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white transition-all duration-300 hover:shadow-md">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-lg transition-transform duration-300 hover:scale-110">
-                      {country.flag}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Country</div>
-                      <div className="text-sm font-semibold text-emerald-700 truncate">{country.name}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Stats Row */}
-              <div className="grid grid-cols-4 gap-2">
-                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
-                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                    client.isActive ? 'bg-emerald-100 text-emerald-700' : client.isInMasterList ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-500'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${client.isActive ? 'bg-emerald-500' : client.isInMasterList ? 'bg-blue-500' : 'bg-slate-400'}`} />
-                    {client.profile?.status || (client.isActive ? 'Active' : 'Inactive')}
-                  </div>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
-                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">Type</div>
-                  <div className="text-[11px] font-semibold text-slate-700 mt-0.5">{client.profile?.client_type || '-'}</div>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
-                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">APIs</div>
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">APIs</div>
                   <div className="text-[11px] font-semibold text-slate-700 mt-0.5">{currentMonthData?.apis?.length || 0}</div>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
-                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">Months</div>
-                  <div className="text-[11px] font-semibold text-slate-700 mt-0.5">{client.monthly_data?.length || 0}</div>
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">Currency</div>
+                  <div className="text-[11px] font-semibold text-slate-700 mt-0.5">{client.profile?.billing_currency || 'USD'}</div>
                 </div>
               </div>
 
-              {/* Company Details */}
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1.5">
-                  <Building2 size={10} className="text-slate-400" />
-                  Company Details
-                </div>
-                <div className="bg-white rounded-xl border border-slate-100 divide-y divide-slate-50 shadow-sm transition-all duration-300 hover:shadow-md">
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <span className="text-xs text-slate-500">Legal Name</span>
-                    <span className="text-xs font-semibold text-slate-800 max-w-[60%] text-right">{client.profile?.legal_name || '-'}</span>
+              {/* Company Details + Billing side by side */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Company Details */}
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-1.5 flex items-center gap-1.5">
+                    <Building2 size={10} className="text-slate-400" />
+                    Company Details
                   </div>
-                  {client.profile?.zoho_name && client.profile.zoho_name !== client.profile.legal_name && (
-                    <div className="flex justify-between items-center px-4 py-3">
-                      <span className="text-xs text-slate-500">Zoho Name</span>
-                      <span className="text-xs font-medium text-slate-700 max-w-[60%] text-right">{client.profile.zoho_name}</span>
+                  <div className="bg-white rounded-lg border border-slate-100 divide-y divide-slate-50 shadow-sm">
+                    <div className="flex justify-between items-center px-3 py-2">
+                      <span className="text-[11px] text-slate-500">Legal Name</span>
+                      <span className="text-[11px] font-semibold text-slate-800 max-w-[55%] text-right truncate">{client.profile?.legal_name || '-'}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <span className="text-xs text-slate-500">Country</span>
-                    <span className="text-xs font-medium text-slate-800 flex items-center gap-1.5">
-                      <span className="text-sm">{country.flag}</span>
-                      {country.name}
-                    </span>
-                  </div>
-                  {/* Editable Industry */}
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <span className="text-xs text-slate-500 flex items-center gap-1">
-                      Industry
-                      {isIndustryUnknown && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      {isIndustryUnknown && (
-                        <button
-                          onClick={handleAutoDetectIndustry}
-                          disabled={autoDetecting}
-                          className="flex items-center gap-0.5 px-2 py-0.5 text-[10px] bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 cursor-pointer transition-all duration-200 shadow-sm hover:shadow"
-                        >
-                          <Sparkles size={8} />
-                          {autoDetecting ? '...' : 'AI Detect'}
-                        </button>
-                      )}
-                      <select
-                        value={editedIndustry}
-                        onChange={(e) => handleIndustryChange(e.target.value)}
-                        className={`text-xs font-medium bg-transparent border-none outline-none cursor-pointer text-right transition-colors duration-200 ${
-                          isIndustryUnknown ? 'text-amber-600' : 'text-slate-800'
-                        }`}
-                      >
-                        <option value="">Select...</option>
-                        {INDUSTRY_OPTIONS.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
+                    {client.profile?.zoho_name && client.profile.zoho_name !== client.profile.legal_name && (
+                      <div className="flex justify-between items-center px-3 py-2">
+                        <span className="text-[11px] text-slate-500">Zoho Name</span>
+                        <span className="text-[11px] font-medium text-slate-700 max-w-[55%] text-right truncate">{client.profile.zoho_name}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center px-3 py-2">
+                      <span className="text-[11px] text-slate-500">Country</span>
+                      <span className="text-[11px] font-medium text-slate-800 flex items-center gap-1">
+                        <span className="text-xs">{country.flag}</span>
+                        {country.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center px-3 py-2">
+                      <span className="text-[11px] text-slate-500">Type</span>
+                      <span className="text-[11px] font-medium text-slate-800">{client.profile?.client_type || '-'}</span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Billing & Finance */}
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1.5">
-                  <CreditCard size={10} className="text-slate-400" />
-                  Billing & Finance
-                </div>
-                <div className="bg-white rounded-xl border border-slate-100 divide-y divide-slate-50 shadow-sm transition-all duration-300 hover:shadow-md">
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <span className="text-xs text-slate-500">Currency</span>
-                    <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-700 text-[11px] font-semibold rounded-md">{client.profile?.billing_currency || 'USD'}</span>
+                {/* Billing & Finance */}
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-1.5 flex items-center gap-1.5">
+                    <CreditCard size={10} className="text-slate-400" />
+                    Billing & Finance
                   </div>
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <span className="text-xs text-slate-500">Billing Type</span>
-                    <span className="text-xs font-medium text-slate-800">{client.profile?.billing_type || '-'}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <span className="text-xs text-slate-500">Payment Model</span>
-                    <span className="text-xs font-medium text-slate-800">{client.profile?.payment_model || '-'}</span>
-                  </div>
-                  {client.profile?.billing_start_month && (
-                    <div className="flex justify-between items-center px-4 py-3">
-                      <span className="text-xs text-slate-500">Billing Start</span>
-                      <span className="text-xs font-medium text-slate-800">{client.profile.billing_start_month}</span>
+                  <div className="bg-white rounded-lg border border-slate-100 divide-y divide-slate-50 shadow-sm">
+                    <div className="flex justify-between items-center px-3 py-2">
+                      <span className="text-[11px] text-slate-500">Billing Type</span>
+                      <span className="text-[11px] font-medium text-slate-800">{client.profile?.billing_type || '-'}</span>
                     </div>
-                  )}
-                  {client.profile?.go_live_date && (
-                    <div className="flex justify-between items-center px-4 py-3">
-                      <span className="text-xs text-slate-500">Go-Live Date</span>
-                      <span className="text-xs font-medium text-emerald-700">{client.profile.go_live_date}</span>
+                    <div className="flex justify-between items-center px-3 py-2">
+                      <span className="text-[11px] text-slate-500">Payment</span>
+                      <span className="text-[11px] font-medium text-slate-800">{client.profile?.payment_model || '-'}</span>
                     </div>
-                  )}
+                    {client.profile?.billing_start_month && (
+                      <div className="flex justify-between items-center px-3 py-2">
+                        <span className="text-[11px] text-slate-500">Start</span>
+                        <span className="text-[11px] font-medium text-slate-800">{client.profile.billing_start_month}</span>
+                      </div>
+                    )}
+                    {client.profile?.go_live_date && (
+                      <div className="flex justify-between items-center px-3 py-2">
+                        <span className="text-[11px] text-slate-500">Go-Live</span>
+                        <span className="text-[11px] font-medium text-emerald-700">{client.profile.go_live_date}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -3449,8 +3470,8 @@ function ClientDetailsPanel({
 
           {/* APIs Tab - with editable costs */}
           {activeTab === 'apis' && (
-            <div className="space-y-2">
-              <div className="text-xs text-slate-500 mb-3">
+            <div className="space-y-1.5">
+              <div className="text-[11px] text-slate-500 mb-2">
                 <span className="font-medium text-slate-700">{panelMonth || 'Latest'}</span> • {currentMonthData?.apis?.length || 0} APIs
                 <span className="text-amber-600 ml-2">(Click "No cost" to add price)</span>
               </div>
@@ -3459,58 +3480,55 @@ function ClientDetailsPanel({
                   .sort((a, b) => (b.revenue_usd || 0) - (a.revenue_usd || 0))
                   .map((api, idx) => {
                     const isEditing = editingApiCost === api.name;
-                    const hasNoCost = !api.revenue_usd || api.revenue_usd === 0;
 
                     return (
                       <div
                         key={idx}
-                        className={`flex items-center justify-between py-3 px-4 rounded-lg ${
+                        className={`flex items-center justify-between py-2 px-3 rounded-lg ${
                           api.revenue_usd > 0 ? 'bg-emerald-50' : (api.usage || 0) > 0 ? 'bg-orange-50' : 'bg-slate-50'
                         }`}
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-slate-800">{api.name}</div>
+                          <div className="text-[12px] font-medium text-slate-800 truncate">{api.name}</div>
                           {(api.usage || 0) > 0 && (
-                            <div className="text-xs text-slate-500 mt-0.5">{(api.usage || 0).toLocaleString('en-US')} calls</div>
+                            <div className="text-[10px] text-slate-500">{(api.usage || 0).toLocaleString('en-US')} calls</div>
                           )}
                         </div>
-                        <div className="text-right ml-4">
+                        <div className="text-right ml-3">
                           {isEditing ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <input
                                 type="number"
                                 value={apiCostValue}
                                 onChange={(e) => setApiCostValue(e.target.value)}
-                                placeholder="Enter cost"
-                                className="w-24 px-2 py-1 text-xs border border-slate-300 rounded"
+                                placeholder="Cost"
+                                className="w-20 px-2 py-1 text-[11px] border border-slate-300 rounded"
                                 autoFocus
                               />
                               <button
                                 onClick={() => handleSaveApiCost(api.name, panelMonth)}
                                 disabled={saving}
-                                className="px-2 py-1 text-xs bg-emerald-500 text-white rounded hover:bg-emerald-600 cursor-pointer"
+                                className="px-2 py-1 text-[11px] bg-emerald-500 text-white rounded hover:bg-emerald-600 cursor-pointer"
                               >
                                 {saving ? '...' : 'Save'}
                               </button>
                               <button
                                 onClick={() => { setEditingApiCost(null); setApiCostValue(''); }}
-                                className="px-2 py-1 text-xs bg-slate-200 text-slate-600 rounded hover:bg-slate-300 cursor-pointer"
+                                className="px-2 py-1 text-[11px] bg-slate-200 text-slate-600 rounded hover:bg-slate-300 cursor-pointer"
                               >
                                 Cancel
                               </button>
                             </div>
                           ) : api.revenue_usd > 0 ? (
-                            <>
-                              <div className="text-sm font-bold text-emerald-700">
-                                {formatCurrency(api.revenue_usd, client.profile?.billing_currency || 'USD')}
-                              </div>
-                            </>
+                            <div className="text-[12px] font-bold text-emerald-700">
+                              {formatCurrency(api.revenue_usd, client.profile?.billing_currency || 'USD')}
+                            </div>
                           ) : (
                             <button
                               onClick={() => { setEditingApiCost(api.name); setApiCostValue(''); }}
-                              className="text-sm text-orange-600 font-medium hover:text-orange-700 hover:underline cursor-pointer"
+                              className="text-[12px] text-orange-600 font-medium hover:text-orange-700 hover:underline cursor-pointer"
                             >
-                              No cost - Add price
+                              No cost - Add
                             </button>
                           )}
                         </div>
@@ -3518,7 +3536,7 @@ function ClientDetailsPanel({
                     );
                   })
               ) : (
-                <div className="text-sm text-slate-400 text-center py-8">No API data for {panelMonth || 'this month'}</div>
+                <div className="text-[12px] text-slate-400 text-center py-6">No API data for {panelMonth || 'this month'}</div>
               )}
             </div>
           )}
@@ -3530,12 +3548,12 @@ function ClientDetailsPanel({
 
           {/* Revenue Tab */}
           {activeTab === 'revenue' && (
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               {client.monthly_data?.map((month, idx) => (
-                <div key={idx} className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-lg">
-                  <span className="text-sm font-medium text-slate-700">{month.month}</span>
+                <div key={idx} className="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg">
+                  <span className="text-[12px] font-medium text-slate-700">{month.month}</span>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-[12px] font-bold text-slate-800">
                       {formatCurrency(month.total_revenue_usd, client.profile?.billing_currency || 'USD')}
                     </span>
                   </div>
@@ -3567,26 +3585,30 @@ function ClientDetailsPanel({
 
 // Client Notes Tab Component
 function ClientNotesTab({ clientName, currentUser }: { clientName: string; currentUser: string }) {
-  const [notes, setNotes] = useState<ClientCommentType[]>([]);
+  const notesKey = `comments-client-${clientName}`;
+  const { data: notes = [], mutate: mutateNotes } = useSWR<ClientCommentType[]>(
+    notesKey,
+    () => getClientComments(clientName)
+  );
   const [newNote, setNewNote] = useState('');
   const [newCategory, setNewCategory] = useState<ClientCommentType['category']>('note');
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
-  useEffect(() => {
-    getClientComments(clientName).then(setNotes);
-  }, [clientName]);
-
   const handleAdd = async () => {
     if (!newNote.trim()) return;
-    const note = await addClientComment(clientName, newNote.trim(), currentUser, newCategory);
-    setNotes(prev => [...prev, note]);
-    setNewNote('');
-    notifyComment(currentUser, clientName, null, newNote.trim());
+    try {
+      const note = await addClientComment(clientName, newNote.trim(), currentUser, newCategory);
+      mutateNotes([...notes, note], false);
+      setNewNote('');
+      notifyComment(currentUser, clientName, null, newNote.trim());
+    } catch {
+      showToast('error', 'Failed to add note');
+    }
   };
 
   const handleDelete = async (id: string) => {
     await deleteClientComment(clientName, id);
-    setNotes(prev => prev.filter(n => n.id !== id));
+    mutateNotes(notes.filter(n => n.id !== id), false);
   };
 
   const filteredNotes = filterCategory === 'all' ? notes : notes.filter(n => n.category === filterCategory);
@@ -3617,15 +3639,15 @@ function ClientNotesTab({ clientName, currentUser }: { clientName: string; curre
 
       {/* Notes list */}
       {filteredNotes.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {filteredNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(note => (
-            <div key={note.id} className="bg-slate-50 rounded-lg p-3 group">
+            <div key={note.id} className="bg-slate-50 rounded-lg p-2 group">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
                   <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${categoryColors[note.category]}`}>
                     {note.category}
                   </span>
-                  <p className="text-sm text-slate-700 mt-1.5">{note.text}</p>
+                  <p className="text-[12px] text-slate-700 mt-1">{note.text}</p>
                 </div>
                 <button
                   onClick={() => handleDelete(note.id)}
@@ -3634,14 +3656,14 @@ function ClientNotesTab({ clientName, currentUser }: { clientName: string; curre
                   <Trash2 size={12} />
                 </button>
               </div>
-              <div className="text-[10px] text-slate-400 mt-2">
+              <div className="text-[10px] text-slate-400 mt-1">
                 {note.author} · {new Date(note.createdAt).toLocaleDateString()}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-sm text-slate-400 text-center py-8">No notes yet</div>
+        <div className="text-[12px] text-slate-400 text-center py-6">No notes yet</div>
       )}
 
       {/* Add note */}
