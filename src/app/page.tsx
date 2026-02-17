@@ -13,6 +13,7 @@ import type { SlackSettings } from '@/lib/slack';
 import RecommendationsView from '@/components/RecommendationsView';
 import AIRecommendationsView from '@/components/AIRecommendationsView';
 import SalesIntelView from '@/components/SalesIntelView';
+import SegmentIntelligenceView from '@/components/SegmentIntelligenceView';
 import LoginPage from '@/components/LoginPage';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
 import { showToast } from '@/components/ToastNotifications';
@@ -911,6 +912,17 @@ export default function Dashboard() {
           <LayoutGrid size={12} />
           Matrix
         </button>
+        <button
+          onClick={() => setView('recommendations')}
+          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium rounded-full transition-all cursor-pointer ${
+            view === 'recommendations'
+              ? 'bg-slate-800 text-white shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Target size={12} />
+          Cross-Sell
+        </button>
       </div>
 
       {/* Floating nav actions — settings, save, logout */}
@@ -946,7 +958,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 min-h-0 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto'}`}>
+      <div className={`flex-1 min-h-0 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : view === 'recommendations' ? 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-2 overflow-hidden' : 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto'}`}>
 
         {/* Matrix View */}
         {view === 'matrix' && (
@@ -1043,17 +1055,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Recommendations View - Commented out for now */}
-        {/*
+        {/* Cross-Sell Intelligence View */}
         {view === 'recommendations' && (
-          <RecommendationsView
-            clients={data.clients.map(c => ({
-              client_name: c.client_name,
-              profile: c.profile ? { segment: c.profile.segment ?? undefined } : undefined
-            }))}
-          />
+          <SegmentIntelligenceView />
         )}
-        */}
 
         {/* Sales Intel View - Commented out for now */}
         {/*
