@@ -519,6 +519,13 @@ export async function loadMatrixData(): Promise<MatrixData> {
   });
 
   let overrideCount = 0;
+  const MIS_MONTHS: Array<{ month: string; key: 'jan_26' | 'dec_25' | 'nov_25' | 'oct_25' }> = [
+    { month: 'Jan 2026', key: 'jan_26' },
+    { month: 'Dec 2025', key: 'dec_25' },
+    { month: 'Nov 2025', key: 'nov_25' },
+    { month: 'Oct 2025', key: 'oct_25' },
+  ];
+
   mergedClients.forEach(client => {
     const masterEntry = masterEntryMap.get(normalizeName(client.client_name))
       || (client.client_id ? masterEntryMap.get(normalizeName(client.client_id)) : undefined);
@@ -528,15 +535,45 @@ export async function loadMatrixData(): Promise<MatrixData> {
     const currency = (client.profile?.billing_currency || 'USD').toUpperCase();
     const usdToNative = USD_TO_NATIVE[currency] || 1;
 
-    let overridden = false;
+    // Build a set of existing months for quick lookup
+    const existingMonths = new Set(client.monthly_data.map(m => m.month));
+
+    // Override existing monthly data
     for (const monthData of client.monthly_data) {
       const key = MONTH_TO_KEY[monthData.month];
       if (key !== undefined) {
         monthData.total_revenue_usd = masterEntry.actualRevenue[key] * usdToNative;
-        overridden = true;
       }
     }
-    if (overridden) overrideCount++;
+
+    // Create missing monthly entries from actualRevenue
+    for (const { month, key } of MIS_MONTHS) {
+      if (!existingMonths.has(month)) {
+        const usdVal = masterEntry.actualRevenue[key];
+        if (usdVal && usdVal > 0) {
+          client.monthly_data.unshift({
+            month,
+            total_revenue_usd: usdVal * usdToNative,
+            hv_api_revenue_usd: 0,
+            other_revenue_usd: 0,
+            apis: [],
+          });
+        }
+      }
+    }
+
+    // Recalculate aggregates from the (now overridden) monthly data
+    client.totalRevenue = client.monthly_data.reduce((sum, m) => sum + m.total_revenue_usd, 0);
+    client.latestMonth = client.monthly_data[0]?.month || '';
+    client.latestRevenue = client.monthly_data[0]?.total_revenue_usd || 0;
+
+    // Update active status if client now has Jan 2026 data
+    if (!client.hasJan2026Data && client.monthly_data.some(m => m.month === 'Jan 2026' && m.total_revenue_usd > 0)) {
+      client.hasJan2026Data = true;
+      if (client.isInMasterList) client.isActive = true;
+    }
+
+    overrideCount++;
   });
   console.log(`[MIS Override] Applied actualRevenue overrides to ${overrideCount} clients`);
 
