@@ -33,7 +33,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Real Estate Development",
       "geography": "India",
       "mrrBucket": "Less than 100",
       "kam": "Kritika Ramesh"
@@ -204,7 +204,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Investment",
       "geography": "India",
       "mrrBucket": "Churned",
       "kam": "Kritika Ramesh"
@@ -715,7 +715,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Channel Partner",
       "geography": "Africa",
       "mrrBucket": "Dormant",
       "kam": "Harshit Shrivastava"
@@ -791,7 +791,7 @@
       },
       "jan26RecurringRevenue": 27.0,
       "category": "Medium - (50 to 79%)",
-      "segment": "Others",
+      "segment": "Digital Lenders",
       "geography": "India",
       "mrrBucket": "Less than 100",
       "kam": "Naveen Shankar Choudhury"
@@ -1048,7 +1048,8 @@
       "name": "BLUEOCEAN TECHNOSOURCE PRIVATE LIMITED",
       "zohoId": "1432375000020141214",
       "metabaseIds": ",,",
-      "clientId": ""
+      "clientId": "",
+      "segment": "Channel Partner"
     },
     {
       "id": 56,
@@ -1330,7 +1331,7 @@
       },
       "jan26RecurringRevenue": 178.0,
       "category": "High - 80 to 100%",
-      "segment": "Others",
+      "segment": "Logistics",
       "geography": "India",
       "mrrBucket": "100 to 500",
       "kam": "Kritika Ramesh"
@@ -1671,7 +1672,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Brokerage",
       "geography": "India",
       "mrrBucket": "Dormant",
       "kam": "Veeramesh"
@@ -2507,7 +2508,7 @@
       },
       "jan26RecurringRevenue": 111.0,
       "category": "High - 80 to 100%",
-      "segment": "Others",
+      "segment": "Channel Partner",
       "geography": "India",
       "mrrBucket": "100 to 500",
       "kam": "Anshuman Gill"
@@ -2678,7 +2679,7 @@
       },
       "jan26RecurringRevenue": 32.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Payment Service Provider",
       "geography": "Africa",
       "mrrBucket": "Less than 100",
       "kam": "Lawrence Osayemi"
@@ -2811,7 +2812,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "High - 80 to 100%",
-      "segment": "Others",
+      "segment": "Digital Lenders",
       "geography": "India",
       "mrrBucket": "Dormant",
       "kam": "Maline K L"
@@ -3039,7 +3040,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Bike/Car Rental",
       "geography": "India",
       "mrrBucket": "Dormant",
       "kam": "Anshuman Gill"
@@ -3077,7 +3078,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "Medium - (50 to 79%)",
-      "segment": "Others",
+      "segment": "Telecom",
       "geography": "India",
       "mrrBucket": "Less than 100",
       "kam": "Arunima Srivastava"
@@ -3305,7 +3306,7 @@
       },
       "jan26RecurringRevenue": 254.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Digital Lenders",
       "geography": "India",
       "mrrBucket": "100 to 500",
       "kam": "Anshuman Gill"
@@ -3740,7 +3741,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "High - 80 to 100%",
-      "segment": "Others",
+      "segment": "Marketplaces",
       "geography": "India",
       "mrrBucket": "Dormant",
       "kam": "Arunima Srivastava"
@@ -4272,7 +4273,7 @@
       },
       "jan26RecurringRevenue": 5.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Marketplaces",
       "geography": "India",
       "mrrBucket": "Less than 100",
       "kam": "Veeramesh"
@@ -4348,7 +4349,7 @@
       },
       "jan26RecurringRevenue": 111.0,
       "category": "High - 80 to 100%",
-      "segment": "Others",
+      "segment": "Marketplaces",
       "geography": "India",
       "mrrBucket": "100 to 500",
       "kam": "Arunima Srivastava"
@@ -5051,7 +5052,7 @@
       },
       "jan26RecurringRevenue": 111.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Marketplaces",
       "geography": "India",
       "mrrBucket": "Churned",
       "kam": "Sriya"
@@ -6115,7 +6116,7 @@
       },
       "jan26RecurringRevenue": 2000.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Crypto",
       "geography": "India",
       "mrrBucket": "500 to 2K",
       "kam": "Michelle George"
@@ -6513,7 +6514,7 @@
         "oct_25": 0.0
       },
       "jan26RecurringRevenue": 0.0,
-      "segment": "Others",
+      "segment": "Gaming",
       "geography": "India",
       "mrrBucket": "Dormant",
       "kam": "Maline K L"
@@ -6789,7 +6790,8 @@
       "name": "North Management LLC",
       "zohoId": "",
       "metabaseIds": ",,",
-      "clientId": ""
+      "clientId": "",
+      "segment": "Real Estate Development"
     },
     {
       "id": 359,
@@ -8151,7 +8153,7 @@
         "oct_25": 0.0
       },
       "jan26RecurringRevenue": 0.0,
-      "segment": "Others",
+      "segment": "Digital Lenders",
       "geography": "Africa",
       "mrrBucket": "Dormant",
       "kam": "Lawrence Osayemi"
@@ -9025,7 +9027,7 @@
       },
       "jan26RecurringRevenue": 105.0,
       "category": "Medium - (50 to 79%)",
-      "segment": "Others",
+      "segment": "Agriculture",
       "geography": "India",
       "mrrBucket": "100 to 500",
       "kam": "Anshuman Gill"
@@ -9120,7 +9122,7 @@
       },
       "jan26RecurringRevenue": 375.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "E-commerce",
       "geography": "HyperStart",
       "mrrBucket": "100 to 500"
     },
@@ -9499,7 +9501,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "Medium - (50 to 79%)",
-      "segment": "Others",
+      "segment": "Travel",
       "geography": "India",
       "mrrBucket": "Dormant",
       "kam": "Sales"
@@ -10125,7 +10127,7 @@
       },
       "jan26RecurringRevenue": 133.0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Payment Service Provider",
       "geography": "India",
       "mrrBucket": "100 to 500",
       "kam": "Arunima Srivastava"
@@ -10163,7 +10165,7 @@
       },
       "jan26RecurringRevenue": 0.0,
       "category": "High - 80 to 100%",
-      "segment": "Others",
+      "segment": "Bike/Car Rental",
       "geography": "India",
       "mrrBucket": "Dormant",
       "kam": "Anshuman Gill"
@@ -10523,7 +10525,7 @@
       },
       "jan26RecurringRevenue": 0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Payment Service Provider",
       "geography": "Africa",
       "mrrBucket": "Churned",
       "kam": "Aditya Rao"
@@ -10560,7 +10562,7 @@
       },
       "jan26RecurringRevenue": 0,
       "category": "High - 80 to 100%",
-      "segment": "Others",
+      "segment": "HR/Staffing",
       "geography": "India",
       "mrrBucket": "Churned",
       "kam": "Anshuman Gill"
@@ -10598,7 +10600,7 @@
       },
       "jan26RecurringRevenue": 0,
       "category": "Low - (< 50%)",
-      "segment": "Others",
+      "segment": "Wallet",
       "geography": "ASEAN",
       "mrrBucket": "Less than 100",
       "kam": "Harshit Shrivastav"
