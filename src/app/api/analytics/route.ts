@@ -156,13 +156,13 @@ export async function GET(request: Request) {
       });
 
       // Recalculate aggregates after applying overrides
-      const totalRevenue = client.monthly_data.reduce((sum, m) =>
-        sum + m.apis.reduce((apiSum, api) => apiSum + api.revenue_usd, 0), 0);
+      // Use total_revenue_usd (which includes MIS actualRevenue overrides) not API sums
+      const totalRevenue = client.monthly_data.reduce((sum, m) => sum + m.total_revenue_usd, 0);
       client.totalRevenue = totalRevenue;
 
       const latestMonth = client.monthly_data[0];
       if (latestMonth) {
-        client.latestRevenue = latestMonth.apis.reduce((sum, api) => sum + api.revenue_usd, 0);
+        client.latestRevenue = latestMonth.total_revenue_usd;
       }
 
       // Recalculate API revenues
