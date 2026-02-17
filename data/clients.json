@@ -12,7 +12,12 @@
         "nov_25": 13.0,
         "oct_25": 28.0
       },
-      "jan26RecurringRevenue": 94.0
+      "jan26RecurringRevenue": 94.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "Africa",
+      "mrrBucket": "Less than 100",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 1,
@@ -26,7 +31,12 @@
         "nov_25": 1.0,
         "oct_25": 5.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 2,
@@ -40,7 +50,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 99.0
+      "jan26RecurringRevenue": 99.0,
+      "category": "High - 80 to 100%",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 3,
@@ -54,7 +69,12 @@
         "nov_25": 2255.0,
         "oct_25": 2379.0
       },
-      "jan26RecurringRevenue": 1917.0
+      "jan26RecurringRevenue": 1917.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 4,
@@ -68,7 +88,12 @@
         "nov_25": 202.0,
         "oct_25": 234.0
       },
-      "jan26RecurringRevenue": 809.0
+      "jan26RecurringRevenue": 809.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "ASEAN",
+      "mrrBucket": "500 to 2K",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 5,
@@ -82,7 +107,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2.0
+      "jan26RecurringRevenue": 2.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 6,
@@ -96,7 +126,12 @@
         "nov_25": 1.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 7,
@@ -110,7 +145,12 @@
         "nov_25": 66.0,
         "oct_25": 113.0
       },
-      "jan26RecurringRevenue": 48.0
+      "jan26RecurringRevenue": 48.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "Africa",
+      "mrrBucket": "100 to 500",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 8,
@@ -124,7 +164,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 10496.0
+      "jan26RecurringRevenue": 10496.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 9,
@@ -138,7 +183,12 @@
         "nov_25": 2740.0,
         "oct_25": 363.0
       },
-      "jan26RecurringRevenue": 4861.0
+      "jan26RecurringRevenue": 4861.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sriya"
     },
     {
       "id": 10,
@@ -152,7 +202,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 11,
@@ -166,7 +221,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 12,
@@ -180,7 +240,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 2352.0
+      "jan26RecurringRevenue": 2352.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 13,
@@ -194,7 +259,12 @@
         "nov_25": 90.0,
         "oct_25": 90.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Lending Marketplace",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 14,
@@ -208,7 +278,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 234.0
+      "jan26RecurringRevenue": 234.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Michelle George"
     },
     {
       "id": 15,
@@ -222,7 +297,12 @@
         "nov_25": 3292.0,
         "oct_25": 3559.0
       },
-      "jan26RecurringRevenue": 7652.0
+      "jan26RecurringRevenue": 7652.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 16,
@@ -236,7 +316,12 @@
         "nov_25": 11.0,
         "oct_25": 14.0
       },
-      "jan26RecurringRevenue": 13.0
+      "jan26RecurringRevenue": 13.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 17,
@@ -250,7 +335,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Bike/Car Rental",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 18,
@@ -264,7 +354,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 23.0
+      "jan26RecurringRevenue": 23.0,
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Less than 100",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 19,
@@ -278,7 +372,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1620.0
+      "jan26RecurringRevenue": 1620.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sales"
     },
     {
       "id": 20,
@@ -292,7 +391,12 @@
         "nov_25": 65.0,
         "oct_25": 88.0
       },
-      "jan26RecurringRevenue": 60.0
+      "jan26RecurringRevenue": 60.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Less than 100",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 21,
@@ -306,7 +410,12 @@
         "nov_25": 90.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 286.0
+      "jan26RecurringRevenue": 286.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 22,
@@ -320,7 +429,12 @@
         "nov_25": 133.0,
         "oct_25": 131.0
       },
-      "jan26RecurringRevenue": 166.0
+      "jan26RecurringRevenue": 166.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 23,
@@ -334,7 +448,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 449.0
+      "jan26RecurringRevenue": 449.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "500 to 2K",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 24,
@@ -348,7 +467,12 @@
         "nov_25": 274.0,
         "oct_25": 436.0
       },
-      "jan26RecurringRevenue": 10419.0
+      "jan26RecurringRevenue": 10419.0,
+      "category": "High - 80 to 100%",
+      "segment": "Wallet",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sarthak Ashok Nair"
     },
     {
       "id": 25,
@@ -362,7 +486,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 583.0
+      "jan26RecurringRevenue": 583.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 26,
@@ -376,7 +505,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6.0
+      "jan26RecurringRevenue": 6.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 27,
@@ -390,7 +524,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 28,
@@ -404,7 +543,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Unassigned"
     },
     {
       "id": 29,
@@ -418,7 +562,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "High - 80 to 100%",
+      "segment": "Bike/Car Rental",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 30,
@@ -432,7 +581,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 25832.0
+      "jan26RecurringRevenue": 25832.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 31,
@@ -446,7 +600,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 351.0
+      "jan26RecurringRevenue": 351.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 32,
@@ -460,7 +619,12 @@
         "nov_25": 4.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 269.0
+      "jan26RecurringRevenue": 269.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 33,
@@ -474,7 +638,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": -0.0
+      "jan26RecurringRevenue": -0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 34,
@@ -488,7 +657,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sriya"
     },
     {
       "id": 35,
@@ -502,7 +675,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 88.0
+      "jan26RecurringRevenue": 88.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Michelle George"
     },
     {
       "id": 36,
@@ -516,7 +694,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Dormant",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 37,
@@ -530,7 +713,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Dormant",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 38,
@@ -544,7 +732,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gaming",
+      "geography": "Africa",
+      "mrrBucket": "Dormant",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 39,
@@ -558,7 +751,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 40,
@@ -572,7 +770,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 23.0
+      "jan26RecurringRevenue": 23.0,
+      "category": "High - 80 to 100%",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 41,
@@ -586,7 +789,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 27.0
+      "jan26RecurringRevenue": 27.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 42,
@@ -600,7 +808,12 @@
         "nov_25": 7.0,
         "oct_25": 11.0
       },
-      "jan26RecurringRevenue": 4.0
+      "jan26RecurringRevenue": 4.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 43,
@@ -614,7 +827,12 @@
         "nov_25": 171.0,
         "oct_25": 261.0
       },
-      "jan26RecurringRevenue": 448.0
+      "jan26RecurringRevenue": 448.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "100 to 500",
+      "kam": "Sales"
     },
     {
       "id": 44,
@@ -628,7 +846,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital lenders",
+      "geography": "Africa",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 45,
@@ -642,7 +865,12 @@
         "nov_25": 74.0,
         "oct_25": 2.0
       },
-      "jan26RecurringRevenue": 11137.0
+      "jan26RecurringRevenue": 11137.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital lenders",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "2K to 10K",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 46,
@@ -656,7 +884,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2803.0
+      "jan26RecurringRevenue": 2803.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital lenders",
+      "geography": "Africa",
+      "mrrBucket": "2K to 10K",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 47,
@@ -670,7 +903,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 246.0
+      "jan26RecurringRevenue": 246.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital lenders",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 48,
@@ -684,7 +922,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 492.0
+      "jan26RecurringRevenue": 492.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital lenders",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 49,
@@ -698,7 +941,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 50,
@@ -712,7 +960,12 @@
         "nov_25": -366.0,
         "oct_25": 3387.0
       },
-      "jan26RecurringRevenue": 7602.0
+      "jan26RecurringRevenue": 7602.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 51,
@@ -726,7 +979,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 133.0
+      "jan26RecurringRevenue": 133.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 52,
@@ -740,7 +998,12 @@
         "nov_25": 4433.0,
         "oct_25": 10449.0
       },
-      "jan26RecurringRevenue": 2492.0
+      "jan26RecurringRevenue": 2492.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 53,
@@ -754,7 +1017,12 @@
         "nov_25": 5625.0,
         "oct_25": 5156.0
       },
-      "jan26RecurringRevenue": 6616.0
+      "jan26RecurringRevenue": 6616.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 54,
@@ -768,7 +1036,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Churned"
     },
     {
       "id": 55,
@@ -789,7 +1062,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 389.0
+      "jan26RecurringRevenue": 389.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 57,
@@ -803,7 +1081,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2215.0
+      "jan26RecurringRevenue": 2215.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "V Kartik"
     },
     {
       "id": 58,
@@ -817,7 +1100,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 14600.0
+      "jan26RecurringRevenue": 14600.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 59,
@@ -831,7 +1119,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3195.0
+      "jan26RecurringRevenue": 3195.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 60,
@@ -845,7 +1138,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sriya"
     },
     {
       "id": 61,
@@ -859,7 +1157,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 7.0
+      "jan26RecurringRevenue": 7.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Crypto",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 62,
@@ -873,7 +1176,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 94.0
+      "jan26RecurringRevenue": 94.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 63,
@@ -887,7 +1195,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Maline K L"
     },
     {
       "id": 64,
@@ -901,7 +1214,12 @@
         "nov_25": 10329.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 4543.0
+      "jan26RecurringRevenue": 4543.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 65,
@@ -915,7 +1233,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 160.0
+      "jan26RecurringRevenue": 160.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Maline K"
     },
     {
       "id": 66,
@@ -929,7 +1252,12 @@
         "nov_25": 45.0,
         "oct_25": 45.0
       },
-      "jan26RecurringRevenue": 44.0
+      "jan26RecurringRevenue": 44.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 67,
@@ -943,7 +1271,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Manish J"
     },
     {
       "id": 68,
@@ -957,7 +1290,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 167.0
+      "jan26RecurringRevenue": 167.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 69,
@@ -971,7 +1309,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 70,
@@ -985,7 +1328,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 178.0
+      "jan26RecurringRevenue": 178.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 71,
@@ -999,7 +1347,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 72,
@@ -1013,7 +1366,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 73,
@@ -1027,7 +1385,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 56.0
+      "jan26RecurringRevenue": 56.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 74,
@@ -1041,7 +1404,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1292.0
+      "jan26RecurringRevenue": 1292.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 75,
@@ -1055,7 +1423,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 11833.0
+      "jan26RecurringRevenue": 11833.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 76,
@@ -1069,7 +1442,12 @@
         "nov_25": 0.0,
         "oct_25": 21.0
       },
-      "jan26RecurringRevenue": 5436.0
+      "jan26RecurringRevenue": 5436.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "Africa",
+      "mrrBucket": "2K to 10K",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 77,
@@ -1083,7 +1461,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2866.0
+      "jan26RecurringRevenue": 2866.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "Africa",
+      "mrrBucket": "2K to 10K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 78,
@@ -1097,7 +1480,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 79,
@@ -1111,7 +1498,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 80,
@@ -1125,7 +1517,12 @@
         "nov_25": 3.0,
         "oct_25": 5.0
       },
-      "jan26RecurringRevenue": -0.0
+      "jan26RecurringRevenue": -0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 81,
@@ -1139,7 +1536,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 94.0
+      "jan26RecurringRevenue": 94.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 82,
@@ -1153,7 +1555,12 @@
         "nov_25": 23.0,
         "oct_25": 20.0
       },
-      "jan26RecurringRevenue": 62.0
+      "jan26RecurringRevenue": 62.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "Africa",
+      "mrrBucket": "Less than 100",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 83,
@@ -1167,7 +1574,12 @@
         "nov_25": 1826.0,
         "oct_25": 998.0
       },
-      "jan26RecurringRevenue": 7203.0
+      "jan26RecurringRevenue": 7203.0,
+      "category": "High - 80 to 100%",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Maline K L"
     },
     {
       "id": 84,
@@ -1181,7 +1593,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1579.0
+      "jan26RecurringRevenue": 1579.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 85,
@@ -1195,7 +1612,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 86,
@@ -1209,7 +1631,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sales"
     },
     {
       "id": 87,
@@ -1223,7 +1650,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1633.0
+      "jan26RecurringRevenue": 1633.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 88,
@@ -1237,7 +1669,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Veeramesh"
     },
     {
       "id": 89,
@@ -1251,7 +1688,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 35.0
+      "jan26RecurringRevenue": 35.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 90,
@@ -1265,7 +1707,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Sriya"
     },
     {
       "id": 91,
@@ -1279,7 +1726,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1489.0
+      "jan26RecurringRevenue": 1489.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 92,
@@ -1293,7 +1745,12 @@
         "nov_25": 569.0,
         "oct_25": 602.0
       },
-      "jan26RecurringRevenue": 601.0
+      "jan26RecurringRevenue": 601.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 93,
@@ -1307,7 +1764,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1180.0
+      "jan26RecurringRevenue": 1180.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "Africa",
+      "mrrBucket": "500 to 2K",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 94,
@@ -1321,7 +1783,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6332.0
+      "jan26RecurringRevenue": 6332.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 95,
@@ -1335,7 +1802,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 22.0
+      "jan26RecurringRevenue": 22.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 96,
@@ -1349,7 +1821,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 167.0
+      "jan26RecurringRevenue": 167.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 97,
@@ -1363,7 +1840,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 36603.0
+      "jan26RecurringRevenue": 36603.0,
+      "category": "High - 80 to 100%",
+      "segment": "Banks",
+      "geography": "ASEAN",
+      "mrrBucket": "10K to 50K",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 98,
@@ -1377,7 +1859,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 417.0
+      "jan26RecurringRevenue": 417.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 99,
@@ -1391,7 +1878,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 218.0
+      "jan26RecurringRevenue": 218.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "100 to 500",
+      "kam": "Akhilesh agarwal"
     },
     {
       "id": 100,
@@ -1405,7 +1897,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1167.0
+      "jan26RecurringRevenue": 1167.0,
+      "category": "High - 80 to 100%",
+      "segment": "Banks",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 101,
@@ -1419,7 +1916,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 102,
@@ -1433,7 +1935,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2.0
+      "jan26RecurringRevenue": 2.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 103,
@@ -1447,7 +1954,12 @@
         "nov_25": 11353.0,
         "oct_25": 1508.0
       },
-      "jan26RecurringRevenue": 13105.0
+      "jan26RecurringRevenue": 13105.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 104,
@@ -1461,7 +1973,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6960.0
+      "jan26RecurringRevenue": 6960.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 105,
@@ -1475,7 +1992,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 106,
@@ -1489,7 +2011,12 @@
         "nov_25": 1.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 411.0
+      "jan26RecurringRevenue": 411.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 107,
@@ -1503,7 +2030,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 792.0
+      "jan26RecurringRevenue": 792.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 108,
@@ -1517,7 +2049,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 375.0
+      "jan26RecurringRevenue": 375.0,
+      "category": "Low - (< 50%)",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 109,
@@ -1531,7 +2068,12 @@
         "nov_25": 0.0,
         "oct_25": 35.0
       },
-      "jan26RecurringRevenue": 296.0
+      "jan26RecurringRevenue": 296.0,
+      "category": "Low - (< 50%)",
+      "segment": "AMCs",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 110,
@@ -1545,7 +2087,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Michelle George"
     },
     {
       "id": 111,
@@ -1559,7 +2106,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Aditya Rao"
     },
     {
       "id": 112,
@@ -1573,7 +2125,12 @@
         "nov_25": 20.0,
         "oct_25": 27.0
       },
-      "jan26RecurringRevenue": 14.0
+      "jan26RecurringRevenue": 14.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 113,
@@ -1587,7 +2144,12 @@
         "nov_25": 3516.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3040.0
+      "jan26RecurringRevenue": 3040.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 114,
@@ -1601,7 +2163,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1914.0
+      "jan26RecurringRevenue": 1914.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 115,
@@ -1615,7 +2182,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 116,
@@ -1629,7 +2201,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 117,
@@ -1643,7 +2220,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 118,
@@ -1657,7 +2239,12 @@
         "nov_25": 2072.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3138.0
+      "jan26RecurringRevenue": 3138.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 119,
@@ -1671,7 +2258,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 200.0
+      "jan26RecurringRevenue": 200.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "100 to 500",
+      "kam": "Maline K L"
     },
     {
       "id": 120,
@@ -1685,7 +2277,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1701.0
+      "jan26RecurringRevenue": 1701.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Michelle George"
     },
     {
       "id": 121,
@@ -1699,7 +2296,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 159.0
+      "jan26RecurringRevenue": 159.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 122,
@@ -1713,7 +2315,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3163.0
+      "jan26RecurringRevenue": 3163.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 123,
@@ -1727,7 +2334,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 23071.0
+      "jan26RecurringRevenue": 23071.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 124,
@@ -1741,7 +2353,12 @@
         "nov_25": -0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 125,
@@ -1755,7 +2372,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 666.0
+      "jan26RecurringRevenue": 666.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "V Kartik"
     },
     {
       "id": 126,
@@ -1769,7 +2391,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Bike/Car rental",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 127,
@@ -1783,7 +2410,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 9452.0
+      "jan26RecurringRevenue": 9452.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 128,
@@ -1797,7 +2429,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1125.0
+      "jan26RecurringRevenue": 1125.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 129,
@@ -1811,7 +2448,12 @@
         "nov_25": 23.0,
         "oct_25": 100.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Veer Ramesh Chembath"
     },
     {
       "id": 130,
@@ -1825,7 +2467,12 @@
         "nov_25": 112.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Manish J"
     },
     {
       "id": 131,
@@ -1839,7 +2486,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 132,
@@ -1853,7 +2505,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 133,
@@ -1867,7 +2524,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 134,
@@ -1881,7 +2543,12 @@
         "nov_25": 112.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 135,
@@ -1895,7 +2562,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 324.0
+      "jan26RecurringRevenue": 324.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 136,
@@ -1909,7 +2581,12 @@
         "nov_25": 12845.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 15791.0
+      "jan26RecurringRevenue": 15791.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "10K to 50K",
+      "kam": "Chitransh Jain"
     },
     {
       "id": 137,
@@ -1923,7 +2600,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 138,
@@ -1937,7 +2619,12 @@
         "nov_25": 0.0,
         "oct_25": 6.0
       },
-      "jan26RecurringRevenue": 603.0
+      "jan26RecurringRevenue": 603.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "500 to 2K",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 139,
@@ -1951,7 +2638,12 @@
         "nov_25": 240.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 5471.0
+      "jan26RecurringRevenue": 5471.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 140,
@@ -1965,7 +2657,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 951.0
+      "jan26RecurringRevenue": 951.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 141,
@@ -1979,7 +2676,12 @@
         "nov_25": 20.0,
         "oct_25": 27.0
       },
-      "jan26RecurringRevenue": 32.0
+      "jan26RecurringRevenue": 32.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Less than 100",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 142,
@@ -1993,7 +2695,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2.0
+      "jan26RecurringRevenue": 2.0,
+      "category": "Low - (< 50%)",
+      "segment": "Ed-tech/Learning",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 143,
@@ -2007,7 +2714,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 4.0
+      "jan26RecurringRevenue": 4.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 144,
@@ -2021,7 +2733,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sebastian Richard Martin"
     },
     {
       "id": 145,
@@ -2035,7 +2752,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 146,
@@ -2049,7 +2771,12 @@
         "nov_25": 0.0,
         "oct_25": 34.0
       },
-      "jan26RecurringRevenue": 1197.0
+      "jan26RecurringRevenue": 1197.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Khushi S"
     },
     {
       "id": 147,
@@ -2063,7 +2790,12 @@
         "nov_25": 84.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 83.0
+      "jan26RecurringRevenue": 83.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 148,
@@ -2077,7 +2809,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 149,
@@ -2091,7 +2828,12 @@
         "nov_25": 25.0,
         "oct_25": 25.0
       },
-      "jan26RecurringRevenue": 19.0
+      "jan26RecurringRevenue": 19.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 150,
@@ -2105,7 +2847,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 350.0
+      "jan26RecurringRevenue": 350.0,
+      "category": "Low - (< 50%)",
+      "segment": "Ed-tech/Learning",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 151,
@@ -2119,7 +2866,12 @@
         "nov_25": 164572.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 164823.0
+      "jan26RecurringRevenue": 164823.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "ASEAN",
+      "mrrBucket": "More Than 50K",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 152,
@@ -2133,7 +2885,12 @@
         "nov_25": 0.0,
         "oct_25": 256.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "ASEAN",
+      "mrrBucket": "Dormant",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 153,
@@ -2147,7 +2904,12 @@
         "nov_25": 8.0,
         "oct_25": 10.0
       },
-      "jan26RecurringRevenue": 10.0
+      "jan26RecurringRevenue": 10.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 154,
@@ -2161,7 +2923,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 359.0
+      "jan26RecurringRevenue": 359.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Sales"
     },
     {
       "id": 155,
@@ -2175,7 +2942,12 @@
         "nov_25": 9.0,
         "oct_25": 18.0
       },
-      "jan26RecurringRevenue": 5.0
+      "jan26RecurringRevenue": 5.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 156,
@@ -2189,7 +2961,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Churned"
     },
     {
       "id": 157,
@@ -2203,7 +2980,12 @@
         "nov_25": 0.0,
         "oct_25": -3.0
       },
-      "jan26RecurringRevenue": 26973.0
+      "jan26RecurringRevenue": 26973.0,
+      "category": "High - 80 to 100%",
+      "segment": "Wallet",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 158,
@@ -2217,7 +2999,12 @@
         "nov_25": 0.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 159,
@@ -2231,7 +3018,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2310.0
+      "jan26RecurringRevenue": 2310.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 160,
@@ -2245,7 +3037,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 161,
@@ -2259,7 +3056,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 25.0
+      "jan26RecurringRevenue": 25.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Veeramesh"
     },
     {
       "id": 162,
@@ -2273,7 +3075,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 163,
@@ -2287,7 +3094,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 164,
@@ -2301,7 +3113,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Churned",
+      "kam": "Linh Doan"
     },
     {
       "id": 165,
@@ -2315,7 +3132,12 @@
         "nov_25": 7990.0,
         "oct_25": 7290.0
       },
-      "jan26RecurringRevenue": 2885.0
+      "jan26RecurringRevenue": 2885.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital lenders",
+      "geography": "ASEAN",
+      "mrrBucket": "2K to 10K",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 166,
@@ -2329,7 +3151,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 3988.0
+      "jan26RecurringRevenue": 3988.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 167,
@@ -2343,7 +3170,12 @@
         "nov_25": 135.0,
         "oct_25": 135.0
       },
-      "jan26RecurringRevenue": 133.0
+      "jan26RecurringRevenue": 133.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Sales"
     },
     {
       "id": 168,
@@ -2357,7 +3189,12 @@
         "nov_25": 7.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 26.0
+      "jan26RecurringRevenue": 26.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Gokul M"
     },
     {
       "id": 169,
@@ -2371,7 +3208,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 578.0
+      "jan26RecurringRevenue": 578.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 170,
@@ -2385,7 +3227,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 45185.0
+      "jan26RecurringRevenue": 45185.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "ASEAN",
+      "mrrBucket": "10K to 50K",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 171,
@@ -2399,7 +3246,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 172,
@@ -2413,7 +3265,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 34.0
+      "jan26RecurringRevenue": 34.0,
+      "category": "High - 80 to 100%",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Sriya"
     },
     {
       "id": 173,
@@ -2427,7 +3284,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 174,
@@ -2441,7 +3303,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 254.0
+      "jan26RecurringRevenue": 254.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 175,
@@ -2455,7 +3322,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 917.0
+      "jan26RecurringRevenue": 917.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sarthak Ashok Nair"
     },
     {
       "id": 176,
@@ -2469,7 +3341,12 @@
         "nov_25": 0.0,
         "oct_25": 57.0
       },
-      "jan26RecurringRevenue": 4046.0
+      "jan26RecurringRevenue": 4046.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider (Indonesia)",
+      "geography": "ASEAN",
+      "mrrBucket": "2K to 10K",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 177,
@@ -2483,7 +3360,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 120.0
+      "jan26RecurringRevenue": 120.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 178,
@@ -2497,7 +3379,12 @@
         "nov_25": 26.0,
         "oct_25": 26.0
       },
-      "jan26RecurringRevenue": 20.0
+      "jan26RecurringRevenue": 20.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 179,
@@ -2511,7 +3398,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 583.0
+      "jan26RecurringRevenue": 583.0,
+      "category": "Low - (< 50%)",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 180,
@@ -2525,7 +3417,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 765.0
+      "jan26RecurringRevenue": 765.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "2K to 10K",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 181,
@@ -2539,7 +3436,12 @@
         "nov_25": 421.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 439.0
+      "jan26RecurringRevenue": 439.0,
+      "category": "High - 80 to 100%",
+      "segment": "Marketplaces",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 182,
@@ -2553,7 +3455,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Aditya Rao"
     },
     {
       "id": 183,
@@ -2567,7 +3473,12 @@
         "nov_25": 154.0,
         "oct_25": 58.0
       },
-      "jan26RecurringRevenue": 65.0
+      "jan26RecurringRevenue": 65.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Unassigned"
     },
     {
       "id": 184,
@@ -2581,7 +3492,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2.0
+      "jan26RecurringRevenue": 2.0,
+      "category": "Low - (< 50%)",
+      "segment": "Ed-tech/Learning",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 185,
@@ -2595,7 +3511,12 @@
         "nov_25": 19255.0,
         "oct_25": 17995.0
       },
-      "jan26RecurringRevenue": 13128.0
+      "jan26RecurringRevenue": 13128.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "ASEAN",
+      "mrrBucket": "10K to 50K",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 186,
@@ -2609,7 +3530,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 300.0
+      "jan26RecurringRevenue": 300.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 187,
@@ -2623,7 +3549,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 380.0
+      "jan26RecurringRevenue": 380.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Payment Service Provider",
+      "geography": "ASEAN",
+      "mrrBucket": "100 to 500",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 188,
@@ -2637,7 +3568,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 189,
@@ -2651,7 +3587,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 190,
@@ -2665,7 +3606,12 @@
         "nov_25": 11.0,
         "oct_25": 6.0
       },
-      "jan26RecurringRevenue": 25.0
+      "jan26RecurringRevenue": 25.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 191,
@@ -2679,7 +3625,12 @@
         "nov_25": 7.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Less than 100",
+      "kam": "Shreshtha Karmakar"
     },
     {
       "id": 192,
@@ -2693,7 +3644,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 193,
@@ -2707,7 +3663,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Churned",
+      "kam": "Churned"
     },
     {
       "id": 194,
@@ -2721,7 +3681,12 @@
         "nov_25": 200.0,
         "oct_25": 200.0
       },
-      "jan26RecurringRevenue": 200.0
+      "jan26RecurringRevenue": 200.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 195,
@@ -2735,7 +3700,12 @@
         "nov_25": 1371.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 173.0
+      "jan26RecurringRevenue": 173.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "ASEAN",
+      "mrrBucket": "500 to 2K",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 196,
@@ -2749,7 +3719,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 310.0
+      "jan26RecurringRevenue": 310.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Maline K L"
     },
     {
       "id": 197,
@@ -2763,7 +3738,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 198,
@@ -2777,7 +3757,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 231.0
+      "jan26RecurringRevenue": 231.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 199,
@@ -2791,7 +3776,12 @@
         "nov_25": 2.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 6.0
+      "jan26RecurringRevenue": 6.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 200,
@@ -2805,7 +3795,12 @@
         "nov_25": 1735.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1503.0
+      "jan26RecurringRevenue": 1503.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Lending Marketplace",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 201,
@@ -2819,7 +3814,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 41.0
+      "jan26RecurringRevenue": 41.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 202,
@@ -2833,7 +3833,12 @@
         "nov_25": 3610.0,
         "oct_25": 1124.0
       },
-      "jan26RecurringRevenue": 580.0
+      "jan26RecurringRevenue": 580.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 203,
@@ -2847,7 +3852,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 204,
@@ -2861,7 +3871,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 458.0
+      "jan26RecurringRevenue": 458.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 205,
@@ -2875,7 +3890,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 8562.0
+      "jan26RecurringRevenue": 8562.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gig economy",
+      "geography": "ASEAN",
+      "mrrBucket": "2K to 10K",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 206,
@@ -2889,7 +3909,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 175.0
+      "jan26RecurringRevenue": 175.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "ASEAN",
+      "mrrBucket": "100 to 500",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 207,
@@ -2903,7 +3928,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 208,
@@ -2917,7 +3947,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Churned",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 209,
@@ -2931,7 +3966,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 243.0
+      "jan26RecurringRevenue": 243.0,
+      "category": "High - 80 to 100%",
+      "segment": "Lending Marketplace",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 210,
@@ -2945,7 +3985,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Sriya"
     },
     {
       "id": 211,
@@ -2959,7 +4004,12 @@
         "nov_25": 1228.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1133.0
+      "jan26RecurringRevenue": 1133.0,
+      "category": "Low - (< 50%)",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 212,
@@ -2973,7 +4023,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 37468.0
+      "jan26RecurringRevenue": 37468.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 213,
@@ -2987,7 +4042,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 271.0
+      "jan26RecurringRevenue": 271.0,
+      "category": "Low - (< 50%)",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 214,
@@ -3001,7 +4061,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 170.0
+      "jan26RecurringRevenue": 170.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "ASEAN",
+      "mrrBucket": "100 to 500",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 215,
@@ -3015,7 +4080,12 @@
         "nov_25": 4.0,
         "oct_25": 11.0
       },
-      "jan26RecurringRevenue": 584.0
+      "jan26RecurringRevenue": 584.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Manoj Kumar Singh"
     },
     {
       "id": 216,
@@ -3029,7 +4099,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 217,
@@ -3043,7 +4118,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sriya"
     },
     {
       "id": 218,
@@ -3057,7 +4137,12 @@
         "nov_25": 2463.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2515.0
+      "jan26RecurringRevenue": 2515.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 219,
@@ -3071,7 +4156,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 8087.0
+      "jan26RecurringRevenue": 8087.0,
+      "category": "High - 80 to 100%",
+      "segment": "Banks",
+      "geography": "ASEAN",
+      "mrrBucket": "2K to 10K",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 220,
@@ -3085,7 +4175,12 @@
         "nov_25": 331.0,
         "oct_25": 116.0
       },
-      "jan26RecurringRevenue": 799.0
+      "jan26RecurringRevenue": 799.0,
+      "category": "High - 80 to 100%",
+      "segment": "Banks",
+      "geography": "ASEAN",
+      "mrrBucket": "500 to 2K",
+      "kam": "Aryan Mukund"
     },
     {
       "id": 221,
@@ -3099,7 +4194,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "#N/A"
     },
     {
       "id": 222,
@@ -3113,7 +4213,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 223,
@@ -3127,7 +4232,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 449.0
+      "jan26RecurringRevenue": 449.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 224,
@@ -3141,7 +4251,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 13729.0
+      "jan26RecurringRevenue": 13729.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 225,
@@ -3155,7 +4270,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 5.0
+      "jan26RecurringRevenue": 5.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Veeramesh"
     },
     {
       "id": 226,
@@ -3169,7 +4289,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 750.0
+      "jan26RecurringRevenue": 750.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 227,
@@ -3183,7 +4308,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Aditya Rao"
     },
     {
       "id": 228,
@@ -3197,7 +4327,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 22074.0
+      "jan26RecurringRevenue": 22074.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 229,
@@ -3211,7 +4346,12 @@
         "nov_25": 0.0,
         "oct_25": 6.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 230,
@@ -3225,7 +4365,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 235.0
+      "jan26RecurringRevenue": 235.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 231,
@@ -3239,7 +4384,12 @@
         "nov_25": 2.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sales"
     },
     {
       "id": 232,
@@ -3253,7 +4403,12 @@
         "nov_25": 1506.0,
         "oct_25": 1429.0
       },
-      "jan26RecurringRevenue": 242.0
+      "jan26RecurringRevenue": 242.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Michelle George"
     },
     {
       "id": 233,
@@ -3267,7 +4422,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Manoj Kumar Singh"
     },
     {
       "id": 234,
@@ -3281,7 +4441,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 235,
@@ -3295,7 +4460,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 4722.0
+      "jan26RecurringRevenue": 4722.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 236,
@@ -3309,7 +4479,12 @@
         "nov_25": 1175.0,
         "oct_25": 640.0
       },
-      "jan26RecurringRevenue": -0.0
+      "jan26RecurringRevenue": -0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sales"
     },
     {
       "id": 237,
@@ -3323,7 +4498,12 @@
         "nov_25": 3.0,
         "oct_25": 3.0
       },
-      "jan26RecurringRevenue": 3.0
+      "jan26RecurringRevenue": 3.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Less than 100",
+      "kam": "Michelle George"
     },
     {
       "id": 238,
@@ -3337,7 +4517,12 @@
         "nov_25": 16915.0,
         "oct_25": 17525.0
       },
-      "jan26RecurringRevenue": 13612.0
+      "jan26RecurringRevenue": 13612.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 239,
@@ -3351,7 +4536,12 @@
         "nov_25": 202.0,
         "oct_25": 147.0
       },
-      "jan26RecurringRevenue": 242.0
+      "jan26RecurringRevenue": 242.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Aditya Rao"
     },
     {
       "id": 240,
@@ -3365,7 +4555,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 130.0
+      "jan26RecurringRevenue": 130.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Maline K L"
     },
     {
       "id": 241,
@@ -3379,7 +4574,12 @@
         "nov_25": 4097.0,
         "oct_25": 5637.0
       },
-      "jan26RecurringRevenue": 1580.0
+      "jan26RecurringRevenue": 1580.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 242,
@@ -3393,7 +4593,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 21.0
+      "jan26RecurringRevenue": 21.0,
+      "category": "High - 80 to 100%",
+      "segment": "Ed-tech/Learning",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 243,
@@ -3407,7 +4612,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 8332.0
+      "jan26RecurringRevenue": 8332.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 244,
@@ -3421,7 +4631,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1690.0
+      "jan26RecurringRevenue": 1690.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "ASEAN",
+      "mrrBucket": "500 to 2K",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 245,
@@ -3435,7 +4650,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 125.0
+      "jan26RecurringRevenue": 125.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "V Kartik"
     },
     {
       "id": 246,
@@ -3449,7 +4669,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 985.0
+      "jan26RecurringRevenue": 985.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 247,
@@ -3463,7 +4688,12 @@
         "nov_25": 0.0,
         "oct_25": 155.0
       },
-      "jan26RecurringRevenue": 264.0
+      "jan26RecurringRevenue": 264.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 248,
@@ -3477,7 +4707,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1853.0
+      "jan26RecurringRevenue": 1853.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 249,
@@ -3491,7 +4726,12 @@
         "nov_25": 0.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Khushi S"
     },
     {
       "id": 250,
@@ -3505,7 +4745,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Churned",
+      "kam": "Churned"
     },
     {
       "id": 251,
@@ -3519,7 +4764,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 145.0
+      "jan26RecurringRevenue": 145.0,
+      "category": "High - 80 to 100%",
+      "segment": "Lending Marketplace",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 252,
@@ -3533,7 +4783,12 @@
         "nov_25": 43.0,
         "oct_25": 3.0
       },
-      "jan26RecurringRevenue": 27.0
+      "jan26RecurringRevenue": 27.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Michelle George"
     },
     {
       "id": 253,
@@ -3547,7 +4802,12 @@
         "nov_25": 90.0,
         "oct_25": 90.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 254,
@@ -3561,7 +4821,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3950.0
+      "jan26RecurringRevenue": 3950.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "V Kartik"
     },
     {
       "id": 255,
@@ -3575,7 +4840,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 100.0
+      "jan26RecurringRevenue": 100.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 256,
@@ -3589,7 +4859,12 @@
         "nov_25": 13.0,
         "oct_25": 9.0
       },
-      "jan26RecurringRevenue": 4.0
+      "jan26RecurringRevenue": 4.0,
+      "category": "High - 80 to 100%",
+      "segment": "Wealth Management",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 257,
@@ -3603,7 +4878,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 258,
@@ -3617,7 +4897,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 259,
@@ -3631,7 +4916,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 260,
@@ -3645,7 +4935,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1353.0
+      "jan26RecurringRevenue": 1353.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 261,
@@ -3659,7 +4954,12 @@
         "nov_25": 3513.0,
         "oct_25": 2760.0
       },
-      "jan26RecurringRevenue": 2431.0
+      "jan26RecurringRevenue": 2431.0,
+      "category": "Low - (< 50%)",
+      "segment": "Lending Marketplace",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 262,
@@ -3673,7 +4973,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 794.0
+      "jan26RecurringRevenue": 794.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 263,
@@ -3687,7 +4992,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6.0
+      "jan26RecurringRevenue": 6.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 264,
@@ -3701,7 +5011,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 286.0
+      "jan26RecurringRevenue": 286.0,
+      "category": "High - 80 to 100%",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 265,
@@ -3715,7 +5030,12 @@
         "nov_25": 73.0,
         "oct_25": 73.0
       },
-      "jan26RecurringRevenue": 72.0
+      "jan26RecurringRevenue": 72.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Veer Ramesh Chembath"
     },
     {
       "id": 266,
@@ -3729,7 +5049,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Sriya"
     },
     {
       "id": 267,
@@ -3743,7 +5068,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 792.0
+      "jan26RecurringRevenue": 792.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 268,
@@ -3757,7 +5087,12 @@
         "nov_25": 6025.0,
         "oct_25": 547.0
       },
-      "jan26RecurringRevenue": 5681.0
+      "jan26RecurringRevenue": 5681.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Maline K L"
     },
     {
       "id": 269,
@@ -3771,7 +5106,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Maline K L"
     },
     {
       "id": 270,
@@ -3785,7 +5125,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 33.0
+      "jan26RecurringRevenue": 33.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Maline K L"
     },
     {
       "id": 271,
@@ -3799,7 +5144,12 @@
         "nov_25": 1.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 30.0
+      "jan26RecurringRevenue": 30.0,
+      "category": "Low - (< 50%)",
+      "segment": "others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 272,
@@ -3813,7 +5163,12 @@
         "nov_25": 510.0,
         "oct_25": 560.0
       },
-      "jan26RecurringRevenue": 540.0
+      "jan26RecurringRevenue": 540.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 273,
@@ -3827,7 +5182,12 @@
         "nov_25": 2.0,
         "oct_25": 27.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 274,
@@ -3841,7 +5201,12 @@
         "nov_25": 512.0,
         "oct_25": 171.0
       },
-      "jan26RecurringRevenue": 1365.0
+      "jan26RecurringRevenue": 1365.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 275,
@@ -3855,7 +5220,12 @@
         "nov_25": 10000.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Dormant",
+      "kam": "Srinija/Bracket"
     },
     {
       "id": 276,
@@ -3869,7 +5239,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 107.0
+      "jan26RecurringRevenue": 107.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 277,
@@ -3883,7 +5258,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 308.0
+      "jan26RecurringRevenue": 308.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Maline K L"
     },
     {
       "id": 278,
@@ -3897,7 +5277,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 15.0
+      "jan26RecurringRevenue": 15.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sebastian Richard Martin"
     },
     {
       "id": 279,
@@ -3911,7 +5296,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 280,
@@ -3925,7 +5315,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1511.0
+      "jan26RecurringRevenue": 1511.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 281,
@@ -3939,7 +5334,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "Churned",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 282,
@@ -3953,7 +5353,12 @@
         "nov_25": 1850.0,
         "oct_25": 1673.0
       },
-      "jan26RecurringRevenue": 13035.0
+      "jan26RecurringRevenue": 13035.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 283,
@@ -3967,7 +5372,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 583.0
+      "jan26RecurringRevenue": 583.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 284,
@@ -3981,7 +5391,12 @@
         "nov_25": 603.0,
         "oct_25": 702.0
       },
-      "jan26RecurringRevenue": 1059.0
+      "jan26RecurringRevenue": 1059.0,
+      "category": "Low - (< 50%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 285,
@@ -3995,7 +5410,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 67.0
+      "jan26RecurringRevenue": 67.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sebastian Richard Martin"
     },
     {
       "id": 286,
@@ -4009,7 +5429,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2196.0
+      "jan26RecurringRevenue": 2196.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sriya"
     },
     {
       "id": 287,
@@ -4023,7 +5448,12 @@
         "nov_25": 8989.0,
         "oct_25": 8989.0
       },
-      "jan26RecurringRevenue": 8989.0
+      "jan26RecurringRevenue": 8989.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 288,
@@ -4037,7 +5467,12 @@
         "nov_25": 167.0,
         "oct_25": 190.0
       },
-      "jan26RecurringRevenue": 41.0
+      "jan26RecurringRevenue": 41.0,
+      "category": "Low - (< 50%)",
+      "segment": "Lending Marketplace",
+      "geography": "Africa",
+      "mrrBucket": "100 to 500",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 289,
@@ -4051,7 +5486,12 @@
         "nov_25": 0.0,
         "oct_25": 9039.0
       },
-      "jan26RecurringRevenue": 6524.0
+      "jan26RecurringRevenue": 6524.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "ASEAN",
+      "mrrBucket": "2K to 10K",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 290,
@@ -4065,7 +5505,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Lending Marketplace",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 291,
@@ -4079,7 +5524,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 231.0
+      "jan26RecurringRevenue": 231.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 292,
@@ -4093,7 +5543,12 @@
         "nov_25": 2.0,
         "oct_25": 2.0
       },
-      "jan26RecurringRevenue": 3.0
+      "jan26RecurringRevenue": 3.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 293,
@@ -4107,7 +5562,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 16.0
+      "jan26RecurringRevenue": 16.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 294,
@@ -4121,7 +5581,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 295,
@@ -4135,7 +5600,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Anusha Gonuguntla"
     },
     {
       "id": 296,
@@ -4149,7 +5619,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Churned"
     },
     {
       "id": 297,
@@ -4163,7 +5638,12 @@
         "nov_25": 95019.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 87396.0
+      "jan26RecurringRevenue": 87396.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "More Than 50K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 298,
@@ -4177,7 +5657,12 @@
         "nov_25": 100.0,
         "oct_25": 139.0
       },
-      "jan26RecurringRevenue": 33.0
+      "jan26RecurringRevenue": 33.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 299,
@@ -4191,7 +5676,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1361.0
+      "jan26RecurringRevenue": 1361.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 300,
@@ -4205,7 +5695,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2365.0
+      "jan26RecurringRevenue": 2365.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 301,
@@ -4219,7 +5714,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 8750.0
+      "jan26RecurringRevenue": 8750.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Maline K L"
     },
     {
       "id": 302,
@@ -4233,7 +5733,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 326.0
+      "jan26RecurringRevenue": 326.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 303,
@@ -4247,7 +5752,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 443.0
+      "jan26RecurringRevenue": 443.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 304,
@@ -4261,7 +5771,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Ed-tech/Learning",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 305,
@@ -4275,7 +5790,12 @@
         "nov_25": 1.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 306,
@@ -4289,7 +5809,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 307,
@@ -4303,7 +5828,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Crypto",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 308,
@@ -4317,7 +5847,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 1802.0
+      "jan26RecurringRevenue": 1802.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Maline K L"
     },
     {
       "id": 309,
@@ -4331,7 +5866,12 @@
         "nov_25": 56.0,
         "oct_25": 44.0
       },
-      "jan26RecurringRevenue": 48.0
+      "jan26RecurringRevenue": 48.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 310,
@@ -4345,7 +5885,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Aditya Rao"
     },
     {
       "id": 311,
@@ -4359,7 +5904,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1167.0
+      "jan26RecurringRevenue": 1167.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 312,
@@ -4373,7 +5923,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 542.0
+      "jan26RecurringRevenue": 542.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 313,
@@ -4387,7 +5942,12 @@
         "nov_25": 19134.0,
         "oct_25": 14350.0
       },
-      "jan26RecurringRevenue": 39437.0
+      "jan26RecurringRevenue": 39437.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 314,
@@ -4401,7 +5961,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2650.0
+      "jan26RecurringRevenue": 2650.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 315,
@@ -4415,7 +5980,12 @@
         "nov_25": 136.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 116.0
+      "jan26RecurringRevenue": 116.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Aditya Rao"
     },
     {
       "id": 316,
@@ -4429,7 +5999,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 4366.0
+      "jan26RecurringRevenue": 4366.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sriya"
     },
     {
       "id": 317,
@@ -4443,7 +6018,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 318,
@@ -4457,7 +6037,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Wealth Management",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Linh Doan"
     },
     {
       "id": 319,
@@ -4471,7 +6056,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 760.0
+      "jan26RecurringRevenue": 760.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 320,
@@ -4485,7 +6075,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 78.0
+      "jan26RecurringRevenue": 78.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sales"
     },
     {
       "id": 321,
@@ -4499,7 +6094,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1289.0
+      "jan26RecurringRevenue": 1289.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 322,
@@ -4513,7 +6113,12 @@
         "nov_25": 500.0,
         "oct_25": 500.0
       },
-      "jan26RecurringRevenue": 2000.0
+      "jan26RecurringRevenue": 2000.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Michelle George"
     },
     {
       "id": 323,
@@ -4527,7 +6132,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Sriya"
     },
     {
       "id": 324,
@@ -4541,7 +6151,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 984.0
+      "jan26RecurringRevenue": 984.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Ed-tech/Learning",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 325,
@@ -4555,7 +6170,12 @@
         "nov_25": 0.0,
         "oct_25": 32.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 326,
@@ -4569,7 +6189,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 233.0
+      "jan26RecurringRevenue": 233.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "Africa",
+      "mrrBucket": "100 to 500",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 327,
@@ -4583,7 +6208,12 @@
         "nov_25": 67.0,
         "oct_25": 67.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 328,
@@ -4597,7 +6227,12 @@
         "nov_25": 17287.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 16896.0
+      "jan26RecurringRevenue": 16896.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 329,
@@ -4611,7 +6246,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 972.0
+      "jan26RecurringRevenue": 972.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 330,
@@ -4625,7 +6265,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 31.0
+      "jan26RecurringRevenue": 31.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 331,
@@ -4639,7 +6284,12 @@
         "nov_25": 90.0,
         "oct_25": 90.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 332,
@@ -4653,7 +6303,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Churned",
+      "kam": "Churned"
     },
     {
       "id": 333,
@@ -4667,7 +6322,12 @@
         "nov_25": -0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 6761.0
+      "jan26RecurringRevenue": 6761.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 334,
@@ -4681,7 +6341,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Churned",
+      "kam": "Churned"
     },
     {
       "id": 335,
@@ -4695,7 +6360,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Dormant",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 336,
@@ -4709,7 +6379,12 @@
         "nov_25": 2.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 8.0
+      "jan26RecurringRevenue": 8.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Veer Ramesh Chembath"
     },
     {
       "id": 337,
@@ -4723,7 +6398,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 28227.0
+      "jan26RecurringRevenue": 28227.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 338,
@@ -4737,7 +6417,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2081.0
+      "jan26RecurringRevenue": 2081.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 339,
@@ -4751,7 +6436,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 28911.0
+      "jan26RecurringRevenue": 28911.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 340,
@@ -4765,7 +6455,12 @@
         "nov_25": 8025.0,
         "oct_25": 3165.0
       },
-      "jan26RecurringRevenue": 9069.0
+      "jan26RecurringRevenue": 9069.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sebastian Richard Martin"
     },
     {
       "id": 341,
@@ -4779,7 +6474,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 342,
@@ -4793,7 +6493,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1320.0
+      "jan26RecurringRevenue": 1320.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 343,
@@ -4807,7 +6512,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 344,
@@ -4821,7 +6530,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 833.0
+      "jan26RecurringRevenue": 833.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 345,
@@ -4835,7 +6549,12 @@
         "nov_25": 8712.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 9328.0
+      "jan26RecurringRevenue": 9328.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 346,
@@ -4849,7 +6568,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Investment",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 347,
@@ -4863,7 +6587,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 12796.0
+      "jan26RecurringRevenue": 12796.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Maline K L"
     },
     {
       "id": 348,
@@ -4877,7 +6606,12 @@
         "nov_25": 3447.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 4022.0
+      "jan26RecurringRevenue": 4022.0,
+      "category": "High - 80 to 100%",
+      "segment": "Lending Marketplace",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 349,
@@ -4891,7 +6625,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 350,
@@ -4905,7 +6644,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 249.0
+      "jan26RecurringRevenue": 249.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 351,
@@ -4919,7 +6663,12 @@
         "nov_25": 14.0,
         "oct_25": 23.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 352,
@@ -4933,7 +6682,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 32.0
+      "jan26RecurringRevenue": 32.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 353,
@@ -4947,7 +6701,12 @@
         "nov_25": 0.0,
         "oct_25": 4515.0
       },
-      "jan26RecurringRevenue": 4375.0
+      "jan26RecurringRevenue": 4375.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sarthak Ashok Nair"
     },
     {
       "id": 354,
@@ -4961,7 +6720,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sriya"
     },
     {
       "id": 355,
@@ -4975,7 +6739,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 356,
@@ -4989,7 +6758,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 889.0
+      "jan26RecurringRevenue": 889.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sales"
     },
     {
       "id": 357,
@@ -5003,7 +6777,12 @@
         "nov_25": 21.0,
         "oct_25": 22.0
       },
-      "jan26RecurringRevenue": 9.0
+      "jan26RecurringRevenue": 9.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 358,
@@ -5024,7 +6803,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 360,
@@ -5038,7 +6821,12 @@
         "nov_25": 8.0,
         "oct_25": 674.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Wallet",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 361,
@@ -5052,7 +6840,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 362,
@@ -5066,7 +6858,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 363,
@@ -5080,7 +6877,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 195.0
+      "jan26RecurringRevenue": 195.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 364,
@@ -5094,7 +6896,12 @@
         "nov_25": 0.0,
         "oct_25": 38.0
       },
-      "jan26RecurringRevenue": 961.0
+      "jan26RecurringRevenue": 961.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Manoj Kumar Singh"
     },
     {
       "id": 365,
@@ -5108,7 +6915,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 14.0
+      "jan26RecurringRevenue": 14.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 366,
@@ -5122,7 +6934,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 905.0
+      "jan26RecurringRevenue": 905.0,
+      "category": "Low - (< 50%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 367,
@@ -5136,7 +6953,12 @@
         "nov_25": 82.0,
         "oct_25": 81.0
       },
-      "jan26RecurringRevenue": 47.0
+      "jan26RecurringRevenue": 47.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 368,
@@ -5150,7 +6972,12 @@
         "nov_25": 305.0,
         "oct_25": 667.0
       },
-      "jan26RecurringRevenue": 655.0
+      "jan26RecurringRevenue": 655.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "ASEAN",
+      "mrrBucket": "100 to 500",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 369,
@@ -5164,7 +6991,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 370,
@@ -5178,7 +7010,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sriya"
     },
     {
       "id": 371,
@@ -5192,7 +7029,12 @@
         "nov_25": 1468.0,
         "oct_25": 2890.0
       },
-      "jan26RecurringRevenue": 1492.0
+      "jan26RecurringRevenue": 1492.0,
+      "category": "Low - (< 50%)",
+      "segment": "Crypto",
+      "geography": "ASEAN",
+      "mrrBucket": "500 to 2K",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 372,
@@ -5206,7 +7048,12 @@
         "nov_25": 233.0,
         "oct_25": 233.0
       },
-      "jan26RecurringRevenue": 233.0
+      "jan26RecurringRevenue": 233.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 373,
@@ -5220,7 +7067,12 @@
         "nov_25": 6928.0,
         "oct_25": 976.0
       },
-      "jan26RecurringRevenue": 6323.0
+      "jan26RecurringRevenue": 6323.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 374,
@@ -5234,7 +7086,12 @@
         "nov_25": 2.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 69.0
+      "jan26RecurringRevenue": 69.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Linh Doan"
     },
     {
       "id": 375,
@@ -5248,7 +7105,12 @@
         "nov_25": 6327.0,
         "oct_25": 5870.0
       },
-      "jan26RecurringRevenue": 5719.0
+      "jan26RecurringRevenue": 5719.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akshay Mate"
     },
     {
       "id": 376,
@@ -5262,7 +7124,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 15802.0
+      "jan26RecurringRevenue": 15802.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 377,
@@ -5276,7 +7143,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 378,
@@ -5290,7 +7162,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 379,
@@ -5304,7 +7181,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1667.0
+      "jan26RecurringRevenue": 1667.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Michelle George"
     },
     {
       "id": 380,
@@ -5318,7 +7200,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6.0
+      "jan26RecurringRevenue": 6.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 381,
@@ -5332,7 +7219,12 @@
         "nov_25": 7.0,
         "oct_25": 9.0
       },
-      "jan26RecurringRevenue": 9.0
+      "jan26RecurringRevenue": 9.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 382,
@@ -5346,7 +7238,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 383,
@@ -5360,7 +7257,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 833.0
+      "jan26RecurringRevenue": 833.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 384,
@@ -5374,7 +7276,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6.0
+      "jan26RecurringRevenue": 6.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 385,
@@ -5388,7 +7295,12 @@
         "nov_25": 10.0,
         "oct_25": 9.0
       },
-      "jan26RecurringRevenue": 429.0
+      "jan26RecurringRevenue": 429.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Sriya"
     },
     {
       "id": 386,
@@ -5402,7 +7314,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6224.0
+      "jan26RecurringRevenue": 6224.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 387,
@@ -5416,7 +7333,12 @@
         "nov_25": 1.0,
         "oct_25": 3.0
       },
-      "jan26RecurringRevenue": 3.0
+      "jan26RecurringRevenue": 3.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 388,
@@ -5430,7 +7352,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 389,
@@ -5444,7 +7371,12 @@
         "nov_25": 62.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 73.0
+      "jan26RecurringRevenue": 73.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sriya"
     },
     {
       "id": 390,
@@ -5458,7 +7390,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 222.0
+      "jan26RecurringRevenue": 222.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 391,
@@ -5472,7 +7409,12 @@
         "nov_25": 4979.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 7528.0
+      "jan26RecurringRevenue": 7528.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Manoj Kumar Singh"
     },
     {
       "id": 392,
@@ -5486,7 +7428,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2393.0
+      "jan26RecurringRevenue": 2393.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Gokul M"
     },
     {
       "id": 393,
@@ -5500,7 +7447,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 394,
@@ -5514,7 +7466,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2106.0
+      "jan26RecurringRevenue": 2106.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 395,
@@ -5528,7 +7485,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 917.0
+      "jan26RecurringRevenue": 917.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 396,
@@ -5542,7 +7504,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 278.0
+      "jan26RecurringRevenue": 278.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 397,
@@ -5556,7 +7523,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 185.0
+      "jan26RecurringRevenue": 185.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 398,
@@ -5570,7 +7542,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 324.0
+      "jan26RecurringRevenue": 324.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 399,
@@ -5584,7 +7561,12 @@
         "nov_25": 158.0,
         "oct_25": 2705.0
       },
-      "jan26RecurringRevenue": 278.0
+      "jan26RecurringRevenue": 278.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 400,
@@ -5598,7 +7580,12 @@
         "nov_25": 746.0,
         "oct_25": 230.0
       },
-      "jan26RecurringRevenue": 35.0
+      "jan26RecurringRevenue": 35.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 401,
@@ -5612,7 +7599,12 @@
         "nov_25": 6021.0,
         "oct_25": 5771.0
       },
-      "jan26RecurringRevenue": 5982.0
+      "jan26RecurringRevenue": 5982.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 402,
@@ -5626,7 +7618,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Churned"
     },
     {
       "id": 403,
@@ -5640,7 +7637,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 404,
@@ -5654,7 +7656,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 540.0
+      "jan26RecurringRevenue": 540.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 405,
@@ -5668,7 +7675,12 @@
         "nov_25": 5422.0,
         "oct_25": 5315.0
       },
-      "jan26RecurringRevenue": 5393.0
+      "jan26RecurringRevenue": 5393.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sarthak Ashok Nair"
     },
     {
       "id": 406,
@@ -5682,7 +7694,12 @@
         "nov_25": 66.0,
         "oct_25": 6.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 407,
@@ -5696,7 +7713,12 @@
         "nov_25": 1685.0,
         "oct_25": 955.0
       },
-      "jan26RecurringRevenue": 1490.0
+      "jan26RecurringRevenue": 1490.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 408,
@@ -5710,7 +7732,12 @@
         "nov_25": -17076.0,
         "oct_25": 114.0
       },
-      "jan26RecurringRevenue": 1998.0
+      "jan26RecurringRevenue": 1998.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 409,
@@ -5724,7 +7751,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 410,
@@ -5738,7 +7770,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 333.0
+      "jan26RecurringRevenue": 333.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 411,
@@ -5752,7 +7789,12 @@
         "nov_25": 944.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 1000.0
+      "jan26RecurringRevenue": 1000.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 412,
@@ -5766,7 +7808,12 @@
         "nov_25": 480.0,
         "oct_25": 627.0
       },
-      "jan26RecurringRevenue": 709.0
+      "jan26RecurringRevenue": 709.0,
+      "category": "Low - (< 50%)",
+      "segment": "Crypto",
+      "geography": "ASEAN",
+      "mrrBucket": "500 to 2K",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 413,
@@ -5780,7 +7827,12 @@
         "nov_25": 4051.0,
         "oct_25": 3581.0
       },
-      "jan26RecurringRevenue": 3454.0
+      "jan26RecurringRevenue": 3454.0,
+      "category": "Low - (< 50%)",
+      "segment": "Lending Marketplace",
+      "geography": "Africa",
+      "mrrBucket": "2K to 10K",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 414,
@@ -5794,7 +7846,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6.0
+      "jan26RecurringRevenue": 6.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 415,
@@ -5808,7 +7865,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1112.0
+      "jan26RecurringRevenue": 1112.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 416,
@@ -5822,7 +7884,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 613.0
+      "jan26RecurringRevenue": 613.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 417,
@@ -5836,7 +7903,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 10.0
+      "jan26RecurringRevenue": 10.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 418,
@@ -5850,7 +7922,12 @@
         "nov_25": 3648.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2630.0
+      "jan26RecurringRevenue": 2630.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sriya"
     },
     {
       "id": 419,
@@ -5864,7 +7941,12 @@
         "nov_25": 955.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 944.0
+      "jan26RecurringRevenue": 944.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "V Kartik"
     },
     {
       "id": 420,
@@ -5878,7 +7960,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1923.0
+      "jan26RecurringRevenue": 1923.0,
+      "category": "High - 80 to 100%",
+      "segment": "Bike/Car Rental",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 421,
@@ -5892,7 +7979,12 @@
         "nov_25": 7451.0,
         "oct_25": 3342.0
       },
-      "jan26RecurringRevenue": 8265.0
+      "jan26RecurringRevenue": 8265.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 422,
@@ -5906,7 +7998,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Maline K L"
     },
     {
       "id": 423,
@@ -5920,7 +8017,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 165.0
+      "jan26RecurringRevenue": 165.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 424,
@@ -5934,7 +8036,12 @@
         "nov_25": -1912.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 9834.0
+      "jan26RecurringRevenue": 9834.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 425,
@@ -5948,7 +8055,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 510.0
+      "jan26RecurringRevenue": 510.0,
+      "category": "High - 80 to 100%",
+      "segment": "Banks",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 426,
@@ -5962,7 +8074,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 14563.0
+      "jan26RecurringRevenue": 14563.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Gopinath Yerra"
     },
     {
       "id": 427,
@@ -5976,7 +8093,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 596.0
+      "jan26RecurringRevenue": 596.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 428,
@@ -5990,7 +8112,12 @@
         "nov_25": 972.0,
         "oct_25": 1158.0
       },
-      "jan26RecurringRevenue": 4990.0
+      "jan26RecurringRevenue": 4990.0,
+      "category": "High - 80 to 100%",
+      "segment": "AMCs",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sales"
     },
     {
       "id": 429,
@@ -6004,7 +8131,12 @@
         "nov_25": 22290.0,
         "oct_25": 8699.0
       },
-      "jan26RecurringRevenue": 25796.0
+      "jan26RecurringRevenue": 25796.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "ASEAN",
+      "mrrBucket": "10K to 50K",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 430,
@@ -6018,7 +8150,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Dormant",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 431,
@@ -6032,7 +8168,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 17.0
+      "jan26RecurringRevenue": 17.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 432,
@@ -6046,7 +8187,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 815.0
+      "jan26RecurringRevenue": 815.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 433,
@@ -6060,7 +8206,12 @@
         "nov_25": 9.0,
         "oct_25": 8.0
       },
-      "jan26RecurringRevenue": 8.0
+      "jan26RecurringRevenue": 8.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gaming",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sales"
     },
     {
       "id": 434,
@@ -6074,7 +8225,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 833.0
+      "jan26RecurringRevenue": 833.0,
+      "category": "Low - (< 50%)",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 435,
@@ -6088,7 +8244,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 625.0
+      "jan26RecurringRevenue": 625.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 436,
@@ -6102,7 +8263,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Venkat Subramanian"
     },
     {
       "id": 437,
@@ -6116,7 +8282,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 438,
@@ -6130,7 +8301,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 439,
@@ -6144,7 +8320,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 14268.0
+      "jan26RecurringRevenue": 14268.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Maline K L"
     },
     {
       "id": 440,
@@ -6158,7 +8339,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 120.0
+      "jan26RecurringRevenue": 120.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 441,
@@ -6172,7 +8358,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 80.0
+      "jan26RecurringRevenue": 80.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 442,
@@ -6186,7 +8377,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1110.0
+      "jan26RecurringRevenue": 1110.0,
+      "category": "Low - (< 50%)",
+      "segment": "Wealth Management",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 443,
@@ -6200,7 +8396,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 444,
@@ -6214,7 +8415,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 579.0
+      "jan26RecurringRevenue": 579.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 445,
@@ -6228,7 +8434,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 5859.0
+      "jan26RecurringRevenue": 5859.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 446,
@@ -6242,7 +8453,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1589.0
+      "jan26RecurringRevenue": 1589.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 447,
@@ -6256,7 +8472,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3172.0
+      "jan26RecurringRevenue": 3172.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sales"
     },
     {
       "id": 448,
@@ -6270,7 +8491,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 324.0
+      "jan26RecurringRevenue": 324.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 449,
@@ -6284,7 +8510,12 @@
         "nov_25": 4259.0,
         "oct_25": 39593.0
       },
-      "jan26RecurringRevenue": 1567.0
+      "jan26RecurringRevenue": 1567.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 450,
@@ -6298,7 +8529,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Sales"
     },
     {
       "id": 451,
@@ -6312,7 +8548,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1781.0
+      "jan26RecurringRevenue": 1781.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 452,
@@ -6326,7 +8567,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1597.0
+      "jan26RecurringRevenue": 1597.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Michelle George"
     },
     {
       "id": 453,
@@ -6340,7 +8586,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 136.0
+      "jan26RecurringRevenue": 136.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 454,
@@ -6354,7 +8605,12 @@
         "nov_25": -0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 1971.0
+      "jan26RecurringRevenue": 1971.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 455,
@@ -6368,7 +8624,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Aditya Rao"
     },
     {
       "id": 456,
@@ -6382,7 +8643,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 11415.0
+      "jan26RecurringRevenue": 11415.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 457,
@@ -6396,7 +8662,12 @@
         "nov_25": 14.0,
         "oct_25": 32.0
       },
-      "jan26RecurringRevenue": 70.0
+      "jan26RecurringRevenue": 70.0,
+      "category": "Low - (< 50%)",
+      "segment": "Wallet",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Phi Le Huynh"
     },
     {
       "id": 458,
@@ -6410,7 +8681,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6152.0
+      "jan26RecurringRevenue": 6152.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sriya"
     },
     {
       "id": 459,
@@ -6424,7 +8700,12 @@
         "nov_25": 68.0,
         "oct_25": 85.0
       },
-      "jan26RecurringRevenue": 100.0
+      "jan26RecurringRevenue": 100.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 460,
@@ -6438,7 +8719,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 116.0
+      "jan26RecurringRevenue": 116.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 461,
@@ -6452,7 +8738,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Unassigned"
     },
     {
       "id": 462,
@@ -6466,7 +8757,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1038.0
+      "jan26RecurringRevenue": 1038.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Venkat Subramanian"
     },
     {
       "id": 463,
@@ -6480,7 +8776,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 714.0
+      "jan26RecurringRevenue": 714.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 464,
@@ -6494,7 +8795,12 @@
         "nov_25": 0.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Nikhil Gopinath"
     },
     {
       "id": 465,
@@ -6508,7 +8814,12 @@
         "nov_25": 3794.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3023.0
+      "jan26RecurringRevenue": 3023.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 466,
@@ -6522,7 +8833,12 @@
         "nov_25": 53544.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 21869.0
+      "jan26RecurringRevenue": 21869.0,
+      "category": "High - 80 to 100%",
+      "segment": "Banks",
+      "geography": "Africa",
+      "mrrBucket": "10K to 50K",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 467,
@@ -6536,7 +8852,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 374.0
+      "jan26RecurringRevenue": 374.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Sriya"
     },
     {
       "id": 468,
@@ -6550,7 +8871,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2436.0
+      "jan26RecurringRevenue": 2436.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 469,
@@ -6564,7 +8890,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 15732.0
+      "jan26RecurringRevenue": 15732.0,
+      "category": "High - 80 to 100%",
+      "segment": "Banks",
+      "geography": "ASEAN",
+      "mrrBucket": "10K to 50K",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 470,
@@ -6578,7 +8909,12 @@
         "nov_25": 0.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 471,
@@ -6592,7 +8928,12 @@
         "nov_25": 4.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 8132.0
+      "jan26RecurringRevenue": 8132.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akshay Mate"
     },
     {
       "id": 472,
@@ -6606,7 +8947,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 473,
@@ -6620,7 +8966,12 @@
         "nov_25": 171.0,
         "oct_25": 160.0
       },
-      "jan26RecurringRevenue": 191.0
+      "jan26RecurringRevenue": 191.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 474,
@@ -6634,7 +8985,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 475,
@@ -6648,7 +9004,12 @@
         "nov_25": 35459.0,
         "oct_25": 30311.0
       },
-      "jan26RecurringRevenue": 55614.0
+      "jan26RecurringRevenue": 55614.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "More Than 50K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 476,
@@ -6662,7 +9023,12 @@
         "nov_25": 112.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 105.0
+      "jan26RecurringRevenue": 105.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 477,
@@ -6676,7 +9042,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 8354.0
+      "jan26RecurringRevenue": 8354.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "V Kartik"
     },
     {
       "id": 478,
@@ -6690,7 +9061,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 479,
@@ -6704,7 +9080,12 @@
         "nov_25": 499.0,
         "oct_25": 457.0
       },
-      "jan26RecurringRevenue": 528.0
+      "jan26RecurringRevenue": 528.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sales"
     },
     {
       "id": 480,
@@ -6718,7 +9099,12 @@
         "nov_25": 0.0,
         "oct_25": 2000.0
       },
-      "jan26RecurringRevenue": 1.0
+      "jan26RecurringRevenue": 1.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital lenders",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Harshit Shrivastava"
     },
     {
       "id": 481,
@@ -6732,7 +9118,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 375.0
+      "jan26RecurringRevenue": 375.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500"
     },
     {
       "id": 482,
@@ -6746,7 +9136,12 @@
         "nov_25": 1385.0,
         "oct_25": 1043.0
       },
-      "jan26RecurringRevenue": 1614.0
+      "jan26RecurringRevenue": 1614.0,
+      "category": "Low - (< 50%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Akshay Mate"
     },
     {
       "id": 483,
@@ -6760,7 +9155,12 @@
         "nov_25": 1626.0,
         "oct_25": 2843.0
       },
-      "jan26RecurringRevenue": 2437.0
+      "jan26RecurringRevenue": 2437.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 484,
@@ -6774,7 +9174,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "Churned",
+      "kam": "Churned"
     },
     {
       "id": 485,
@@ -6788,7 +9193,12 @@
         "nov_25": 0.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Real Estate Development",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 486,
@@ -6802,7 +9212,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Aishwarya Paraskar"
     },
     {
       "id": 487,
@@ -6816,7 +9231,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1384.0
+      "jan26RecurringRevenue": 1384.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 488,
@@ -6830,7 +9250,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 75.0
+      "jan26RecurringRevenue": 75.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "Less than 100",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 489,
@@ -6844,7 +9269,12 @@
         "nov_25": 100.0,
         "oct_25": 100.0
       },
-      "jan26RecurringRevenue": 100.0
+      "jan26RecurringRevenue": 100.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Michelle George"
     },
     {
       "id": 490,
@@ -6858,7 +9288,12 @@
         "nov_25": 55.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 491,
@@ -6872,7 +9307,12 @@
         "nov_25": 112.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 492,
@@ -6886,7 +9326,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 410.0
+      "jan26RecurringRevenue": 410.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "ASEAN",
+      "mrrBucket": "100 to 500",
+      "kam": "Minh Nguyen Duc"
     },
     {
       "id": 493,
@@ -6900,7 +9345,12 @@
         "nov_25": 2.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Wealth Management",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 494,
@@ -6914,7 +9364,12 @@
         "nov_25": 181.0,
         "oct_25": 297.0
       },
-      "jan26RecurringRevenue": 250.0
+      "jan26RecurringRevenue": 250.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "100 to 500",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 495,
@@ -6928,7 +9383,12 @@
         "nov_25": 1.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 15.0
+      "jan26RecurringRevenue": 15.0,
+      "category": "Low - (< 50%)",
+      "segment": "Investment",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 496,
@@ -6942,7 +9402,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 37.0
+      "jan26RecurringRevenue": 37.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 497,
@@ -6956,7 +9421,12 @@
         "nov_25": 2.0,
         "oct_25": 1.0
       },
-      "jan26RecurringRevenue": 3.0
+      "jan26RecurringRevenue": 3.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Bike/Car Rental",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 498,
@@ -6970,7 +9440,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 499,
@@ -6984,7 +9459,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 333.0
+      "jan26RecurringRevenue": 333.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 500,
@@ -6998,7 +9478,12 @@
         "nov_25": 1220.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 501,
@@ -7012,7 +9497,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sales"
     },
     {
       "id": 502,
@@ -7026,7 +9516,12 @@
         "nov_25": 0.0,
         "oct_25": 136.0
       },
-      "jan26RecurringRevenue": 78.0
+      "jan26RecurringRevenue": 78.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 503,
@@ -7040,7 +9535,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Maline K L"
     },
     {
       "id": 504,
@@ -7054,7 +9554,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2958.0
+      "jan26RecurringRevenue": 2958.0,
+      "category": "High - 80 to 100%",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 505,
@@ -7068,7 +9573,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 255.0
+      "jan26RecurringRevenue": 255.0,
+      "category": "High - 80 to 100%",
+      "segment": "Telecom",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 506,
@@ -7082,7 +9592,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Dormant",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 507,
@@ -7096,7 +9610,12 @@
         "nov_25": 9.0,
         "oct_25": 5.0
       },
-      "jan26RecurringRevenue": 7.0
+      "jan26RecurringRevenue": 7.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Less than 100",
+      "kam": "Aditya Rao"
     },
     {
       "id": 508,
@@ -7110,7 +9629,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 8553.0
+      "jan26RecurringRevenue": 8553.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 509,
@@ -7124,7 +9648,12 @@
         "nov_25": 148.0,
         "oct_25": 247.0
       },
-      "jan26RecurringRevenue": 83.0
+      "jan26RecurringRevenue": 83.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 510,
@@ -7138,7 +9667,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "ASEAN",
+      "mrrBucket": "Dormant",
+      "kam": "Nam Nguyen"
     },
     {
       "id": 511,
@@ -7152,7 +9686,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 153.0
+      "jan26RecurringRevenue": 153.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Michele"
     },
     {
       "id": 512,
@@ -7166,7 +9705,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 917.0
+      "jan26RecurringRevenue": 917.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 513,
@@ -7180,7 +9724,12 @@
         "nov_25": 1.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 27.0
+      "jan26RecurringRevenue": 27.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Michelle George"
     },
     {
       "id": 514,
@@ -7194,7 +9743,12 @@
         "nov_25": 332.0,
         "oct_25": 539.0
       },
-      "jan26RecurringRevenue": 837.0
+      "jan26RecurringRevenue": 837.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "Africa",
+      "mrrBucket": "500 to 2K",
+      "kam": "Lawrence Osayemi"
     },
     {
       "id": 515,
@@ -7208,7 +9762,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 89.0
+      "jan26RecurringRevenue": 89.0,
+      "category": "High - 80 to 100%",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 516,
@@ -7222,7 +9781,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 14922.0
+      "jan26RecurringRevenue": 14922.0,
+      "category": "High - 80 to 100%",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "10K to 50K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 517,
@@ -7236,7 +9800,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 278.0
+      "jan26RecurringRevenue": 278.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 518,
@@ -7250,7 +9819,12 @@
         "nov_25": 93.0,
         "oct_25": 123.0
       },
-      "jan26RecurringRevenue": 142.0
+      "jan26RecurringRevenue": 142.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 519,
@@ -7264,7 +9838,12 @@
         "nov_25": 2663.0,
         "oct_25": 2690.0
       },
-      "jan26RecurringRevenue": 2489.0
+      "jan26RecurringRevenue": 2489.0,
+      "category": "Low - (< 50%)",
+      "segment": "Banks",
+      "geography": "ASEAN",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aryan Mukund"
     },
     {
       "id": 520,
@@ -7278,7 +9857,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 6513.0
+      "jan26RecurringRevenue": 6513.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 521,
@@ -7292,7 +9876,12 @@
         "nov_25": -0.0,
         "oct_25": 112.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 522,
@@ -7306,7 +9895,12 @@
         "nov_25": 129.0,
         "oct_25": -1691.0
       },
-      "jan26RecurringRevenue": 60555.0
+      "jan26RecurringRevenue": 60555.0,
+      "category": "High - 80 to 100%",
+      "segment": "Telecom",
+      "geography": "India",
+      "mrrBucket": "More Than 50K",
+      "kam": "Ashutosh Daga"
     },
     {
       "id": 523,
@@ -7320,7 +9914,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 34.0
+      "jan26RecurringRevenue": 34.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "V Kartik"
     },
     {
       "id": 524,
@@ -7334,7 +9933,12 @@
         "nov_25": 1011.0,
         "oct_25": 1011.0
       },
-      "jan26RecurringRevenue": 1000.0
+      "jan26RecurringRevenue": 1000.0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "US and ROW Fintech",
+      "mrrBucket": "500 to 2K",
+      "kam": "Maline K L"
     },
     {
       "id": 525,
@@ -7348,7 +9952,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2956.0
+      "jan26RecurringRevenue": 2956.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Sriya"
     },
     {
       "id": 526,
@@ -7362,7 +9971,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1005.0
+      "jan26RecurringRevenue": 1005.0,
+      "category": "High - 80 to 100%",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Sriya"
     },
     {
       "id": 527,
@@ -7376,7 +9990,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 272.0
+      "jan26RecurringRevenue": 272.0,
+      "category": "Low - (< 50%)",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 528,
@@ -7390,7 +10009,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 995.0
+      "jan26RecurringRevenue": 995.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 529,
@@ -7404,7 +10028,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 516.0
+      "jan26RecurringRevenue": 516.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "Karthik Shivakumara"
     },
     {
       "id": 530,
@@ -7418,7 +10047,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 619.0
+      "jan26RecurringRevenue": 619.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "V Kartik"
     },
     {
       "id": 531,
@@ -7432,7 +10066,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3169.0
+      "jan26RecurringRevenue": 3169.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 532,
@@ -7446,7 +10085,12 @@
         "nov_25": -0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 3518.0
+      "jan26RecurringRevenue": 3518.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Maline K L"
     },
     {
       "id": 533,
@@ -7460,7 +10104,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 206.0
+      "jan26RecurringRevenue": 206.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 534,
@@ -7474,7 +10123,12 @@
         "nov_25": 135.0,
         "oct_25": 135.0
       },
-      "jan26RecurringRevenue": 133.0
+      "jan26RecurringRevenue": 133.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 535,
@@ -7488,7 +10142,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 3112.0
+      "jan26RecurringRevenue": 3112.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Naveen Shankar Choudhury"
     },
     {
       "id": 536,
@@ -7502,7 +10161,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 537,
@@ -7516,7 +10180,12 @@
         "nov_25": 4.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 655.0
+      "jan26RecurringRevenue": 655.0,
+      "category": "Low - (< 50%)",
+      "segment": "Channel Partner",
+      "geography": "ASEAN",
+      "mrrBucket": "500 to 2K",
+      "kam": "Aryan Mukund"
     },
     {
       "id": 538,
@@ -7530,7 +10199,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 833.0
+      "jan26RecurringRevenue": 833.0,
+      "category": "Low - (< 50%)",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 539,
@@ -7544,7 +10218,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "category": "Low - (< 50%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Sai Prasaanth"
     },
     {
       "id": 540,
@@ -7558,7 +10237,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1791.0
+      "jan26RecurringRevenue": 1791.0,
+      "category": "High - 80 to 100%",
+      "segment": "Bike/Car Rental",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 541,
@@ -7572,7 +10256,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 167.0
+      "jan26RecurringRevenue": 167.0,
+      "category": "High - 80 to 100%",
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 542,
@@ -7586,7 +10275,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 2411.0
+      "jan26RecurringRevenue": 2411.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Crypto",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Akanksha Pandaw"
     },
     {
       "id": 543,
@@ -7600,7 +10294,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 169.0
+      "jan26RecurringRevenue": 169.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 544,
@@ -7614,7 +10313,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 1508.0
+      "jan26RecurringRevenue": 1508.0,
+      "category": "Low - (< 50%)",
+      "segment": "NBFC",
+      "geography": "Africa",
+      "mrrBucket": "500 to 2K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 545,
@@ -7628,7 +10332,12 @@
         "nov_25": 0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": -0.0
+      "jan26RecurringRevenue": -0.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Parthiban Anbazhagan"
     },
     {
       "id": 546,
@@ -7642,7 +10351,11 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 0.0
+      "jan26RecurringRevenue": 0.0,
+      "segment": "Channel Partner",
+      "geography": "India",
+      "mrrBucket": "Dormant",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 547,
@@ -7656,7 +10369,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 40.0
+      "jan26RecurringRevenue": 40.0,
+      "category": "High - 80 to 100%",
+      "segment": "Payment Service Provider",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 548,
@@ -7670,7 +10388,12 @@
         "nov_25": -0.0,
         "oct_25": -0.0
       },
-      "jan26RecurringRevenue": 4402.0
+      "jan26RecurringRevenue": 4402.0,
+      "category": "High - 80 to 100%",
+      "segment": "Gig economy",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Aditya Rao"
     },
     {
       "id": 549,
@@ -7684,7 +10407,12 @@
         "nov_25": 4336.0,
         "oct_25": 4276.0
       },
-      "jan26RecurringRevenue": 5787.0
+      "jan26RecurringRevenue": 5787.0,
+      "category": "Medium - (50 to 79%)",
+      "segment": "Insurance",
+      "geography": "India",
+      "mrrBucket": "2K to 10K",
+      "kam": "Maline K L"
     },
     {
       "id": 550,
@@ -7698,7 +10426,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 111.0
+      "jan26RecurringRevenue": 111.0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500",
+      "kam": "Manish Jan"
     },
     {
       "id": 551,
@@ -7712,7 +10445,12 @@
         "nov_25": -0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 565.0
+      "jan26RecurringRevenue": 565.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "500 to 2K",
+      "kam": "V Kartik"
     },
     {
       "id": 552,
@@ -7726,7 +10464,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 250.0
+      "jan26RecurringRevenue": 250.0,
+      "category": "High - 80 to 100%",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "100 to 500",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 553,
@@ -7740,7 +10483,12 @@
         "nov_25": 0.0,
         "oct_25": 0.0
       },
-      "jan26RecurringRevenue": 31.0
+      "jan26RecurringRevenue": 31.0,
+      "category": "High - 80 to 100%",
+      "segment": "Brokerage",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Kritika Ramesh"
     },
     {
       "id": 554,
@@ -7754,7 +10502,12 @@
         "nov_25": 0,
         "oct_25": 0
       },
-      "jan26RecurringRevenue": 0
+      "jan26RecurringRevenue": 0,
+      "category": "Low - (< 50%)",
+      "segment": "CLM",
+      "geography": "HyperStart",
+      "mrrBucket": "500 to 2K",
+      "kam": "Ayyappa K R"
     },
     {
       "id": 555,
@@ -7768,7 +10521,12 @@
         "nov_25": 0,
         "oct_25": 0
       },
-      "jan26RecurringRevenue": 0
+      "jan26RecurringRevenue": 0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "Africa",
+      "mrrBucket": "Churned",
+      "kam": "Aditya Rao"
     },
     {
       "id": 556,
@@ -7782,7 +10540,11 @@
         "nov_25": 0,
         "oct_25": 0
       },
-      "jan26RecurringRevenue": 0
+      "jan26RecurringRevenue": 0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "100 to 500"
     },
     {
       "id": 557,
@@ -7796,7 +10558,12 @@
         "nov_25": 112,
         "oct_25": 0
       },
-      "jan26RecurringRevenue": 0
+      "jan26RecurringRevenue": 0,
+      "category": "High - 80 to 100%",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Anshuman Gill"
     },
     {
       "id": 558,
@@ -7810,7 +10577,12 @@
         "nov_25": 0,
         "oct_25": 0
       },
-      "jan26RecurringRevenue": 0
+      "jan26RecurringRevenue": 0,
+      "category": "Low - (< 50%)",
+      "segment": "Digital Lenders",
+      "geography": "India",
+      "mrrBucket": "Churned",
+      "kam": "Arunima Srivastava"
     },
     {
       "id": 559,
@@ -7824,7 +10596,12 @@
         "nov_25": 0,
         "oct_25": 0
       },
-      "jan26RecurringRevenue": 0
+      "jan26RecurringRevenue": 0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "ASEAN",
+      "mrrBucket": "Less than 100",
+      "kam": "Harshit Shrivastav"
     },
     {
       "id": 560,
@@ -7838,7 +10615,12 @@
         "nov_25": 0,
         "oct_25": 0
       },
-      "jan26RecurringRevenue": 0
+      "jan26RecurringRevenue": 0,
+      "category": "Low - (< 50%)",
+      "segment": "Others",
+      "geography": "India",
+      "mrrBucket": "Less than 100",
+      "kam": "Veeramesh"
     }
   ]
 }
