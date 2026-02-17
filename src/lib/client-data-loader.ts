@@ -74,6 +74,13 @@ export interface ClientMasterEntry {
   zohoId: string;
   metabaseIds: string;
   clientId: string;
+  actualRevenue?: {
+    jan_26: number;
+    dec_25: number;
+    nov_25: number;
+    oct_25: number;
+  };
+  jan26RecurringRevenue?: number;
 }
 
 export interface ClientMasterFile {
@@ -484,6 +491,54 @@ export async function loadMatrixData(): Promise<MatrixData> {
       });
     }
   });
+
+  // Override monthly totals with MIS actualRevenue from clients.json
+  // MIS values are in USD; convert back to native billing currency so the
+  // frontend's convertToUSD(native, currency) round-trips correctly.
+  const USD_TO_NATIVE: Record<string, number> = {
+    'USD': 1.0,
+    'INR': 1 / 0.012,    // ~83.33
+    'VND': 1 / 0.000039, // ~25641
+    'NGN': 1 / 0.00062,  // ~1612.9
+    'NGR': 1 / 0.00062,
+  };
+  const MONTH_TO_KEY: Record<string, 'jan_26' | 'dec_25' | 'nov_25' | 'oct_25'> = {
+    'Jan 2026': 'jan_26',
+    'Dec 2025': 'dec_25',
+    'Nov 2025': 'nov_25',
+    'Oct 2025': 'oct_25',
+  };
+
+  // Build lookup from normalized client name → master entry with actualRevenue
+  const masterEntryMap = new Map<string, ClientMasterEntry>();
+  clientMaster.clients.forEach(mc => {
+    if (mc.actualRevenue) {
+      masterEntryMap.set(normalizeName(mc.name), mc);
+      masterEntryMap.set(normalizeName(mc.clientId), mc);
+    }
+  });
+
+  let overrideCount = 0;
+  mergedClients.forEach(client => {
+    const masterEntry = masterEntryMap.get(normalizeName(client.client_name))
+      || (client.client_id ? masterEntryMap.get(normalizeName(client.client_id)) : undefined);
+
+    if (!masterEntry?.actualRevenue) return;
+
+    const currency = (client.profile?.billing_currency || 'USD').toUpperCase();
+    const usdToNative = USD_TO_NATIVE[currency] || 1;
+
+    let overridden = false;
+    for (const monthData of client.monthly_data) {
+      const key = MONTH_TO_KEY[monthData.month];
+      if (key !== undefined) {
+        monthData.total_revenue_usd = masterEntry.actualRevenue[key] * usdToNative;
+        overridden = true;
+      }
+    }
+    if (overridden) overrideCount++;
+  });
+  console.log(`[MIS Override] Applied actualRevenue overrides to ${overrideCount} clients`);
 
   // Sort clients by priority:
   // 1. Active (in master list + has Jan 2026 data) - sorted by name

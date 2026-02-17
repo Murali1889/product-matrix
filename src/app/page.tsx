@@ -1538,7 +1538,13 @@ function MatrixView({
   }, [masterAPIs, getClientAPIData]);
 
   // Check if total matches sum of API revenues (with tolerance for rounding)
+  // Disabled for months where MIS actualRevenue overrides the billing total
+  const MIS_OVERRIDE_MONTHS = new Set(['Jan 2026', 'Dec 2025', 'Nov 2025', 'Oct 2025']);
   const hasDiscrepancy = useCallback((client: ProcessedClient): { hasIssue: boolean; total: number; apiSum: number; diff: number } => {
+    const month = selectedMonth || 'Jan 2026';
+    if (MIS_OVERRIDE_MONTHS.has(month)) {
+      return { hasIssue: false, total: 0, apiSum: 0, diff: 0 };
+    }
     const total = getClientTotalForMonth(client);
     const apiSum = getClientAPISum(client);
     const diff = total - apiSum;
@@ -1546,7 +1552,7 @@ function MatrixView({
     const tolerance = Math.max(total * 0.01, 1);
     const hasIssue = total > 0 && Math.abs(diff) > tolerance;
     return { hasIssue, total, apiSum, diff };
-  }, [getClientTotalForMonth, getClientAPISum]);
+  }, [getClientTotalForMonth, getClientAPISum, selectedMonth]);
 
   // Get row status based on ACTUAL data
   const getRowStatus = useCallback((client: ProcessedClient) => {
