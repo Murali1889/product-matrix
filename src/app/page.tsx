@@ -422,8 +422,8 @@ export default function Dashboard() {
       stats[api.moduleName] = { revenue: 0, clients: new Set() };
     });
 
-    // Aggregate from client data (guard against undefined)
-    (data.clients || []).forEach(client => {
+    // Aggregate from client data (master list only)
+    (data.clients || []).filter(c => c.isInMasterList).forEach(client => {
       client.monthly_data?.[0]?.apis?.forEach(api => {
         if (api.name && api.revenue_usd) {
           if (!stats[api.name]) {
@@ -447,9 +447,9 @@ export default function Dashboard() {
 
   // API insights - aggregated from actual client data (HV API / 3P API)
   const apiInsights = useMemo(() => {
-    // Get unique API names from client data (not master list)
+    // Get unique API names from client data (master list only)
     const clientAPIStats: Record<string, { revenue: number; clients: Set<string> }> = {};
-    const clients = data.clients || [];
+    const clients = (data.clients || []).filter(c => c.isInMasterList);
 
     clients.forEach(client => {
       client.monthly_data?.[0]?.apis?.forEach(api => {
@@ -483,6 +483,8 @@ export default function Dashboard() {
 
   const processedClients = useMemo<ProcessedClient[]>(() => {
     return (data.clients || [])
+      // Only include clients from clients.json (master list) — single source of truth
+      .filter(c => c.isInMasterList)
       .map(client => {
         const curr = client.profile?.billing_currency;
         // Use only Jan 2026 (latest month) as the single source of truth
@@ -520,8 +522,8 @@ export default function Dashboard() {
 
   const summary = useMemo(() => {
     const totalRevenue = processedClients.reduce((sum, c) => sum + c.totalRevenue, 0);
-    const masterListClients = processedClients.filter(c => c.isInMasterList).length;
-    const activeClients = processedClients.filter(c => c.totalRevenue > 0 && c.isInMasterList).length;
+    const masterListClients = processedClients.length;
+    const activeClients = processedClients.filter(c => c.totalRevenue > 0).length;
     const avgRevenue = activeClients > 0 ? totalRevenue / activeClients : 0;
 
     const segments: Record<string, { count: number; revenue: number }> = {};
