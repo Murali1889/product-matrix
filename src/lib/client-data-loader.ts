@@ -49,6 +49,7 @@ export interface RawClientData {
       name: string;
       zohoId?: string;
       zohoName?: string;
+      credentialList?: Array<{ type: string; appId: string }>;
     }>;
     pricingSlabList?: Array<{
       moduleType: string;
@@ -96,6 +97,7 @@ export interface APIUsage {
   usage: number;
   success: number;
   currency: string;
+  environment?: 'production' | 'staging';
 }
 
 export interface MonthlyData {
@@ -220,16 +222,40 @@ export async function loadClientMaster(): Promise<ClientMasterFile> {
 }
 
 /**
- * Consolidate usage rows from all appIds and BUIDs for a billing period
+ * Extract production appIds from businessUnits credentialList
  */
-function consolidateUsageRows(billingData: BillingPeriod['data'] | undefined): UsageRow[] {
+function getProductionAppIds(businessUnits: RawClientData['clientDetails']['businessUnits']): Set<string> {
+  const productionAppIds = new Set<string>();
+  if (!businessUnits) return productionAppIds;
+
+  for (const bu of Object.values(businessUnits)) {
+    if (bu.credentialList) {
+      for (const cred of bu.credentialList) {
+        if (cred.type === 'PRODUCTION' && cred.appId) {
+          productionAppIds.add(cred.appId);
+        }
+      }
+    }
+  }
+
+  return productionAppIds;
+}
+
+/**
+ * Consolidate usage rows for a specific set of appIds in a billing period.
+ * If allowedAppIds is empty, includes all appIds (safety fallback).
+ */
+function consolidateUsageRows(billingData: BillingPeriod['data'] | undefined, allowedAppIds: Set<string>): UsageRow[] {
   if (!billingData) return [];
 
   const consolidated: Map<string, UsageRow> = new Map();
 
-  // Process all appId usage
   if (billingData.appId) {
-    Object.values(billingData.appId).forEach(app => {
+    const shouldFilter = allowedAppIds.size > 0;
+
+    Object.entries(billingData.appId).forEach(([appId, app]) => {
+      if (shouldFilter && !allowedAppIds.has(appId)) return;
+
       app?.usageRows?.forEach(row => {
         const key = `${row.moduleName}|${row.unit}`;
         const existing = consolidated.get(key);
@@ -245,6 +271,22 @@ function consolidateUsageRows(billingData: BillingPeriod['data'] | undefined): U
   }
 
   return Array.from(consolidated.values());
+}
+
+/**
+ * Get staging appIds: all appIds in billing data that are NOT in the production set
+ */
+function getStagingAppIds(billingData: BillingPeriod['data'] | undefined, productionAppIds: Set<string>): Set<string> {
+  const stagingAppIds = new Set<string>();
+  if (!billingData?.appId || productionAppIds.size === 0) return stagingAppIds;
+
+  for (const appId of Object.keys(billingData.appId)) {
+    if (!productionAppIds.has(appId)) {
+      stagingAppIds.add(appId);
+    }
+  }
+
+  return stagingAppIds;
 }
 
 /**
@@ -292,47 +334,53 @@ function inferSegment(industry: string[]): string {
 }
 
 /**
- * Get the authoritative total from buid.total.total.totalCost
- */
-function getAuthoritativeTotal(billingData: BillingPeriod['data'] | undefined): number {
-  if (!billingData?.buid?.total?.total?.totalCost) return 0;
-  return billingData.buid.total.total.totalCost || 0;
-}
-
-/**
  * Transform raw client data to dashboard format
  */
 export function transformClientData(raw: RawClientData): TransformedClient {
   const { clientName, clientId, clientDetails, billing } = raw;
   const company = clientDetails.companyDetails;
 
+  // Extract production appIds from credential lists
+  const productionAppIds = getProductionAppIds(clientDetails.businessUnits);
+
   // Transform monthly data
   const monthlyData: MonthlyData[] = billing.map(period => {
-    const usageRows = consolidateUsageRows(period.data);
     const billingCurrency = company.billingCurrency || 'INR';
 
-    // Transform usage rows to API usage
-    // Include rows that have either cost OR usage (to show "No cost" for APIs with usage but no revenue)
-    const apis: APIUsage[] = usageRows
-      .filter(row => (row.cost !== null && row.cost > 0) || row.total > 0 || row.success > 0)
-      .map(row => ({
-        name: createAPIName(row.moduleName, row.unit),
-        moduleName: row.moduleName,
-        subModule: row.unit === '-' ? '' : row.unit,
-        revenue_usd: toUSD(row.cost, billingCurrency),
-        usage: row.total,
-        success: row.success,
-        currency: billingCurrency,
-      }));
+    // Helper to convert usage rows to APIUsage objects
+    const toApiUsage = (rows: UsageRow[], env: 'production' | 'staging'): APIUsage[] =>
+      rows
+        .filter(row => (row.cost !== null && row.cost > 0) || row.total > 0 || row.success > 0)
+        .map(row => ({
+          name: createAPIName(row.moduleName, row.unit),
+          moduleName: row.moduleName,
+          subModule: row.unit === '-' ? '' : row.unit,
+          revenue_usd: toUSD(row.cost, billingCurrency),
+          usage: row.total,
+          success: row.success,
+          currency: billingCurrency,
+          environment: env,
+        }));
 
-    // Use authoritative total from buid.total.total.totalCost (NOT sum of APIs)
-    const authoritativeTotal = getAuthoritativeTotal(period.data);
-    const total_revenue_usd = toUSD(authoritativeTotal, billingCurrency);
+    // Production APIs
+    const productionRows = consolidateUsageRows(period.data, productionAppIds);
+    const productionApis = toApiUsage(productionRows, 'production');
+
+    // Staging APIs (all appIds not in production set)
+    const stagingAppIds = getStagingAppIds(period.data, productionAppIds);
+    const stagingRows = consolidateUsageRows(period.data, stagingAppIds);
+    const stagingApis = toApiUsage(stagingRows, 'staging');
+
+    // Combine: production first, then staging
+    const apis: APIUsage[] = [...productionApis, ...stagingApis];
+
+    // Revenue = sum of PRODUCTION API costs only
+    const total_revenue_usd = productionApis.reduce((sum, api) => sum + api.revenue_usd, 0);
 
     return {
       month: period.period,
       total_revenue_usd,
-      hv_api_revenue_usd: total_revenue_usd, // All is HV API revenue in this data
+      hv_api_revenue_usd: total_revenue_usd,
       other_revenue_usd: 0,
       apis,
     };
@@ -538,11 +586,28 @@ export async function loadMatrixData(): Promise<MatrixData> {
     // Build a set of existing months for quick lookup
     const existingMonths = new Set(client.monthly_data.map(m => m.month));
 
-    // Override existing monthly data
+    // Override existing monthly data with actualRevenue from clients.json
+    // If MIS total > sum of production APIs, add "Unattributed Revenue" entry for the gap
     for (const monthData of client.monthly_data) {
       const key = MONTH_TO_KEY[monthData.month];
       if (key !== undefined) {
-        monthData.total_revenue_usd = masterEntry.actualRevenue[key] * usdToNative;
+        const misTotal = masterEntry.actualRevenue[key] * usdToNative;
+        const apiSum = monthData.apis.reduce((sum, api) => sum + api.revenue_usd, 0);
+        const diff = misTotal - apiSum;
+
+        if (diff > 0.01) {
+          monthData.apis.push({
+            name: 'Unattributed Revenue',
+            moduleName: 'Unattributed Revenue',
+            subModule: '',
+            revenue_usd: diff,
+            usage: 0,
+            success: 0,
+            currency: currency,
+          });
+        }
+
+        monthData.total_revenue_usd = misTotal;
       }
     }
 

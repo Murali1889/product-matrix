@@ -34,6 +34,27 @@ function toUSD(amount: number, currency: string): number {
   return amount * rate;
 }
 
+/**
+ * Extract production appIds from businessUnits credentialList.
+ * Matches the same logic as client-data-loader.ts
+ */
+function getProductionAppIds(businessUnits?: Record<string, { credentialList?: Array<{ type: string; appId: string }> }>): Set<string> {
+  const productionAppIds = new Set<string>();
+  if (!businessUnits) return productionAppIds;
+
+  for (const bu of Object.values(businessUnits)) {
+    if (bu.credentialList) {
+      for (const cred of bu.credentialList) {
+        if (cred.type === 'PRODUCTION' && cred.appId) {
+          productionAppIds.add(cred.appId);
+        }
+      }
+    }
+  }
+
+  return productionAppIds;
+}
+
 async function generate() {
   console.log('Loading data...');
 
@@ -50,12 +71,18 @@ async function generate() {
     data: Array<{
       clientName: string;
       clientId: string;
-      clientDetails: { companyDetails: { billingCurrency?: string } };
+      clientDetails: {
+        companyDetails: { billingCurrency?: string };
+        businessUnits?: Record<string, {
+          BUID: string;
+          name: string;
+          credentialList?: Array<{ type: string; appId: string }>;
+        }>;
+      };
       billing: Array<{
         period: string;
         data: {
           appId: Record<string, { usageRows: Array<{ moduleName: string; total: number; cost: number | null }> }>;
-          buid: Record<string, Record<string, { usageRows: Array<{ moduleName: string; total: number; cost: number | null }> }>>;
         };
       }>;
     }>;
@@ -85,6 +112,8 @@ async function generate() {
   const clientInfos: ClientAPIInfo[] = [];
   const allApiNames = new Set<string>();
 
+  let skippedStagingAPIs = 0;
+
   for (const mc of clientMaster.clients) {
     const billing = billingMap.get(normalizeName(mc.name)) || billingMap.get(normalizeName(mc.clientId));
 
@@ -93,12 +122,20 @@ async function generate() {
     const billingCurrency = billing?.clientDetails?.companyDetails?.billingCurrency || 'USD';
 
     if (billing && billing.billing.length > 0) {
-      // Aggregate APIs across all months (use latest 4 months for relevance)
+      // Extract production appIds from credential list (same logic as client-data-loader.ts)
+      const productionAppIds = getProductionAppIds(billing.clientDetails.businessUnits);
+
+      // Aggregate APIs across latest 4 months — PRODUCTION appIds ONLY
       const apiTotals = new Map<string, { revenue: number; usage: number }>();
 
       for (const period of billing.billing.slice(0, 4)) {
-        // From appId
-        for (const app of Object.values(period.data.appId || {})) {
+        const appIdData = period.data.appId || {};
+        for (const [appId, app] of Object.entries(appIdData)) {
+          // Skip non-production appIds (if we have production credentials to filter by)
+          if (productionAppIds.size > 0 && !productionAppIds.has(appId)) {
+            skippedStagingAPIs++;
+            continue;
+          }
           for (const row of app.usageRows || []) {
             if (!row.moduleName || row.moduleName === 'total') continue;
             const existing = apiTotals.get(row.moduleName) || { revenue: 0, usage: 0 };
@@ -107,18 +144,7 @@ async function generate() {
             apiTotals.set(row.moduleName, existing);
           }
         }
-        // From buid
-        for (const bu of Object.values(period.data.buid || {})) {
-          for (const app of Object.values(bu || {})) {
-            for (const row of app.usageRows || []) {
-              if (!row.moduleName || row.moduleName === 'total') continue;
-              const existing = apiTotals.get(row.moduleName) || { revenue: 0, usage: 0 };
-              existing.revenue += toUSD(row.cost || 0, billingCurrency);
-              existing.usage += (row.total || 0);
-              apiTotals.set(row.moduleName, existing);
-            }
-          }
-        }
+        // buid data is intentionally excluded — only production appId data is used
       }
 
       for (const [name, totals] of apiTotals) {
@@ -179,16 +205,19 @@ async function generate() {
         name: string;
         peerAdoptionRate: number;  // what % of segment uses it
         peersUsing: number;        // how many peers use it
-        avgPeerRevenue: number;    // avg revenue from this API among peers
+        avgPeerRevenue: number;    // usage-based estimate
+        avgPricingRevenue: number; // simple mean peer revenue
         topPeers: string[];        // up to 5 peer names who use it
         priority: 'high' | 'medium' | 'low';
         reason: string;            // human-readable WHY this is recommended
       }>;
       adoptionScore: number;       // what % of segment APIs this client uses (0-100)
-      potentialRevenue: number;    // sum of avgPeerRevenue for all missing APIs
+      potentialRevenue: number;    // sum of usage-based estimates
+      potentialRevenueAvg: number; // sum of avg pricing estimates
     }>;
     // Summary stats
     totalPotentialRevenue: number;
+    totalPotentialRevenueAvg: number;
     avgAdoptionScore: number;
   }
 
@@ -198,16 +227,36 @@ async function generate() {
     if (segName === 'Unknown') continue;
     if (clients.length < 2) continue; // Need at least 2 clients for cross-sell
 
-    // Find all APIs used in this segment and compute adoption
-    const apiStats = new Map<string, { clients: string[]; totalRevenue: number }>();
+    // Find all APIs used in this segment — track per-client revenue AND usage
+    const apiStats = new Map<string, {
+      clients: string[];
+      perClientRevenue: number[];   // each peer's revenue for median calc
+      perClientUsage: number[];     // each peer's usage for median calc
+      totalRevenue: number;
+      totalUsage: number;
+    }>();
 
     for (const client of clients) {
       for (const api of client.apisUsed) {
-        const stat = apiStats.get(api.name) || { clients: [], totalRevenue: 0 };
+        const stat = apiStats.get(api.name) || {
+          clients: [], perClientRevenue: [], perClientUsage: [],
+          totalRevenue: 0, totalUsage: 0,
+        };
         stat.clients.push(client.name);
+        stat.perClientRevenue.push(api.revenue);
+        stat.perClientUsage.push(api.usage);
         stat.totalRevenue += api.revenue;
+        stat.totalUsage += api.usage;
         apiStats.set(api.name, stat);
       }
+    }
+
+    // Helper: compute median of a sorted numeric array
+    function median(values: number[]): number {
+      if (values.length === 0) return 0;
+      const sorted = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
     }
 
     const segmentAPIs = Array.from(apiStats.entries())
@@ -216,7 +265,12 @@ async function generate() {
         clientsUsing: stat.clients.length,
         adoptionRate: stat.clients.length / clients.length,
         totalRevenue: stat.totalRevenue,
+        totalUsage: stat.totalUsage,
         avgRevenuePerUser: stat.totalRevenue / stat.clients.length,
+        medianRevenue: median(stat.perClientRevenue),
+        maxRevenue: Math.max(...stat.perClientRevenue),
+        // Revenue per API call across all peers (for usage-based estimation)
+        revenuePerCall: stat.totalUsage > 0 ? stat.totalRevenue / stat.totalUsage : 0,
       }))
       .sort((a, b) => b.adoptionRate - a.adoptionRate);
 
@@ -226,6 +280,10 @@ async function generate() {
     // Per-client analysis
     const clientResults = clients.map(client => {
       const clientAPISet = new Set(client.apiNames);
+
+      // Client's own call volume: average calls per API they currently use
+      const clientTotalCalls = client.apisUsed.reduce((s, a) => s + a.usage, 0);
+      const clientAvgCallsPerAPI = client.apisUsed.length > 0 ? clientTotalCalls / client.apisUsed.length : 0;
 
       const apisMissing = crossSellAPIs
         .filter(api => !clientAPISet.has(api.name))
@@ -238,27 +296,51 @@ async function generate() {
 
           const peers = stat.clients.filter(n => n !== client.name).slice(0, 5);
           const peerList = peers.slice(0, 3).join(', ');
-          const revStr = api.avgRevenuePerUser >= 1000
-            ? `$${(api.avgRevenuePerUser / 1000).toFixed(1)}K`
-            : `$${Math.round(api.avgRevenuePerUser)}`;
+
+          // --- Estimate revenue using client's own call volume ---
+          let estimatedRevenue: number;
+          let estimationMethod: string;
+
+          if (clientAvgCallsPerAPI > 0 && api.revenuePerCall > 0) {
+            // Primary: client's avg calls/API × this API's revenue-per-call from peers
+            estimatedRevenue = clientAvgCallsPerAPI * api.revenuePerCall;
+            estimationMethod = 'usage-based';
+          } else {
+            // Fallback: median peer revenue (resistant to outliers)
+            estimatedRevenue = api.medianRevenue;
+            estimationMethod = 'median';
+          }
+
+          // Sanity cap: never exceed max peer revenue for this API
+          estimatedRevenue = Math.min(estimatedRevenue, api.maxRevenue);
+          // Floor: at least $1 if there's any signal
+          estimatedRevenue = Math.max(estimatedRevenue, 0);
+
+          const revStr = estimatedRevenue >= 1000
+            ? `$${(estimatedRevenue / 1000).toFixed(1)}K`
+            : `$${Math.round(estimatedRevenue)}`;
 
           // Build a clear reason
           let reason = `${pct}% of ${segName} clients (${api.clientsUsing} out of ${clients.length}) use ${api.name}.`;
           if (peers.length > 0) {
             reason += ` Companies like ${peerList} already use it.`;
           }
-          reason += ` Avg revenue per client: ${revStr} over 4 months.`;
+          reason += ` Est. revenue: ${revStr} (${estimationMethod}).`;
           if (priority === 'high') {
-            reason += ` This is a widely adopted API in your segment — strong cross-sell signal.`;
+            reason += ` Widely adopted in your segment — strong cross-sell signal.`;
           } else if (priority === 'medium') {
             reason += ` Growing adoption in your segment — good opportunity.`;
           }
+
+          // Average pricing estimate (simple mean of all peers)
+          const avgPricingRevenue = api.avgRevenuePerUser;
 
           return {
             name: api.name,
             peerAdoptionRate: api.adoptionRate,
             peersUsing: api.clientsUsing,
-            avgPeerRevenue: api.avgRevenuePerUser,
+            avgPeerRevenue: estimatedRevenue,
+            avgPricingRevenue,
             topPeers: peers,
             priority,
             reason,
@@ -275,6 +357,7 @@ async function generate() {
         : 100;
 
       const potentialRevenue = apisMissing.reduce((sum, a) => sum + a.avgPeerRevenue, 0);
+      const potentialRevenueAvg = apisMissing.reduce((sum, a) => sum + a.avgPricingRevenue, 0);
 
       return {
         name: client.name,
@@ -285,10 +368,12 @@ async function generate() {
         apisMissing,
         adoptionScore,
         potentialRevenue,
+        potentialRevenueAvg,
       };
     }).sort((a, b) => b.potentialRevenue - a.potentialRevenue);
 
     const totalPotentialRevenue = clientResults.reduce((s, c) => s + c.potentialRevenue, 0);
+    const totalPotentialRevenueAvg = clientResults.reduce((s, c) => s + c.potentialRevenueAvg, 0);
     const avgAdoptionScore = clientResults.length > 0
       ? Math.round(clientResults.reduce((s, c) => s + c.adoptionScore, 0) / clientResults.length)
       : 0;
@@ -300,6 +385,7 @@ async function generate() {
       segmentAPIs,
       clients: clientResults,
       totalPotentialRevenue,
+      totalPotentialRevenueAvg,
       avgAdoptionScore,
     });
   }
@@ -311,14 +397,17 @@ async function generate() {
     generatedAt: new Date().toISOString(),
     totalSegments: segments.length,
     totalPotentialRevenue: segments.reduce((s, seg) => s + seg.totalPotentialRevenue, 0),
+    totalPotentialRevenueAvg: segments.reduce((s, seg) => s + seg.totalPotentialRevenueAvg, 0),
     segments,
   };
 
   await fs.writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
 
-  console.log(`\nGenerated cross-sell intelligence:`);
+  console.log(`\nGenerated cross-sell intelligence (production appIds only):`);
   console.log(`  Segments: ${segments.length}`);
-  console.log(`  Total potential revenue: $${Math.round(output.totalPotentialRevenue).toLocaleString()}`);
+  console.log(`  Staging appId entries skipped: ${skippedStagingAPIs}`);
+  console.log(`  Total potential (usage-based): $${Math.round(output.totalPotentialRevenue).toLocaleString()}`);
+  console.log(`  Total potential (avg pricing): $${Math.round(output.totalPotentialRevenueAvg).toLocaleString()}`);
   console.log(`\nTop 5 segments by opportunity:`);
   for (const seg of segments.slice(0, 5)) {
     console.log(`  ${seg.segment}: ${seg.totalClients} clients, ${seg.segmentAPIs.length} APIs, $${Math.round(seg.totalPotentialRevenue).toLocaleString()} potential`);

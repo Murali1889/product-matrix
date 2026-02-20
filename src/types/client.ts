@@ -3,6 +3,7 @@ export interface APIUsage {
   sub_module?: string | null;
   revenue_usd: number;
   usage?: number;
+  environment?: 'production' | 'staging';
 }
 
 export interface MonthlyData {

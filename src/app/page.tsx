@@ -10,10 +10,7 @@ import { getCellComments, addCellComment, deleteCellComment, getCommentedCellKey
 import type { CellComment as CellCommentType, ClientComment as ClientCommentType } from '@/types/comments';
 import { getSlackSettings, saveSlackSettings, testSlackWebhook, notifyComment, notifyRevenueEdit } from '@/lib/slack';
 import type { SlackSettings } from '@/lib/slack';
-import RecommendationsView from '@/components/RecommendationsView';
-import AIRecommendationsView from '@/components/AIRecommendationsView';
-import SalesIntelView from '@/components/SalesIntelView';
-import SegmentIntelligenceView from '@/components/SegmentIntelligenceView';
+import RevenueIntelligenceView from '@/components/RevenueIntelligenceView';
 import LoginPage from '@/components/LoginPage';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
 import { showToast } from '@/components/ToastNotifications';
@@ -140,7 +137,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'revenue' | 'latest' | 'name'>('revenue');
-  const [view, setView] = useState<'analytics' | 'matrix' | 'recommendations' | 'sales-intel'>('matrix');
+  const [view, setView] = useState<'revenue-intel' | 'matrix'>('revenue-intel');
   const [selectedCell, setSelectedCell] = useState<{ client: string; api: string } | null>(null);
 
   // Pagination state
@@ -319,7 +316,7 @@ export default function Dashboard() {
       if (e.altKey && !e.metaKey && !e.ctrlKey) {
         if (e.key === '1') {
           e.preventDefault();
-          setView('analytics');
+          setView('revenue-intel');
         } else if (e.key === '2') {
           e.preventDefault();
           setView('matrix');
@@ -889,39 +886,28 @@ export default function Dashboard() {
   return (
     <div className="h-screen bg-stone-50 flex flex-col overflow-hidden">
       {/* Floating view switcher — no layout space */}
-      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full px-1 py-1 shadow-lg">
+      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full px-1.5 py-1 shadow-lg">
         <button
-          onClick={() => setView('analytics')}
-          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium rounded-full transition-all cursor-pointer ${
-            view === 'analytics'
+          onClick={() => setView('revenue-intel')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium rounded-full transition-all cursor-pointer ${
+            view === 'revenue-intel'
               ? 'bg-slate-800 text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
           }`}
         >
-          <BarChart3 size={12} />
-          Dashboard
+          <Target size={14} />
+          Revenue Intel
         </button>
         <button
           onClick={() => setView('matrix')}
-          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium rounded-full transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium rounded-full transition-all cursor-pointer ${
             view === 'matrix'
               ? 'bg-slate-800 text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
           }`}
         >
-          <LayoutGrid size={12} />
+          <LayoutGrid size={14} />
           Matrix
-        </button>
-        <button
-          onClick={() => setView('recommendations')}
-          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium rounded-full transition-all cursor-pointer ${
-            view === 'recommendations'
-              ? 'bg-slate-800 text-white shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <Target size={12} />
-          Cross-Sell
         </button>
       </div>
 
@@ -958,7 +944,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 min-h-0 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : view === 'recommendations' ? 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-2 overflow-hidden' : 'max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto'}`}>
+      <div className={`flex-1 min-h-0 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : 'overflow-hidden'}`}>
 
         {/* Matrix View */}
         {view === 'matrix' && (
@@ -1055,20 +1041,13 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Cross-Sell Intelligence View */}
-        {view === 'recommendations' && (
-          <SegmentIntelligenceView />
+        {/* Revenue Intelligence View */}
+        {view === 'revenue-intel' && (
+          <RevenueIntelligenceView />
         )}
 
-        {/* Sales Intel View - Commented out for now */}
-        {/*
-        {view === 'sales-intel' && (
-          <SalesIntelView />
-        )}
-        */}
-
-        {/* Analytics View - Simplified */}
-        {view === 'analytics' && (
+        {/* Analytics View - REMOVED: replaced by Revenue Intelligence */}
+        {false && (
           <div className="h-full grid grid-rows-[auto_1fr] gap-3 overflow-hidden">
             {/* Row 1: KPI strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
@@ -1927,34 +1906,47 @@ function MatrixView({
         {/* Top row: Title and Stats */}
         <div className="flex items-center justify-between mb-2 sm:mb-0">
           <div className="flex items-center gap-2">
-            <Database className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-semibold text-slate-700 text-[13px] tracking-[-0.02em]">Revenue Matrix</span>
+            <Database className="w-4 h-4 text-slate-400" />
+            <span className="font-semibold text-slate-700 text-[14px] tracking-[-0.02em]">Revenue Matrix</span>
             <button
               onClick={() => setFeedbackActive(!feedbackActive)}
-              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
                 feedbackActive
                   ? 'bg-amber-100 text-amber-700 border border-amber-300'
                   : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
               }`}
               title="Send feedback"
             >
-              <MessageSquarePlus size={12} />
+              <MessageSquarePlus size={13} />
               <span className="hidden sm:inline">Feedback</span>
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600 tabular-nums">
+            <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-600 tabular-nums">
               {stats.total} clients
             </span>
-            <span className="text-[11px] text-slate-500 hidden sm:inline tracking-[-0.01em]">
+            <span className="text-[12px] text-slate-500 hidden sm:inline tracking-[-0.01em]">
               Total: <span className="font-semibold text-slate-700 rev-num">{formatCurrency(stats.totalRevenue)}</span>
             </span>
             {stats.withDiscrepancy > 0 && (
-              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-50 text-amber-600 hidden md:inline" title="Clients where Total ≠ Sum of APIs">
+              <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-amber-50 text-amber-600 hidden md:inline" title="Clients where Total ≠ Sum of APIs">
                 {stats.withDiscrepancy} review
               </span>
             )}
             <div className="hidden sm:flex items-center gap-1 ml-1 pl-2 border-l border-slate-200">
+              {/* Cross-sell toggle */}
+              <button
+                onClick={() => setCrossSellMode(!crossSellMode)}
+                className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
+                  crossSellMode
+                    ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
+                }`}
+                title={crossSellMode ? 'Hide cross-sell opportunities' : 'Show cross-sell opportunities (select a segment first)'}
+              >
+                <Target size={12} />
+                <span>Cross-Sell</span>
+              </button>
               {/* Compact toggle */}
               <button
                 onClick={() => setCompactMode(!compactMode)}
@@ -1968,14 +1960,14 @@ function MatrixView({
               {/* Chart toggle */}
               <button
                 onClick={() => setShowChart(!showChart)}
-                className={`px-2 py-1 text-[10px] font-medium rounded-md transition-all cursor-pointer ${
+                className={`px-2 py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
                   showChart
                     ? 'bg-blue-100 text-blue-700 border border-blue-300'
                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
                 }`}
                 title="Toggle revenue chart"
               >
-                <span className="flex items-center gap-1"><BarChart3 size={11} /> Chart</span>
+                <span className="flex items-center gap-1"><BarChart3 size={12} /> Chart</span>
               </button>
               {/* Export CSV */}
               <button
@@ -1991,11 +1983,12 @@ function MatrixView({
 
         {/* Filters Row — single compact row */}
         {viewMode === 'matrix' && (
-          <div className="mt-2.5 animate-fade-in">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-              {/* Inline search */}
+          <div className="mt-2.5 animate-fade-in space-y-2">
+            {/* Primary filter row */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+              {/* Inline search — fixed width, no layout shift */}
               <div className="relative shrink-0">
-                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -2005,14 +1998,14 @@ function MatrixView({
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-40 focus:w-60 text-[11px] border border-slate-200 rounded-lg pl-7 pr-6 py-1.5 bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all duration-200"
+                  className="w-52 text-[12px] border border-slate-200 rounded-lg pl-8 pr-7 py-1.5 bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-colors duration-200"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                   >
-                    <X size={10} />
+                    <X size={11} />
                   </button>
                 )}
               </div>
@@ -2022,7 +2015,9 @@ function MatrixView({
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="text-[11px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all duration-200 hover:border-slate-300 cursor-pointer"
+                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-colors duration-200 cursor-pointer ${
+                  selectedMonth ? 'border-amber-400 bg-amber-50 text-amber-700 font-medium' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                }`}
               >
                 <option value="">Latest</option>
                 {allMonths.map(month => (
@@ -2032,7 +2027,7 @@ function MatrixView({
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
-                className="text-[11px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all duration-200 hover:border-slate-300 cursor-pointer"
+                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-colors duration-200 hover:border-slate-300 cursor-pointer"
               >
                 <option value="revenue">Revenue ↓</option>
                 <option value="status">Status</option>
@@ -2049,7 +2044,7 @@ function MatrixView({
                   setNotUsingFilter(null);
                   setCurrentPage(1);
                 }}
-                className={`text-[11px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all duration-200 cursor-pointer ${
+                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-colors duration-200 cursor-pointer ${
                   selectedSegment ? 'border-blue-400 bg-blue-50 text-blue-700 font-medium shadow-sm shadow-blue-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
@@ -2067,7 +2062,7 @@ function MatrixView({
                   setSelectedCountry(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`text-[11px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition-all duration-200 cursor-pointer ${
+                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition-colors duration-200 cursor-pointer ${
                   selectedCountry ? 'border-emerald-400 bg-emerald-50 text-emerald-700 font-medium shadow-sm shadow-emerald-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
@@ -2084,7 +2079,7 @@ function MatrixView({
                   setSelectedOwner(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`text-[11px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition-all duration-200 cursor-pointer ${
+                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition-colors duration-200 cursor-pointer ${
                   selectedOwner ? 'border-purple-400 bg-purple-50 text-purple-700 font-medium shadow-sm shadow-purple-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
@@ -2099,86 +2094,118 @@ function MatrixView({
 
               {/* API column search */}
               <div className="relative shrink-0">
-                <Database size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <Database size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="API..."
+                  placeholder="Filter APIs..."
                   value={apiSearchTerm}
                   onChange={(e) => setApiSearchTerm(e.target.value)}
-                  className="text-[11px] border border-slate-200 rounded-lg pl-6 pr-6 py-1.5 bg-white w-24 focus:outline-none focus:ring-2 focus:ring-amber-400/40 text-slate-600 placeholder:text-slate-400 transition-all duration-200 hover:border-slate-300"
+                  className="text-[12px] border border-slate-200 rounded-lg pl-7 pr-7 py-1.5 bg-white w-28 focus:outline-none focus:ring-2 focus:ring-amber-400/40 text-slate-600 placeholder:text-slate-400 transition-colors duration-200 hover:border-slate-300"
                 />
                 {apiSearchTerm && (
-                  <button onClick={() => setApiSearchTerm('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                    <X size={10} />
+                  <button onClick={() => setApiSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                    <X size={11} />
                   </button>
                 )}
               </div>
 
-              {/* Active filter chips + clear all */}
-              {(selectedSegment || selectedOwner || selectedCountry || searchTerm || apiSearchTerm || notUsingFilter) && (
-                <>
-                  <div className="w-px h-5 bg-slate-200 shrink-0" />
-                  {selectedSegment && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-full shrink-0">
-                      {selectedSegment}
-                      <button onClick={() => { setSelectedSegment(''); setCurrentPage(1); }} className="hover:text-blue-900 cursor-pointer"><X size={9} /></button>
-                    </span>
-                  )}
-                  {selectedCountry && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full shrink-0">
-                      {selectedCountry}
-                      <button onClick={() => { setSelectedCountry(''); setCurrentPage(1); }} className="hover:text-emerald-900 cursor-pointer"><X size={9} /></button>
-                    </span>
-                  )}
-                  {selectedOwner && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200 rounded-full shrink-0">
-                      {selectedOwner}
-                      <button onClick={() => { setSelectedOwner(''); setCurrentPage(1); }} className="hover:text-purple-900 cursor-pointer"><X size={9} /></button>
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSelectedSegment('');
-                      setSelectedOwner('');
-                      setSelectedCountry('');
-                      setSearchTerm('');
-                      setApiSearchTerm('');
-                      setNotUsingFilter(null);
-                      setCurrentPage(1);
-                      searchInputRef.current?.focus();
-                    }}
-                    className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-600 shrink-0 cursor-pointer tracking-wide transition-all duration-200 hover:bg-red-50 px-2 py-1 rounded-lg"
-                  >
-                    <X size={10} />
-                    Clear
-                  </button>
-                </>
-              )}
-
               {/* Result count + pagination */}
               <div className="flex items-center gap-1.5 ml-auto shrink-0 pl-2 border-l border-slate-200">
-                <span className="text-[10px] text-slate-400 tabular-nums">{sortedClients.length} clients</span>
+                <span className="text-[11px] text-slate-500 tabular-nums">{sortedClients.length} of {clients.filter(c => c.isInMasterList).length} clients</span>
               </div>
               {totalPages > 1 && (
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150"
+                    className="px-1.5 py-1 text-[12px] text-slate-500 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150"
                   >
                     ←
                   </button>
-                  <span className="text-[10px] text-slate-500 tabular-nums font-medium">{currentPage}/{totalPages}</span>
+                  <span className="text-[11px] text-slate-500 tabular-nums font-medium">{currentPage}/{totalPages}</span>
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-1.5 py-1 text-[11px] text-slate-500 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150"
+                    className="px-1.5 py-1 text-[12px] text-slate-500 hover:bg-slate-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150"
                   >
                     →
                   </button>
                 </div>
               )}
             </div>
+
+            {/* Active filter chips — complete visibility of all constraints */}
+            {(selectedSegment || selectedOwner || selectedCountry || searchTerm || apiSearchTerm || notUsingFilter || selectedMonth || sortByAPI) && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] text-slate-400">Active:</span>
+                {searchTerm && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 rounded-full shrink-0">
+                    &ldquo;{searchTerm}&rdquo;
+                    <button onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }} className="hover:text-slate-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {selectedMonth && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-full shrink-0">
+                    {selectedMonth}
+                    <button onClick={() => setSelectedMonth('')} className="hover:text-amber-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {selectedSegment && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-full shrink-0">
+                    {selectedSegment}
+                    <button onClick={() => { setSelectedSegment(''); setCurrentPage(1); }} className="hover:text-blue-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {selectedCountry && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full shrink-0">
+                    {selectedCountry}
+                    <button onClick={() => { setSelectedCountry(''); setCurrentPage(1); }} className="hover:text-emerald-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {selectedOwner && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200 rounded-full shrink-0">
+                    {selectedOwner}
+                    <button onClick={() => { setSelectedOwner(''); setCurrentPage(1); }} className="hover:text-purple-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {apiSearchTerm && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 rounded-full shrink-0">
+                    API: {apiSearchTerm}
+                    <button onClick={() => setApiSearchTerm('')} className="hover:text-slate-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {notUsingFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-full shrink-0">
+                    Not using: {notUsingFilter}
+                    <button onClick={() => { setNotUsingFilter(null); setCurrentPage(1); }} className="hover:text-amber-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {sortByAPI && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-full shrink-0">
+                    Sorted by: {sortByAPI.split(' - ')[0]}
+                    <button onClick={() => setSortByAPI(null)} className="hover:text-amber-900 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setSelectedSegment('');
+                    setSelectedOwner('');
+                    setSelectedCountry('');
+                    setSearchTerm('');
+                    setApiSearchTerm('');
+                    setNotUsingFilter(null);
+                    setSortByAPI(null);
+                    setSelectedMonth('');
+                    setCurrentPage(1);
+                    searchInputRef.current?.focus();
+                  }}
+                  className="flex items-center gap-1 text-[11px] text-rose-500 hover:text-rose-700 shrink-0 cursor-pointer transition-all duration-200 hover:bg-rose-50 px-2 py-0.5 rounded-lg font-medium"
+                >
+                  <X size={11} />
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -2216,11 +2243,11 @@ function MatrixView({
                         <span className="text-[13px] font-bold text-slate-800 tracking-[-0.02em]">{selectedSegment} — API Adoption & Opportunities</span>
                       </div>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[11px] text-slate-500">{segTotal} clients in segment</span>
-                        <span className="text-[11px] text-slate-300">·</span>
-                        <span className="text-[11px] text-slate-500">{adoptionList.length} APIs adopted</span>
-                        <span className="text-[11px] text-slate-300">·</span>
-                        <span className="text-[11px] font-semibold text-amber-600 rev-num">~{formatUSD(totalPotential)} potential</span>
+                        <span className="text-[12px] text-slate-500">{segTotal} clients in segment</span>
+                        <span className="text-[12px] text-slate-300">·</span>
+                        <span className="text-[12px] text-slate-500">{adoptionList.length} APIs adopted</span>
+                        <span className="text-[12px] text-slate-300">·</span>
+                        <span className="text-[12px] font-semibold text-amber-600 rev-num">~{formatUSD(totalPotential)} potential</span>
                       </div>
                     </div>
                     <button onClick={() => setShowChart(false)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><X size={15} /></button>
@@ -2268,8 +2295,8 @@ function MatrixView({
                         >
                           {/* API Name */}
                           <div className="w-[160px] shrink-0 text-right pr-1">
-                            <div className={`text-[11px] font-medium truncate leading-tight ${isActiveFilter ? 'text-amber-800' : 'text-slate-700'}`} title={api.name}>{parts[0]}</div>
-                            {parts[1] && <div className="text-[9px] text-slate-400 truncate leading-tight">{parts[1]}</div>}
+                            <div className={`text-[12px] font-medium truncate leading-tight ${isActiveFilter ? 'text-amber-800' : 'text-slate-700'}`} title={api.name}>{parts[0]}</div>
+                            {parts[1] && <div className="text-[10px] text-slate-400 truncate leading-tight">{parts[1]}</div>}
                           </div>
                           {/* Adoption bar */}
                           <div className={`flex-1 h-[26px] ${gapColor} rounded overflow-hidden relative flex items-center`}>
@@ -2278,15 +2305,15 @@ function MatrixView({
                               style={{ width: `${adoptPct}%` }}
                             >
                               {adoptPct >= 25 && (
-                                <span className="text-[10px] font-bold text-white pl-2.5 whitespace-nowrap">{api.using}/{api.total}</span>
+                                <span className="text-[11px] font-bold text-white pl-2.5 whitespace-nowrap">{api.using}/{api.total}</span>
                               )}
                             </div>
                             {adoptPct < 25 && (
-                              <span className="text-[10px] font-bold text-slate-500 pl-2 whitespace-nowrap">{api.using}/{api.total}</span>
+                              <span className="text-[11px] font-bold text-slate-500 pl-2 whitespace-nowrap">{api.using}/{api.total}</span>
                             )}
                             {/* Gap indicator */}
                             {api.gap > 0 && adoptPct < 85 && (
-                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-medium text-slate-500 whitespace-nowrap">
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-slate-500 whitespace-nowrap">
                                 {api.gap} not using {isActiveFilter && '(filtered)'}
                               </span>
                             )}
@@ -2301,11 +2328,11 @@ function MatrixView({
                           <div className="w-[90px] shrink-0 text-right">
                             {api.gap > 0 ? (
                               <>
-                                <div className="text-[10px] font-semibold text-amber-600 rev-num">~{formatUSD(api.potentialRev)}</div>
-                                <div className="text-[9px] text-slate-400">from {api.gap} clients</div>
+                                <div className="text-[11px] font-semibold text-amber-600 rev-num">~{formatUSD(api.potentialRev)}</div>
+                                <div className="text-[10px] text-slate-400">from {api.gap} clients</div>
                               </>
                             ) : (
-                              <div className="text-[10px] text-emerald-600 font-medium">Full adoption</div>
+                              <div className="text-[11px] text-emerald-600 font-medium">Full adoption</div>
                             )}
                           </div>
                         </div>
@@ -2322,17 +2349,17 @@ function MatrixView({
                       <div className="flex items-center gap-2 mb-3">
                         <Target size={14} className="text-amber-500" />
                         <span className="text-[12px] font-bold text-slate-800">Top Opportunities — Who to Target Next</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">{crossSellOppsList.length} total</span>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">{crossSellOppsList.length} total</span>
                       </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[11px]">
+                        <table className="w-full text-[12px]">
                           <thead>
                             <tr className="border-b border-slate-200">
-                              <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Client</th>
-                              <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">API to Pitch</th>
-                              <th className="text-center py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Segment Adoption</th>
-                              <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Est. Revenue</th>
-                              <th className="text-center py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Priority</th>
+                              <th className="text-left py-1.5 px-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Client</th>
+                              <th className="text-left py-1.5 px-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">API to Pitch</th>
+                              <th className="text-center py-1.5 px-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Segment Adoption</th>
+                              <th className="text-right py-1.5 px-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Est. Revenue</th>
+                              <th className="text-center py-1.5 px-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Priority</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -2346,7 +2373,7 @@ function MatrixView({
                                 </td>
                                 <td className="py-1.5 px-2 text-right font-semibold text-amber-700 rev-num">~{formatUSD(opp.estimatedRevenue)}/mo</td>
                                 <td className="py-1.5 px-2 text-center">
-                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                                     opp.priority === 'high' ? 'bg-red-100 text-red-700' :
                                     opp.priority === 'medium' ? 'bg-amber-100 text-amber-700' :
                                     'bg-slate-100 text-slate-600'
@@ -2358,7 +2385,7 @@ function MatrixView({
                         </table>
                       </div>
                       {crossSellOppsList.length > 20 && (
-                        <div className="text-[10px] text-slate-400 text-center mt-2">Showing top 20 of {crossSellOppsList.length} opportunities</div>
+                        <div className="text-[11px] text-slate-400 text-center mt-2">Showing top 20 of {crossSellOppsList.length} opportunities</div>
                       )}
                     </div>
                   )}
@@ -2391,9 +2418,9 @@ function MatrixView({
                       <span className="text-[13px] font-bold text-slate-800 tracking-[-0.02em]">Revenue by API Product</span>
                     </div>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[11px] text-slate-400">{chartAPIs.length} APIs with revenue</span>
-                      <span className="text-[11px] text-slate-400">·</span>
-                      <span className="text-[11px] font-medium text-slate-600 rev-num">{formatUSD(totalChartRev)} total</span>
+                      <span className="text-[12px] text-slate-400">{chartAPIs.length} APIs with revenue</span>
+                      <span className="text-[12px] text-slate-400">·</span>
+                      <span className="text-[12px] font-medium text-slate-600 rev-num">{formatUSD(totalChartRev)} total</span>
                     </div>
                   </div>
                   <button onClick={() => setShowChart(false)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><X size={15} /></button>
@@ -2408,10 +2435,10 @@ function MatrixView({
                     const colorIdx = i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : i < 13 ? 3 : 4;
                     return (
                       <div key={api.name} className="flex items-center gap-3 group py-[2px]">
-                        <span className="w-[18px] text-[10px] text-slate-400 text-right shrink-0 tabular-nums">{i + 1}</span>
+                        <span className="w-[18px] text-[11px] text-slate-400 text-right shrink-0 tabular-nums">{i + 1}</span>
                         <div className="w-[160px] shrink-0 text-right pr-1">
-                          <div className="text-[11px] font-medium text-slate-700 truncate leading-tight" title={api.name}>{parts[0]}</div>
-                          {parts[1] && <div className="text-[9px] text-slate-400 truncate leading-tight">{parts[1]}</div>}
+                          <div className="text-[12px] font-medium text-slate-700 truncate leading-tight" title={api.name}>{parts[0]}</div>
+                          {parts[1] && <div className="text-[10px] text-slate-400 truncate leading-tight">{parts[1]}</div>}
                         </div>
                         <div className="flex-1 h-[24px] bg-slate-50 rounded overflow-hidden relative border border-slate-100">
                           <div
@@ -2419,16 +2446,16 @@ function MatrixView({
                             style={{ width: `${barWidth}%` }}
                           >
                             {barWidth > 30 && (
-                              <span className="text-[10px] font-semibold text-white/90 pl-2.5 rev-num whitespace-nowrap">{formatUSD(api.revenue)}</span>
+                              <span className="text-[11px] font-semibold text-white/90 pl-2.5 rev-num whitespace-nowrap">{formatUSD(api.revenue)}</span>
                             )}
                           </div>
                           {barWidth <= 30 && (
-                            <span className="absolute left-[calc(var(--bar-w)+8px)] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-600 rev-num whitespace-nowrap" style={{ '--bar-w': `${barWidth}%` } as React.CSSProperties}>{formatUSD(api.revenue)}</span>
+                            <span className="absolute left-[calc(var(--bar-w)+8px)] top-1/2 -translate-y-1/2 text-[11px] font-semibold text-slate-600 rev-num whitespace-nowrap" style={{ '--bar-w': `${barWidth}%` } as React.CSSProperties}>{formatUSD(api.revenue)}</span>
                           )}
                         </div>
                         <div className="w-[90px] shrink-0 text-right">
-                          <div className="text-[10px] font-medium text-slate-600 tabular-nums">{share}%</div>
-                          <div className="text-[9px] text-slate-400">{api.clients} {api.clients === 1 ? 'client' : 'clients'}</div>
+                          <div className="text-[11px] font-medium text-slate-600 tabular-nums">{share}%</div>
+                          <div className="text-[10px] text-slate-400">{api.clients} {api.clients === 1 ? 'client' : 'clients'}</div>
                         </div>
                       </div>
                     );
@@ -2448,11 +2475,11 @@ function MatrixView({
           {/* Not-using filter badge (visible when chart is closed but filter active) */}
           {notUsingFilter && !showChart && (
             <div className="flex items-center gap-2 mx-5 mt-2 mb-1 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <Filter size={12} className="text-amber-600" />
-              <span className="text-[11px] text-amber-800 font-medium">Showing {selectedSegment || 'all'} clients NOT using: <span className="font-bold">{notUsingFilter}</span></span>
+              <Filter size={13} className="text-amber-600" />
+              <span className="text-[12px] text-amber-800 font-medium">Showing {selectedSegment || 'all'} clients NOT using: <span className="font-bold">{notUsingFilter}</span></span>
               <button
                 onClick={() => { setNotUsingFilter(null); setCurrentPage(1); }}
-                className="ml-auto text-[10px] px-2 py-0.5 rounded bg-amber-200 text-amber-800 hover:bg-amber-300 cursor-pointer font-medium"
+                className="ml-auto text-[11px] px-2 py-0.5 rounded bg-amber-200 text-amber-800 hover:bg-amber-300 cursor-pointer font-medium"
               >
                 Clear filter
               </button>
@@ -2464,9 +2491,9 @@ function MatrixView({
             <table className="matrix-table w-max border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="h-[56px] bg-slate-50">
-                  <th className="sticky left-0 z-20 bg-slate-50 text-center text-[10px] font-medium text-slate-400 w-[44px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">#</th>
-                  <th className="sticky left-[44px] z-20 bg-slate-50 text-left px-3 col-label text-[11px] text-slate-500 w-[200px] max-w-[200px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">Client</th>
-                  <th className="sticky left-[244px] z-20 bg-slate-50 text-center px-3 col-label text-[11px] text-slate-500 w-[100px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">Total</th>
+                  <th className="sticky left-0 z-20 bg-slate-50 text-center text-[11px] font-medium text-slate-400 w-[44px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">#</th>
+                  <th className="sticky left-[44px] z-20 bg-slate-50 text-left px-3 col-label text-[12px] text-slate-500 w-[200px] max-w-[200px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">Client</th>
+                  <th className="sticky left-[244px] z-20 bg-slate-50 text-center px-3 col-label text-[12px] text-slate-500 w-[100px] shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-2px_0_#cbd5e1]">Total</th>
                   {visibleAPIs.map(api => {
                     const parts = api.split(' - ');
                     const moduleName = parts[0] || api;
@@ -2483,18 +2510,18 @@ function MatrixView({
                         title={isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
                       >
                         <div className="flex flex-col items-center gap-0.5">
-                          <div className={`col-label text-[10px] leading-snug text-center truncate max-w-[140px] ${isUnmatched ? 'text-red-600' : 'text-slate-500'}`}>
+                          <div className={`col-label text-[11px] leading-snug text-center truncate max-w-[140px] ${isUnmatched ? 'text-red-600' : 'text-slate-500'}`}>
                             {moduleName}
                           </div>
                           {subModule && (
-                            <div className={`text-[9px] font-normal leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-400' : 'text-slate-400'}`}>
+                            <div className={`text-[10px] font-normal leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-400' : 'text-slate-400'}`}>
                               {subModule}
                             </div>
                           )}
                           {/* Client count badge: using / total — click to sort clients by this API */}
                           {!selectedSegment && (
                             <div
-                              className={`text-[9px] px-1.5 py-px rounded-full font-medium cursor-pointer transition-colors ${
+                              className={`text-[10px] px-1.5 py-px rounded-full font-medium cursor-pointer transition-colors ${
                                 sortByAPI === api
                                   ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
                                   : clientCount > 0 ? 'bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-600' : 'bg-slate-50 text-slate-300'
@@ -2511,7 +2538,7 @@ function MatrixView({
                           )}
                           {selectedSegment && adoption && (
                             <div
-                              className={`text-[9px] px-1.5 py-px rounded-full font-medium cursor-pointer transition-colors ${
+                              className={`text-[10px] px-1.5 py-px rounded-full font-medium cursor-pointer transition-colors ${
                                 sortByAPI === api
                                   ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
                                   : adoption.adoptionRate >= 0.7 ? 'bg-emerald-50 text-emerald-600 hover:bg-amber-50 hover:text-amber-600' :
@@ -2544,7 +2571,7 @@ function MatrixView({
                   return (
                     <tr key={client.client_name} className={`${rowBg} ${compactMode ? 'h-[32px]' : 'h-[40px]'} transition-colors duration-100`}>
                       {/* Row number */}
-                      <td className={`sticky left-0 z-10 ${rowBg} px-2 text-center w-[44px] text-[10px] text-slate-400 shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-1px_0_#e2e8f0]`}>
+                      <td className={`sticky left-0 z-10 ${rowBg} px-2 text-center w-[44px] text-[11px] text-slate-400 shadow-[inset_-1px_0_0_#cbd5e1,inset_0_-1px_0_#e2e8f0]`}>
                         {(currentPage - 1) * pageSize + idx + 1}
                       </td>
                       {/* Client name */}
@@ -2563,8 +2590,8 @@ function MatrixView({
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-200 shrink-0" title="Inactive" />
                           )}
                           <div className="min-w-0">
-                            <div className={`${compactMode ? 'text-[11px]' : 'text-[12px]'} font-medium truncate leading-tight tracking-[-0.01em] ${usesSelectedAPI ? 'text-amber-700' : 'text-slate-800'}`} title={client.client_name}>{client.client_name}</div>
-                            {!compactMode && <div className="text-[10px] text-slate-400 truncate leading-tight mt-0.5 tracking-wide">{client.profile?.segment || '-'}</div>}
+                            <div className={`${compactMode ? 'text-[12px]' : 'text-[13px]'} font-medium truncate leading-tight tracking-[-0.01em] ${usesSelectedAPI ? 'text-amber-700' : 'text-slate-800'}`} title={client.client_name}>{client.client_name}</div>
+                            {!compactMode && <div className="text-[11px] text-slate-400 truncate leading-tight mt-0.5 tracking-wide">{client.profile?.segment || '-'}</div>}
                           </div>
                         </div>
                       </td>
@@ -2651,12 +2678,12 @@ function MatrixView({
                                       {momChange > 0 ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
                                     </span>
                                   )}
-                                  <span className={`rev-num ${compactMode ? 'text-[11px]' : 'text-[12px]'} ${
+                                  <span className={`rev-num ${compactMode ? 'text-[12px]' : 'text-[13px]'} ${
                                     hasEdit ? 'font-semibold text-amber-700' :
                                     hasUsageNoRev ? 'font-medium text-orange-500' :
                                     value > 0 ? 'font-medium text-emerald-700' :
-                                    crossSellOpp ? 'text-purple-400 text-[10px]' :
-                                    potential > 0 ? 'text-amber-400/70 text-[10px]' : 'text-slate-200'
+                                    crossSellOpp ? 'text-purple-400 text-[11px]' :
+                                    potential > 0 ? 'text-amber-400/70 text-[11px]' : 'text-slate-200'
                                   }`}>
                                     {value > 0
                                       ? formatCurrency(value, client.profile?.billing_currency || 'USD')
@@ -2670,17 +2697,17 @@ function MatrixView({
                                   </span>
                                 </div>
                                 {!compactMode && usage > 0 && (
-                                  <span className={`text-[9px] tracking-wide ${hasUsageNoRev ? 'text-orange-500' : 'text-slate-400'}`}>
+                                  <span className={`text-[10px] tracking-wide ${hasUsageNoRev ? 'text-orange-500' : 'text-slate-400'}`}>
                                     {usage.toLocaleString('en-US')}
                                   </span>
                                 )}
                                 {crossSellOpp && !value && (
-                                  <span className="text-[9px] text-purple-400 tracking-wide">
+                                  <span className="text-[10px] text-purple-400 tracking-wide">
                                     {Math.round(crossSellOpp.segmentAdoptionRate * 100)}% adopt
                                   </span>
                                 )}
                                 {!crossSellOpp && potential > 0 && !value && segAdoption && (
-                                  <span className="text-[9px] text-amber-400/60 tracking-wide">
+                                  <span className="text-[10px] text-amber-400/60 tracking-wide">
                                     {segAdoption.clientCount}/{currentSegmentAdoption!.totalClients} use
                                   </span>
                                 )}
@@ -2697,12 +2724,12 @@ function MatrixView({
               <tfoot>
                 <tr className="bg-slate-800 text-white h-[38px]">
                   <td className="sticky left-0 z-10 bg-slate-800 w-[44px] shadow-[inset_-1px_0_0_#475569,inset_0_1px_0_#475569]"></td>
-                  <td className="sticky left-[44px] z-10 bg-slate-800 px-3 col-label text-[11px] tracking-widest text-slate-300 shadow-[inset_-1px_0_0_#475569,inset_0_1px_0_#475569]">Totals</td>
-                  <td className="sticky left-[244px] z-10 bg-slate-800 px-3 text-center rev-num text-[12px] font-semibold shadow-[inset_-1px_0_0_#475569,inset_1px_0_0_#475569,inset_0_1px_0_#475569]">
+                  <td className="sticky left-[44px] z-10 bg-slate-800 px-3 col-label text-[12px] tracking-widest text-slate-300 shadow-[inset_-1px_0_0_#475569,inset_0_1px_0_#475569]">Totals</td>
+                  <td className="sticky left-[244px] z-10 bg-slate-800 px-3 text-center rev-num text-[13px] font-semibold shadow-[inset_-1px_0_0_#475569,inset_1px_0_0_#475569,inset_0_1px_0_#475569]">
                     {formatUSD(clients.reduce((s, c) => s + toUSD(getClientTotalForMonth(c), c.profile?.billing_currency), 0))}
                   </td>
                   {visibleAPIs.map(api => (
-                    <td key={api} className="pl-4 pr-3 text-right rev-num text-[11px] text-slate-400 border-r border-t border-slate-700">
+                    <td key={api} className="pl-4 pr-3 text-right rev-num text-[12px] text-slate-400 border-r border-t border-slate-700">
                       {apiTotals[api] > 0 ? formatUSD(apiTotals[api]) : '\u2014'}
                     </td>
                   ))}
@@ -2941,8 +2968,8 @@ function CellPopupWithComments({
       {/* Header */}
       <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100">
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-semibold text-slate-800 truncate tracking-[-0.01em]">{cellPopup.clientName}</div>
-          <div className="text-[11px] text-slate-400 truncate mt-0.5">{cellPopup.apiName}</div>
+          <div className="text-[14px] font-semibold text-slate-800 truncate tracking-[-0.01em]">{cellPopup.clientName}</div>
+          <div className="text-[12px] text-slate-400 truncate mt-0.5">{cellPopup.apiName}</div>
         </div>
         <button onClick={onClose} className="ml-2 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 cursor-pointer">
           <X size={14} />
@@ -2950,22 +2977,22 @@ function CellPopupWithComments({
       </div>
 
       {/* Stats */}
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <div className="flex justify-between items-center">
-          <span className="text-[11px] text-slate-400 tracking-wide">Revenue</span>
-          <span className="text-[13px] font-semibold text-slate-800 rev-num">
+          <span className="text-[12px] text-slate-400 tracking-wide">Revenue</span>
+          <span className="text-[14px] font-semibold text-slate-800 rev-num">
             {cellPopup.revenue > 0 ? formatCurrency(cellPopup.revenue, cellPopup.currency) : '\u2014'}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[11px] text-slate-400 tracking-wide">API Calls</span>
-          <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
+          <span className="text-[12px] text-slate-400 tracking-wide">API Calls</span>
+          <span className="text-[14px] font-semibold text-slate-700 tabular-nums">
             {cellPopup.usage > 0 ? cellPopup.usage.toLocaleString('en-US') : '\u2014'}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[11px] text-slate-400 tracking-wide">Cost / Call</span>
-          <span className="text-[13px] font-semibold text-slate-600 rev-num">
+          <span className="text-[12px] text-slate-400 tracking-wide">Cost / Call</span>
+          <span className="text-[14px] font-semibold text-slate-600 rev-num">
             {cellPopup.usage > 0 && cellPopup.revenue > 0 ? `$${(cellPopup.revenue / cellPopup.usage).toFixed(2)}` : '\u2014'}
           </span>
         </div>
@@ -2973,9 +3000,9 @@ function CellPopupWithComments({
 
       {/* Cross-sell insight */}
       {crossSellOpp && (
-        <div className="mt-3 p-2 bg-purple-50 border border-purple-200 rounded text-[10px] text-purple-700">
+        <div className="mt-3 p-2.5 bg-purple-50 border border-purple-200 rounded-lg text-[11px] text-purple-700">
           <div className="flex items-center gap-1 font-semibold mb-1">
-            <Target size={10} />
+            <Target size={11} />
             Cross-sell Opportunity
           </div>
           <div>{Math.round(crossSellOpp.segmentAdoptionRate * 100)}% of {selectedSegment} clients ({crossSellOpp.segmentClientsUsing}/{crossSellOpp.segmentTotalClients}) use this API</div>
@@ -2986,35 +3013,35 @@ function CellPopupWithComments({
       {/* Comments Section */}
       <div className="mt-3 pt-3 border-t border-slate-100">
         <div className="flex items-center gap-1 mb-2">
-          <MessageSquare size={12} className="text-slate-400" />
-          <span className="text-[11px] font-medium text-slate-600">Comments ({comments.length})</span>
+          <MessageSquare size={13} className="text-slate-400" />
+          <span className="text-[12px] font-medium text-slate-600">Comments ({comments.length})</span>
         </div>
         {comments.length > 0 && (
           <div className="space-y-2 mb-2 max-h-[120px] overflow-y-auto">
             {comments.map(c => (
               <div key={c.id} className="bg-slate-50 rounded p-2 group">
-                <div className="text-[11px] text-slate-700">{c.text}</div>
+                <div className="text-[12px] text-slate-700">{c.text}</div>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[9px] text-slate-400">{c.author} · {new Date(c.createdAt).toLocaleDateString()}</span>
+                  <span className="text-[10px] text-slate-400">{c.author} · {new Date(c.createdAt).toLocaleDateString()}</span>
                   <button
                     onClick={() => handleDeleteComment(c.id)}
                     className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 cursor-pointer"
                   >
-                    <Trash2 size={10} />
+                    <Trash2 size={11} />
                   </button>
                 </div>
               </div>
             ))}
           </div>
         )}
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           <input
             type="text"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
             placeholder="Add a comment..."
-            className="flex-1 text-[11px] border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="flex-1 text-[12px] border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
           />
           <button
             onClick={handleAddComment}
@@ -3029,7 +3056,7 @@ function CellPopupWithComments({
       {/* Edit Button */}
       <button
         onClick={onStartEdit}
-        className="mt-3 w-full py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer transition-colors"
+        className="mt-3 w-full py-1.5 text-[12px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer transition-colors"
       >
         Edit Revenue
       </button>
@@ -3498,11 +3525,21 @@ function ClientDetailsPanel({
                       <div
                         key={idx}
                         className={`flex items-center justify-between py-2 px-3 rounded-lg ${
-                          api.revenue_usd > 0 ? 'bg-emerald-50' : (api.usage || 0) > 0 ? 'bg-orange-50' : 'bg-slate-50'
+                          api.environment === 'staging'
+                            ? 'bg-purple-50 border border-purple-200'
+                            : api.revenue_usd > 0 ? 'bg-emerald-50' : (api.usage || 0) > 0 ? 'bg-orange-50' : 'bg-slate-50'
                         }`}
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="text-[12px] font-medium text-slate-800 truncate">{api.name}</div>
+                          <div className="text-[12px] font-medium text-slate-800 truncate flex items-center gap-1.5">
+                            {api.name}
+                            {api.environment === 'staging' && (
+                              <span className="inline-flex px-1.5 py-0.5 text-[9px] font-semibold uppercase rounded bg-purple-100 text-purple-700 leading-none shrink-0">Staging</span>
+                            )}
+                            {api.environment === 'production' && (
+                              <span className="inline-flex px-1.5 py-0.5 text-[9px] font-semibold uppercase rounded bg-emerald-100 text-emerald-700 leading-none shrink-0">Prod</span>
+                            )}
+                          </div>
                           {(api.usage || 0) > 0 && (
                             <div className="text-[10px] text-slate-500">{(api.usage || 0).toLocaleString('en-US')} calls</div>
                           )}

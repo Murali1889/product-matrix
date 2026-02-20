@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 const DATA_PATH = path.join(process.cwd(), 'data', 'cross-sell-intelligence.json');
+const CLIENTS_PATH = path.join(process.cwd(), 'data', 'clients.json');
 
 // Cache the JSON file in memory (reload every 10 min)
 let cachedData: CrossSellData | null = null;
@@ -13,6 +14,7 @@ interface CrossSellData {
   generatedAt: string;
   totalSegments: number;
   totalPotentialRevenue: number;
+  totalPotentialRevenueAvg: number;
   segments: SegmentIntel[];
 }
 
@@ -38,14 +40,17 @@ interface SegmentIntel {
       peerAdoptionRate: number;
       peersUsing: number;
       avgPeerRevenue: number;
+      avgPricingRevenue: number;
       topPeers: string[];
       priority: 'high' | 'medium' | 'low';
       reason: string;
     }>;
     adoptionScore: number;
     potentialRevenue: number;
+    potentialRevenueAvg: number;
   }>;
   totalPotentialRevenue: number;
+  totalPotentialRevenueAvg: number;
   avgAdoptionScore: number;
 }
 
@@ -101,6 +106,41 @@ export async function GET(request: Request) {
           return NextResponse.json({ success: false, error: `Segment "${segName}" not found` }, { status: 404 });
         }
         return NextResponse.json({ success: true, data: segment });
+      }
+
+      case 'all':
+        // Return complete cross-sell data in a single response
+        return NextResponse.json({ success: true, data });
+
+      case 'client-meta': {
+        // Return lightweight client metadata for filter enrichment
+        try {
+          const clientsContent = await fs.readFile(CLIENTS_PATH, 'utf-8');
+          const clientsData = JSON.parse(clientsContent) as {
+            clients: Array<{
+              name: string;
+              clientId: string;
+              segment?: string;
+              geography?: string;
+              mrrBucket?: string;
+              kam?: string;
+              category?: string;
+            }>;
+          };
+          const meta = clientsData.clients.map(c => ({
+            name: c.name,
+            clientId: c.clientId,
+            segment: c.segment || '',
+            geography: c.geography || '',
+            mrrBucket: c.mrrBucket || '',
+            kam: c.kam || '',
+            category: c.category || '',
+          }));
+          return NextResponse.json({ success: true, data: meta });
+        } catch (e) {
+          console.error('Failed to load client meta:', e);
+          return NextResponse.json({ success: false, error: 'Could not load client metadata' }, { status: 500 });
+        }
       }
 
       default:
