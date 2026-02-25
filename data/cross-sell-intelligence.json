@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-20T19:54:49.676Z",
+  "generatedAt": "2026-02-25T12:54:57.000Z",
   "totalSegments": 24,
   "totalPotentialRevenue": 6518977.515076571,
   "totalPotentialRevenueAvg": 12576548.410140574,
@@ -7,7 +7,7 @@
     {
       "segment": "Brokerage",
       "totalClients": 38,
-      "totalRevenue": 216130,
+      "totalRevenue": 124420,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -366,7 +366,7 @@
         {
           "name": "Groww",
           "clientId": "groww",
-          "totalRevenue": 70140,
+          "totalRevenue": 39801,
           "kam": "Sai Prasaanth",
           "apisUsing": [
             {
@@ -584,7 +584,7 @@
         {
           "name": "PayTM Money",
           "clientId": "paytm_money",
-          "totalRevenue": 23507,
+          "totalRevenue": 5719,
           "kam": "Akshay Mate",
           "apisUsing": [
             {
@@ -676,7 +676,7 @@
         {
           "name": "MOSL",
           "clientId": "motilal_oswal",
-          "totalRevenue": 12420,
+          "totalRevenue": 5971,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -768,7 +768,7 @@
         {
           "name": "AngelBroking",
           "clientId": "angel_one",
-          "totalRevenue": 30934,
+          "totalRevenue": 29880,
           "kam": "Parthiban Anbazhagan",
           "apisUsing": [
             {
@@ -1346,7 +1346,7 @@
         {
           "name": "5paisa",
           "clientId": "5paisa",
-          "totalRevenue": 8406,
+          "totalRevenue": 1917,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -1512,7 +1512,7 @@
         {
           "name": "Bigul",
           "clientId": "bigul",
-          "totalRevenue": 375,
+          "totalRevenue": 167,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -1976,7 +1976,7 @@
         {
           "name": "HDFC securities",
           "clientId": "hdfc_securities",
-          "totalRevenue": 7888,
+          "totalRevenue": 2857,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -2212,7 +2212,7 @@
         {
           "name": "India Bonds",
           "clientId": "india_bonds",
-          "totalRevenue": 419,
+          "totalRevenue": 264,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -2578,7 +2578,7 @@
         {
           "name": "Enrich Money",
           "clientId": "enrich_money",
-          "totalRevenue": 1231,
+          "totalRevenue": 1197,
           "kam": "Khushi S",
           "apisUsing": [
             {
@@ -2744,7 +2744,7 @@
         {
           "name": "Swastika Investmart",
           "clientId": "swastika_investmart",
-          "totalRevenue": 740,
+          "totalRevenue": 191,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -2824,7 +2824,7 @@
         {
           "name": "FHL",
           "clientId": "fhl_ph",
-          "totalRevenue": 256,
+          "totalRevenue": 0,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -3034,7 +3034,7 @@
         {
           "name": "One Percent",
           "clientId": "one_percent",
-          "totalRevenue": 999,
+          "totalRevenue": 961,
           "kam": "Manoj Kumar Singh",
           "apisUsing": [
             {
@@ -3250,7 +3250,7 @@
         {
           "name": "Gameskraft Securities",
           "clientId": "games_kraft_securities",
-          "totalRevenue": 61,
+          "totalRevenue": 25,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -3352,7 +3352,7 @@
         {
           "name": "Liquibonds",
           "clientId": "liquibonds",
-          "totalRevenue": 4,
+          "totalRevenue": 1,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -3584,7 +3584,7 @@
         {
           "name": "Kuvera-CRED",
           "clientId": "kuvera_cred",
-          "totalRevenue": 7,
+          "totalRevenue": 3,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -3936,7 +3936,7 @@
         {
           "name": "IIFL Securities",
           "clientId": "iifl_securities",
-          "totalRevenue": 18479,
+          "totalRevenue": 1580,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -4018,7 +4018,7 @@
         {
           "name": "Nirmal Bang",
           "clientId": "nirmal_bang",
-          "totalRevenue": 4515,
+          "totalRevenue": 0,
           "kam": "Sarthak Ashok Nair",
           "apisUsing": [
             {
@@ -4100,7 +4100,7 @@
         {
           "name": "Reliance Securities",
           "clientId": "reliance_securities",
-          "totalRevenue": 2903,
+          "totalRevenue": 1040,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -4192,7 +4192,7 @@
     {
       "segment": "Payment Service Provider",
       "totalClients": 43,
-      "totalRevenue": 175495,
+      "totalRevenue": 75573,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -4683,7 +4683,7 @@
         {
           "name": "Mobikwik",
           "clientId": "mobikwik",
-          "totalRevenue": 55619,
+          "totalRevenue": 18773,
           "kam": "Gopinath Yerra",
           "apisUsing": [
             {
@@ -4780,7 +4780,7 @@
         {
           "name": "SBI Cards",
           "clientId": "sbi_cards",
-          "totalRevenue": 30455,
+          "totalRevenue": 15875,
           "kam": "Gopinath Yerra",
           "apisUsing": [
             {
@@ -4975,7 +4975,7 @@
         {
           "name": "MyFlot",
           "clientId": "my_flot",
-          "totalRevenue": 31424,
+          "totalRevenue": 9069,
           "kam": "Sebastian Richard Martin",
           "apisUsing": [
             {
@@ -5062,7 +5062,7 @@
         {
           "name": "Razor Pay",
           "clientId": "razor_pay",
-          "totalRevenue": 5790,
+          "totalRevenue": 1490,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -5169,7 +5169,7 @@
         {
           "name": "BharatPe",
           "clientId": "bharat_pe",
-          "totalRevenue": 22447,
+          "totalRevenue": 12118,
           "kam": "Gopinath Yerra",
           "apisUsing": [
             {
@@ -5275,7 +5275,7 @@
         {
           "name": "Pinelabs",
           "clientId": "pine_labs",
-          "totalRevenue": 1908,
+          "totalRevenue": 0,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -5588,7 +5588,7 @@
         {
           "name": "Kissht",
           "clientId": "kissht",
-          "totalRevenue": 16558,
+          "totalRevenue": 13035,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -5658,7 +5658,7 @@
         {
           "name": "Dollarpe",
           "clientId": "dollarpe",
-          "totalRevenue": 113,
+          "totalRevenue": 1,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -5760,7 +5760,7 @@
         {
           "name": "9pay",
           "clientId": "9pay",
-          "totalRevenue": 1369,
+          "totalRevenue": 809,
           "kam": "Minh Nguyen Duc",
           "apisUsing": [
             {
@@ -6251,7 +6251,7 @@
         {
           "name": "Revolut",
           "clientId": "revolut",
-          "totalRevenue": 2817,
+          "totalRevenue": 944,
           "kam": "V Kartik",
           "apisUsing": [
             {
@@ -6358,7 +6358,7 @@
         {
           "name": "Unimoni India",
           "clientId": "unimoni_india",
-          "totalRevenue": 33,
+          "totalRevenue": 27,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -6532,7 +6532,7 @@
         {
           "name": "KSF-BharatPe",
           "clientId": "ksf_bharat_pe",
-          "totalRevenue": 58,
+          "totalRevenue": 30,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -7386,7 +7386,7 @@
         {
           "name": "Almondz",
           "clientId": "almondz_nb",
-          "totalRevenue": 3,
+          "totalRevenue": 0,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -7558,7 +7558,7 @@
         {
           "name": "UdhaarPay (RocketPay)",
           "clientId": "rocketpay",
-          "totalRevenue": 659,
+          "totalRevenue": 125,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -7647,7 +7647,7 @@
         {
           "name": "PayPay",
           "clientId": "pay_pay",
-          "totalRevenue": 188,
+          "totalRevenue": 69,
           "kam": "Linh Doan",
           "apisUsing": [
             {
@@ -7738,7 +7738,7 @@
         {
           "name": "03 Capital",
           "clientId": "03_capital",
-          "totalRevenue": 197,
+          "totalRevenue": 94,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -8100,7 +8100,7 @@
         {
           "name": "Ecstasy Nigeria.",
           "clientId": "ecstasy_nigeria",
-          "totalRevenue": 98,
+          "totalRevenue": 32,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -8473,7 +8473,7 @@
         {
           "name": "Wezboone",
           "clientId": "wezboone",
-          "totalRevenue": 538,
+          "totalRevenue": 133,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -8586,7 +8586,7 @@
         {
           "name": "LoanDigit",
           "clientId": "loan_digit",
-          "totalRevenue": 2107,
+          "totalRevenue": 59,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -8787,7 +8787,7 @@
         {
           "name": "Dokopay",
           "clientId": "dokopay",
-          "totalRevenue": 335,
+          "totalRevenue": 111,
           "kam": "Manish J",
           "apisUsing": [
             {
@@ -8861,7 +8861,7 @@
     {
       "segment": "NBFC",
       "totalClients": 51,
-      "totalRevenue": 1370658,
+      "totalRevenue": 543078,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -9605,7 +9605,7 @@
         {
           "name": "FE Credit",
           "clientId": "fe_credit",
-          "totalRevenue": 499593,
+          "totalRevenue": 168668,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -9715,7 +9715,7 @@
         {
           "name": "LTFS",
           "clientId": "ltfs",
-          "totalRevenue": 307809,
+          "totalRevenue": 117493,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -9961,7 +9961,7 @@
         {
           "name": "Shriram City Union Finance",
           "clientId": "shriram_finance",
-          "totalRevenue": 46921,
+          "totalRevenue": 1567,
           "kam": "Parthiban Anbazhagan",
           "apisUsing": [
             {
@@ -10016,7 +10016,7 @@
         {
           "name": "IIFL Finance",
           "clientId": "iifl_gold_loans",
-          "totalRevenue": 64646,
+          "totalRevenue": 13612,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -10212,7 +10212,7 @@
         {
           "name": "Branch India",
           "clientId": "branch_india",
-          "totalRevenue": 24578,
+          "totalRevenue": 12451,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -10282,7 +10282,7 @@
         {
           "name": "Chola Finance",
           "clientId": "chola_finance",
-          "totalRevenue": 39646,
+          "totalRevenue": 15434,
           "kam": "Parthiban Anbazhagan",
           "apisUsing": [
             {
@@ -10347,7 +10347,7 @@
         {
           "name": "Branch Kenya",
           "clientId": "branch_kenya",
-          "totalRevenue": 11894,
+          "totalRevenue": 6238,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -10418,7 +10418,7 @@
         {
           "name": "Aditya Birla Capital",
           "clientId": "aditya_birla_finance",
-          "totalRevenue": 3290,
+          "totalRevenue": 1620,
           "kam": "Sales",
           "apisUsing": [],
           "apisMissing": [
@@ -10798,7 +10798,7 @@
         {
           "name": "Piramal",
           "clientId": "piramal",
-          "totalRevenue": 16110,
+          "totalRevenue": 8614,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -10878,7 +10878,7 @@
         {
           "name": "SHB Finance",
           "clientId": "shb_finance",
-          "totalRevenue": 101122,
+          "totalRevenue": 33331,
           "kam": "Nam Nguyen",
           "apisUsing": [
             {
@@ -10962,7 +10962,7 @@
         {
           "name": "IIFL HFC",
           "clientId": "iifl_hfc",
-          "totalRevenue": 876,
+          "totalRevenue": 299,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -11093,7 +11093,7 @@
         {
           "name": "Branch NG",
           "clientId": "branch_nigeria",
-          "totalRevenue": 5991,
+          "totalRevenue": 2866,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -11278,7 +11278,7 @@
         {
           "name": "Tata Capital",
           "clientId": "tata_capital",
-          "totalRevenue": 8826,
+          "totalRevenue": 2437,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -11443,7 +11443,7 @@
         {
           "name": "KSF-CRED",
           "clientId": "ksf_cred",
-          "totalRevenue": 2237,
+          "totalRevenue": 540,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -11590,7 +11590,7 @@
         {
           "name": "KSF-PayTM",
           "clientId": "ksf_pay_tm",
-          "totalRevenue": 3118,
+          "totalRevenue": 1365,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -11746,7 +11746,7 @@
         {
           "name": "Zedvance",
           "clientId": "zedvance",
-          "totalRevenue": 2899,
+          "totalRevenue": 1508,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -11850,7 +11850,7 @@
         {
           "name": "Thinhphat",
           "clientId": "thinh_phat",
-          "totalRevenue": 825,
+          "totalRevenue": 410,
           "kam": "Minh Nguyen Duc",
           "apisUsing": [
             {
@@ -11894,7 +11894,7 @@
         {
           "name": "TVS DKYC",
           "clientId": "tvs_credit",
-          "totalRevenue": 2080,
+          "totalRevenue": 528,
           "kam": "Sales",
           "apisUsing": [
             {
@@ -12008,7 +12008,7 @@
         {
           "name": "Apollo Finvest",
           "clientId": "apollo_finvest",
-          "totalRevenue": 336,
+          "totalRevenue": 329,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -12078,7 +12078,7 @@
         {
           "name": "Aeroflex Finance Private Limited",
           "clientId": "aeroflex_finance_private_limited",
-          "totalRevenue": 564,
+          "totalRevenue": 166,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -12220,7 +12220,7 @@
         {
           "name": "InCred Finance",
           "clientId": "in_cred_finance",
-          "totalRevenue": 261,
+          "totalRevenue": 125,
           "kam": "V Kartik",
           "apisUsing": [
             {
@@ -12377,7 +12377,7 @@
         {
           "name": "KSF Money Tap",
           "clientId": "ksf_money_tap",
-          "totalRevenue": 67,
+          "totalRevenue": 33,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -12512,7 +12512,7 @@
         {
           "name": "KSF-PaySense",
           "clientId": "ksf_pay_sense",
-          "totalRevenue": 29,
+          "totalRevenue": 0,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -12812,7 +12812,7 @@
         {
           "name": "Bhawana finance",
           "clientId": "bhawana_finance",
-          "totalRevenue": 185,
+          "totalRevenue": 183,
           "kam": "Maline K",
           "apisUsing": [
             {
@@ -12993,7 +12993,7 @@
         {
           "name": "MANAPPURAM",
           "clientId": "manappuram",
-          "totalRevenue": 102927,
+          "totalRevenue": 39445,
           "kam": "Parthiban Anbazhagan",
           "apisUsing": [
             {
@@ -13122,7 +13122,7 @@
         {
           "name": "Poonawalla Fin",
           "clientId": "poonawallafincorp_ltd",
-          "totalRevenue": 15221,
+          "totalRevenue": 5209,
           "kam": "Manoj Kumar Singh",
           "apisUsing": [
             {
@@ -13164,7 +13164,7 @@
     {
       "segment": "Insurance",
       "totalClients": 40,
-      "totalRevenue": 341495,
+      "totalRevenue": 137294,
       "segmentAPIs": [
         {
           "name": "ID Card Validation",
@@ -13789,7 +13789,7 @@
         {
           "name": "GSIS",
           "clientId": "gsis",
-          "totalRevenue": 60511,
+          "totalRevenue": 13128,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -13949,7 +13949,7 @@
         {
           "name": "BALIC",
           "clientId": "balic",
-          "totalRevenue": 25508,
+          "totalRevenue": 7120,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -14286,7 +14286,7 @@
         {
           "name": "Kotak Life Insurance",
           "clientId": "kotak_life_insurance",
-          "totalRevenue": 2630,
+          "totalRevenue": 2196,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -14630,7 +14630,7 @@
         {
           "name": "Royal Sundaram",
           "clientId": "royal_sundaram",
-          "totalRevenue": 29671,
+          "totalRevenue": 9641,
           "kam": "Parthiban Anbazhagan",
           "apisUsing": [
             {
@@ -14779,7 +14779,7 @@
         {
           "name": "Zuno",
           "clientId": "edelweissgi",
-          "totalRevenue": 22876,
+          "totalRevenue": 7026,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -14923,7 +14923,7 @@
         {
           "name": "Acko",
           "clientId": "acko_general_insurance",
-          "totalRevenue": 19042,
+          "totalRevenue": 8447,
           "kam": "Gopinath Yerra",
           "apisUsing": [
             {
@@ -15083,7 +15083,7 @@
         {
           "name": "Manipal Cigna",
           "clientId": "manipal_cigna",
-          "totalRevenue": 1775,
+          "totalRevenue": 1289,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -15417,7 +15417,7 @@
         {
           "name": "ABSLI",
           "clientId": "aditya_birla_sun_life_insurance",
-          "totalRevenue": 16097,
+          "totalRevenue": 5951,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -15586,7 +15586,7 @@
         {
           "name": "Magma HDI",
           "clientId": "magma_hdi",
-          "totalRevenue": 7900,
+          "totalRevenue": 4366,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -15915,7 +15915,7 @@
         {
           "name": "Oona Philippines",
           "clientId": "oona_philippines",
-          "totalRevenue": 2051,
+          "totalRevenue": 655,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -16098,7 +16098,7 @@
         {
           "name": "ICICI Lombard - Agent Onboarding",
           "clientId": "icici_lombard_agent_onboarding_flow_journey",
-          "totalRevenue": 3531,
+          "totalRevenue": 303,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -16269,7 +16269,7 @@
         {
           "name": "NIA",
           "clientId": "new_india_assurance",
-          "totalRevenue": 28703,
+          "totalRevenue": 10048,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -16375,7 +16375,7 @@
         {
           "name": "GICHF",
           "clientId": "gic_housing_finance",
-          "totalRevenue": 411,
+          "totalRevenue": 65,
           "kam": "Unassigned",
           "apisUsing": [],
           "apisMissing": [
@@ -17315,7 +17315,7 @@
         {
           "name": "Star Health",
           "clientId": "star_health_claims",
-          "totalRevenue": 1,
+          "totalRevenue": 0,
           "kam": "Nikhil Gopinath",
           "apisUsing": [],
           "apisMissing": [
@@ -17675,7 +17675,7 @@
         {
           "name": "BAGIC",
           "clientId": "bagic",
-          "totalRevenue": 20070,
+          "totalRevenue": 2701,
           "kam": "Nikhil Gopinath",
           "apisUsing": [
             {
@@ -17787,7 +17787,7 @@
         {
           "name": "Aegiscovenant",
           "clientId": "aegis_covenant",
-          "totalRevenue": 508,
+          "totalRevenue": 286,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -17964,7 +17964,7 @@
         {
           "name": "Chola MS",
           "clientId": "chola_ms_general_insurance",
-          "totalRevenue": 15079,
+          "totalRevenue": 7842,
           "kam": "Parthiban Anbazhagan",
           "apisUsing": [
             {
@@ -18079,7 +18079,7 @@
         {
           "name": "Oona Insurance",
           "clientId": "oona_idn",
-          "totalRevenue": 286,
+          "totalRevenue": 47,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -18262,7 +18262,7 @@
         {
           "name": "Tata AIG",
           "clientId": "tata_aig",
-          "totalRevenue": 5504,
+          "totalRevenue": 1625,
           "kam": "Akshay Mate",
           "apisUsing": [
             {
@@ -18712,7 +18712,7 @@
         {
           "name": "SBI General Insurance",
           "clientId": "sbi_general_insurance",
-          "totalRevenue": 1206,
+          "totalRevenue": 625,
           "kam": "Nikhil Gopinath",
           "apisUsing": [
             {
@@ -18824,7 +18824,7 @@
         {
           "name": "Acko Life Insurance",
           "clientId": "acko_life_insurance",
-          "totalRevenue": 48,
+          "totalRevenue": 13,
           "kam": "Gopinath Yerra",
           "apisUsing": [
             {
@@ -19346,7 +19346,7 @@
         {
           "name": "IndusInd Insurance",
           "clientId": "indus_ind_insurance",
-          "totalRevenue": 109,
+          "totalRevenue": 31,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -19458,7 +19458,7 @@
         {
           "name": "GoT - Pension",
           "clientId": "telangana_government",
-          "totalRevenue": 6327,
+          "totalRevenue": 580,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -19636,7 +19636,7 @@
         {
           "name": "Sama Insurance",
           "clientId": "sama_insurance",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Venkat Subramanian",
           "apisUsing": [
             {
@@ -19830,7 +19830,7 @@
         {
           "name": "UIIC (United India Insurance Company)",
           "clientId": "united_india_insurance",
-          "totalRevenue": 9838,
+          "totalRevenue": 9835,
           "kam": "Sai Prasaanth",
           "apisUsing": [
             {
@@ -19912,7 +19912,7 @@
         {
           "name": "Universal Sompo",
           "clientId": "universal_sompo",
-          "totalRevenue": 32933,
+          "totalRevenue": 14930,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -19994,7 +19994,7 @@
     {
       "segment": "Digital Lenders",
       "totalClients": 112,
-      "totalRevenue": 376742,
+      "totalRevenue": 221043,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -20666,7 +20666,7 @@
         {
           "name": "Kredivo PHL",
           "clientId": "kredivo_phl",
-          "totalRevenue": 23233,
+          "totalRevenue": 7491,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -20880,7 +20880,7 @@
         {
           "name": "Flexiloans",
           "clientId": "flexi_loans",
-          "totalRevenue": 2312,
+          "totalRevenue": 1195,
           "kam": "Sarthak Ashok Nair",
           "apisUsing": [
             {
@@ -20961,7 +20961,7 @@
         {
           "name": "Finx",
           "clientId": "finx",
-          "totalRevenue": 55466,
+          "totalRevenue": 47214,
           "kam": "Minh Nguyen Duc",
           "apisUsing": [
             {
@@ -21035,7 +21035,7 @@
         {
           "name": "UniOrbit",
           "clientId": "uniorbit",
-          "totalRevenue": 1636,
+          "totalRevenue": 917,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -21180,7 +21180,7 @@
         {
           "name": "Stashfin",
           "clientId": "STASHFIN",
-          "totalRevenue": 11406,
+          "totalRevenue": 3023,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -21224,7 +21224,7 @@
         {
           "name": "Rupeeredee",
           "clientId": "rupee_redee",
-          "totalRevenue": 13013,
+          "totalRevenue": 14925,
           "kam": "Gopinath Yerra",
           "apisUsing": [
             {
@@ -21278,7 +21278,7 @@
         {
           "name": "Aventus Mexico",
           "clientId": "aventus_group_mexico",
-          "totalRevenue": 11873,
+          "totalRevenue": 11137,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -21344,7 +21344,7 @@
         {
           "name": "Jupiter",
           "clientId": "jupiter",
-          "totalRevenue": 18820,
+          "totalRevenue": 5681,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -21482,7 +21482,7 @@
         {
           "name": "MoneyView",
           "clientId": "money_view",
-          "totalRevenue": 14883,
+          "totalRevenue": 7470,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -21618,7 +21618,7 @@
         {
           "name": "ECG",
           "clientId": "ecg",
-          "totalRevenue": 41481,
+          "totalRevenue": 15791,
           "kam": "Chitransh Jain",
           "apisUsing": [
             {
@@ -22017,7 +22017,7 @@
         {
           "name": "TrueCredits",
           "clientId": "true_credits",
-          "totalRevenue": 4933,
+          "totalRevenue": 3428,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -22273,7 +22273,7 @@
         {
           "name": "CreditSea",
           "clientId": "credit_sea",
-          "totalRevenue": 2256,
+          "totalRevenue": 1701,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -22328,7 +22328,7 @@
         {
           "name": "Capital Now",
           "clientId": "capital_now",
-          "totalRevenue": 2567,
+          "totalRevenue": 673,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -22447,7 +22447,7 @@
         {
           "name": "Aventus SL",
           "clientId": "aventus_group_srilanka",
-          "totalRevenue": 530,
+          "totalRevenue": 246,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -22579,7 +22579,7 @@
         {
           "name": "Augie",
           "clientId": "getaugie1",
-          "totalRevenue": 1236,
+          "totalRevenue": 448,
           "kam": "Sales",
           "apisUsing": [],
           "apisMissing": [
@@ -22959,7 +22959,7 @@
         {
           "name": "Early Salary",
           "clientId": "fibe",
-          "totalRevenue": 5776,
+          "totalRevenue": 5536,
           "kam": "Gopinath Yerra",
           "apisUsing": [],
           "apisMissing": [
@@ -23187,7 +23187,7 @@
         {
           "name": "Finle",
           "clientId": "finle",
-          "totalRevenue": 538,
+          "totalRevenue": 133,
           "kam": "Sales",
           "apisUsing": [],
           "apisMissing": [
@@ -23263,7 +23263,7 @@
         {
           "name": "Krazybee",
           "clientId": "krazy_bee",
-          "totalRevenue": 36254,
+          "totalRevenue": 9287,
           "kam": "Aditya Rao",
           "apisUsing": [],
           "apisMissing": [
@@ -24251,7 +24251,7 @@
         {
           "name": "Tala Philippines",
           "clientId": "tala",
-          "totalRevenue": 2003,
+          "totalRevenue": 1,
           "kam": "Harshit Shrivastava",
           "apisUsing": [],
           "apisMissing": [
@@ -24479,7 +24479,7 @@
         {
           "name": "Vance",
           "clientId": "vance",
-          "totalRevenue": 4033,
+          "totalRevenue": 1000,
           "kam": "Maline K L",
           "apisUsing": [],
           "apisMissing": [
@@ -24631,7 +24631,7 @@
         {
           "name": "Credit Saison",
           "clientId": "credit_saison",
-          "totalRevenue": 12203,
+          "totalRevenue": 4200,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -24697,7 +24697,7 @@
         {
           "name": "WeRize",
           "clientId": "werize-dkyc-test",
-          "totalRevenue": 353,
+          "totalRevenue": 206,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -24867,7 +24867,7 @@
         {
           "name": "Aimtoget",
           "clientId": "aimtoget_ng",
-          "totalRevenue": 1378,
+          "totalRevenue": 449,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -24932,7 +24932,7 @@
         {
           "name": "Protium",
           "clientId": "protium",
-          "totalRevenue": 1871,
+          "totalRevenue": 917,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -25055,7 +25055,7 @@
         {
           "name": "Spicemoney",
           "clientId": "spicemoney",
-          "totalRevenue": 342,
+          "totalRevenue": 101,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -25126,7 +25126,7 @@
         {
           "name": "Credit7",
           "clientId": "credit_7",
-          "totalRevenue": 400,
+          "totalRevenue": 200,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -25389,7 +25389,7 @@
         {
           "name": "Gimo",
           "clientId": "gimo_vietnam",
-          "totalRevenue": 1912,
+          "totalRevenue": 173,
           "kam": "Minh Nguyen Duc",
           "apisUsing": [
             {
@@ -25438,7 +25438,7 @@
         {
           "name": "Addosser",
           "clientId": "addosser",
-          "totalRevenue": 94,
+          "totalRevenue": 23,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -25579,7 +25579,7 @@
         {
           "name": "Kapitus",
           "clientId": "kapitus",
-          "totalRevenue": 10000,
+          "totalRevenue": 0,
           "kam": "Srinija/Bracket",
           "apisUsing": [
             {
@@ -25765,7 +25765,7 @@
         {
           "name": "Finaccel (Kredivo)",
           "clientId": "finaccel",
-          "totalRevenue": 24677,
+          "totalRevenue": 2885,
           "kam": "Nam Nguyen",
           "apisUsing": [
             {
@@ -25820,7 +25820,7 @@
         {
           "name": "EZMS",
           "clientId": "ezms",
-          "totalRevenue": 609,
+          "totalRevenue": 603,
           "kam": "Karthik Shivakumara",
           "apisUsing": [
             {
@@ -25864,7 +25864,7 @@
         {
           "name": "Una financial",
           "clientId": "una_financial",
-          "totalRevenue": 506,
+          "totalRevenue": 153,
           "kam": "Michele",
           "apisUsing": [
             {
@@ -25918,7 +25918,7 @@
         {
           "name": "Advancly NG",
           "clientId": "advancly_ng",
-          "totalRevenue": 265,
+          "totalRevenue": 60,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -25988,7 +25988,7 @@
         {
           "name": "R Rabit",
           "clientId": "r_rabit",
-          "totalRevenue": 1050,
+          "totalRevenue": 37,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -26150,7 +26150,7 @@
         {
           "name": "Niyogin",
           "clientId": "niyogin",
-          "totalRevenue": 70,
+          "totalRevenue": 10,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -26318,7 +26318,7 @@
         {
           "name": "ClickMyLoan",
           "clientId": "click_my_loan",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -26444,7 +26444,7 @@
         {
           "name": "Dispatch Network",
           "clientId": "dispatch_network",
-          "totalRevenue": 130,
+          "totalRevenue": 1,
           "kam": "Veer Ramesh Chembath",
           "apisUsing": [
             {
@@ -26564,7 +26564,7 @@
         {
           "name": "Rainplatforms",
           "clientId": "rain_platforms",
-          "totalRevenue": 223,
+          "totalRevenue": 111,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -26618,7 +26618,7 @@
         {
           "name": "A1 Loans (Anchorage Finkred)",
           "clientId": "anchorage_finkred",
-          "totalRevenue": 3,
+          "totalRevenue": 1,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -26722,7 +26722,7 @@
         {
           "name": "Ardent Capital",
           "clientId": "ardent_capital",
-          "totalRevenue": 179,
+          "totalRevenue": 89,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -26862,7 +26862,7 @@
         {
           "name": "Truzo",
           "clientId": "truzo",
-          "totalRevenue": 29,
+          "totalRevenue": 7,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -26911,7 +26911,7 @@
         {
           "name": "IDVend",
           "clientId": "id_vend",
-          "totalRevenue": 12,
+          "totalRevenue": 3,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -27081,7 +27081,7 @@
         {
           "name": "Indiabit",
           "clientId": "indiabit",
-          "totalRevenue": 112,
+          "totalRevenue": 111,
           "kam": "Khushi S",
           "apisUsing": [
             {
@@ -27125,7 +27125,7 @@
         {
           "name": "Niaragram",
           "clientId": "niaragram",
-          "totalRevenue": 41,
+          "totalRevenue": 0,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -27169,7 +27169,7 @@
         {
           "name": "Axio",
           "clientId": "axio",
-          "totalRevenue": 15065,
+          "totalRevenue": 12044,
           "kam": "Sai Prasaanth",
           "apisUsing": [
             {
@@ -27288,7 +27288,7 @@
         {
           "name": "Incred Money",
           "clientId": "incred_money",
-          "totalRevenue": 1485,
+          "totalRevenue": 999,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -27561,7 +27561,7 @@
         {
           "name": "Paasa",
           "clientId": "paasa",
-          "totalRevenue": 932,
+          "totalRevenue": 233,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -27650,7 +27650,7 @@
         {
           "name": "Propelld Edgro",
           "clientId": "propelld_edgro",
-          "totalRevenue": 4243,
+          "totalRevenue": 2106,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -27707,7 +27707,7 @@
         {
           "name": "Refyne",
           "clientId": "refyne",
-          "totalRevenue": -12053,
+          "totalRevenue": 1998,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -28009,7 +28009,7 @@
     {
       "segment": "Wallet",
       "totalClients": 5,
-      "totalRevenue": 88245,
+      "totalRevenue": 45786,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -28115,7 +28115,7 @@
         {
           "name": "Airtel Payments Bank - Retail",
           "clientId": "airtel_payments_bank_retail",
-          "totalRevenue": 24773,
+          "totalRevenue": 13132,
           "kam": "Sarthak Ashok Nair",
           "apisUsing": [
             {
@@ -28350,7 +28350,7 @@
         {
           "name": "Fampay",
           "clientId": "fampay",
-          "totalRevenue": 62585,
+          "totalRevenue": 32582,
           "kam": "Parthiban Anbazhagan",
           "apisUsing": [
             {
@@ -28415,7 +28415,7 @@
         {
           "name": "OVO",
           "clientId": "ovo",
-          "totalRevenue": 682,
+          "totalRevenue": 0,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -28523,7 +28523,7 @@
         {
           "name": "SmartPay",
           "clientId": "smart_pay",
-          "totalRevenue": 203,
+          "totalRevenue": 70,
           "kam": "Phi Le Huynh",
           "apisUsing": [
             {
@@ -28637,7 +28637,7 @@
     {
       "segment": "AMCs",
       "totalClients": 15,
-      "totalRevenue": 48174,
+      "totalRevenue": 24465,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -28985,7 +28985,7 @@
         {
           "name": "Grip",
           "clientId": "grip",
-          "totalRevenue": 4854,
+          "totalRevenue": 1792,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -29323,7 +29323,7 @@
         {
           "name": "INDmoney",
           "clientId": "ind_money",
-          "totalRevenue": 19540,
+          "totalRevenue": 10905,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -29669,7 +29669,7 @@
         {
           "name": "CAMS",
           "clientId": "cams",
-          "totalRevenue": 12178,
+          "totalRevenue": 4471,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -30036,7 +30036,7 @@
         {
           "name": "Cleveralpha",
           "clientId": "clever_alpha",
-          "totalRevenue": 331,
+          "totalRevenue": 296,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [],
           "apisMissing": [
@@ -30678,7 +30678,7 @@
         {
           "name": "SBI MF",
           "clientId": "sbi_mf",
-          "totalRevenue": 8503,
+          "totalRevenue": 5198,
           "kam": "Sales",
           "apisUsing": [
             {
@@ -30796,7 +30796,7 @@
         {
           "name": "Groww AMC",
           "clientId": "groww_amc",
-          "totalRevenue": 519,
+          "totalRevenue": 271,
           "kam": "Sai Prasaanth",
           "apisUsing": [
             {
@@ -31047,7 +31047,7 @@
         {
           "name": "HDFC ASSET MANAGEMENT COMPANY LIMITED",
           "clientId": "",
-          "totalRevenue": 1337,
+          "totalRevenue": 620,
           "kam": "Manoj Kumar Singh",
           "apisUsing": [
             {
@@ -31429,7 +31429,7 @@
     {
       "segment": "Gig Economy",
       "totalClients": 35,
-      "totalRevenue": 359604,
+      "totalRevenue": 183889,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -31909,7 +31909,7 @@
         {
           "name": "Rapido",
           "clientId": "rapido",
-          "totalRevenue": 24967,
+          "totalRevenue": 8865,
           "kam": "Sarthak Ashok Nair",
           "apisUsing": [
             {
@@ -32114,7 +32114,7 @@
         {
           "name": "ParkPlus",
           "clientId": "park_plus",
-          "totalRevenue": 20145,
+          "totalRevenue": 6323,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -32319,7 +32319,7 @@
         {
           "name": "Swiggy",
           "clientId": "swiggy",
-          "totalRevenue": 195133,
+          "totalRevenue": 55614,
           "kam": "Sai Prasaanth",
           "apisUsing": [
             {
@@ -32760,7 +32760,7 @@
         {
           "name": "Matrimony",
           "clientId": "matrimony",
-          "totalRevenue": 32,
+          "totalRevenue": 0,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -32950,7 +32950,7 @@
         {
           "name": "Awign",
           "clientId": "Awign",
-          "totalRevenue": 224,
+          "totalRevenue": 0,
           "kam": "Kritika Ramesh",
           "apisUsing": [],
           "apisMissing": [
@@ -33166,7 +33166,7 @@
         {
           "name": "GasValet",
           "clientId": "gas_valet",
-          "totalRevenue": 7,
+          "totalRevenue": 0,
           "kam": "Shreshtha Karmakar",
           "apisUsing": [],
           "apisMissing": [
@@ -33490,7 +33490,7 @@
         {
           "name": "MoEVing",
           "clientId": "mo_e_ving",
-          "totalRevenue": 135,
+          "totalRevenue": 1,
           "kam": "Arunima Srivastava",
           "apisUsing": [],
           "apisMissing": [
@@ -33598,7 +33598,7 @@
         {
           "name": "Supernan",
           "clientId": "supernan",
-          "totalRevenue": 1,
+          "totalRevenue": 0,
           "kam": "Kritika Ramesh",
           "apisUsing": [],
           "apisMissing": [
@@ -33814,7 +33814,7 @@
         {
           "name": "QuickRide",
           "clientId": "quick_ride",
-          "totalRevenue": 3430,
+          "totalRevenue": 288,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -33914,7 +33914,7 @@
         {
           "name": "ShyftOff",
           "clientId": "shyftoff",
-          "totalRevenue": 3779,
+          "totalRevenue": 1781,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -34308,7 +34308,7 @@
         {
           "name": "The Finger Tip",
           "clientId": "the_finger_tip",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -34496,7 +34496,7 @@
         {
           "name": "Bidryde",
           "clientId": "Bidryde",
-          "totalRevenue": 179,
+          "totalRevenue": 44,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -34766,7 +34766,7 @@
         {
           "name": "Lastmiles",
           "clientId": "Lastmiles",
-          "totalRevenue": 296,
+          "totalRevenue": 33,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -35023,7 +35023,7 @@
     {
       "segment": "Banks",
       "totalClients": 22,
-      "totalRevenue": 186422,
+      "totalRevenue": 89345,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -35448,7 +35448,7 @@
         {
           "name": "Carbon",
           "clientId": "carbon",
-          "totalRevenue": 2583,
+          "totalRevenue": 1180,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -35503,7 +35503,7 @@
         {
           "name": "SuryodaySFB",
           "clientId": "suryoday_sfb",
-          "totalRevenue": 10913,
+          "totalRevenue": 10909,
           "kam": "Akshay Mate",
           "apisUsing": [
             {
@@ -35595,7 +35595,7 @@
         {
           "name": "IDFC Digital",
           "clientId": "idfc_first_bank",
-          "totalRevenue": 5112,
+          "totalRevenue": 1815,
           "kam": "Sales",
           "apisUsing": [
             {
@@ -35748,7 +35748,7 @@
         {
           "name": "Mintyn",
           "clientId": "mintyn",
-          "totalRevenue": 501,
+          "totalRevenue": 233,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -36046,7 +36046,7 @@
         {
           "name": "HSBC PHL",
           "clientId": "hsbc_phl",
-          "totalRevenue": 4373,
+          "totalRevenue": 2659,
           "kam": "Aryan Mukund",
           "apisUsing": [
             {
@@ -36095,7 +36095,7 @@
         {
           "name": "AB MFB Nigeria",
           "clientId": "ab_mfb_nigeria",
-          "totalRevenue": 472,
+          "totalRevenue": 48,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -36160,7 +36160,7 @@
         {
           "name": "Union Bank",
           "clientId": "union_bank",
-          "totalRevenue": 2268,
+          "totalRevenue": 837,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -36220,7 +36220,7 @@
         {
           "name": "Sterling Bank",
           "clientId": "sterling_bank",
-          "totalRevenue": 102329,
+          "totalRevenue": 21869,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -36275,7 +36275,7 @@
         {
           "name": "CIMB'",
           "clientId": "cimb",
-          "totalRevenue": 66,
+          "totalRevenue": 35,
           "kam": "Minh Nguyen Duc",
           "apisUsing": [
             {
@@ -36319,7 +36319,7 @@
         {
           "name": "Federal bank",
           "clientId": "federal_bank",
-          "totalRevenue": 47,
+          "totalRevenue": 25,
           "kam": "Veeramesh",
           "apisUsing": [
             {
@@ -36485,7 +36485,7 @@
         {
           "name": "FaceTech MY",
           "clientId": "face_tech_my",
-          "totalRevenue": 35,
+          "totalRevenue": 5,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -36544,7 +36544,7 @@
         {
           "name": "ICICI Bank",
           "clientId": "icici_bank",
-          "totalRevenue": 2,
+          "totalRevenue": 0,
           "kam": "Sales",
           "apisUsing": [
             {
@@ -36714,7 +36714,7 @@
         {
           "name": "Unobank Ph",
           "clientId": "unobank_ph",
-          "totalRevenue": 10480,
+          "totalRevenue": 2489,
           "kam": "Aryan Mukund",
           "apisUsing": [
             {
@@ -36806,7 +36806,7 @@
     {
       "segment": "Channel Partner",
       "totalClients": 38,
-      "totalRevenue": 64435,
+      "totalRevenue": 31649,
       "segmentAPIs": [
         {
           "name": "ID Card Validation",
@@ -37198,7 +37198,7 @@
         {
           "name": "CAMS Investors",
           "clientId": "cams_investors",
-          "totalRevenue": 2933,
+          "totalRevenue": 1579,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -37330,7 +37330,7 @@
         {
           "name": "Transunion",
           "clientId": "trans_union",
-          "totalRevenue": 1991,
+          "totalRevenue": 0,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -37471,7 +37471,7 @@
         {
           "name": "Voice Club",
           "clientId": "voice_club",
-          "totalRevenue": 417,
+          "totalRevenue": 0,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -37540,7 +37540,7 @@
         {
           "name": "Travelexic",
           "clientId": "travelexic testing credentials",
-          "totalRevenue": 214,
+          "totalRevenue": 78,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -37606,7 +37606,7 @@
         {
           "name": "XNVentures",
           "clientId": "xn_ventures",
-          "totalRevenue": 8922,
+          "totalRevenue": 7611,
           "kam": "Aryan Mukund",
           "apisUsing": [
             {
@@ -38339,7 +38339,7 @@
         {
           "name": "Go Kiwi",
           "clientId": "go_kiwi",
-          "totalRevenue": 16,
+          "totalRevenue": 6,
           "kam": "Kritika Ramesh",
           "apisUsing": [],
           "apisMissing": [
@@ -38491,7 +38491,7 @@
         {
           "name": "GreyBlue - KYC",
           "clientId": "grey_blue_kyc",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Sriya",
           "apisUsing": [],
           "apisMissing": [
@@ -38719,7 +38719,7 @@
         {
           "name": "TechMojo",
           "clientId": "tech_mojo",
-          "totalRevenue": 400,
+          "totalRevenue": 100,
           "kam": "Michelle George",
           "apisUsing": [],
           "apisMissing": [
@@ -38871,7 +38871,7 @@
         {
           "name": "TenX",
           "clientId": "tenx_tenx",
-          "totalRevenue": 242,
+          "totalRevenue": 111,
           "kam": "Nam Nguyen",
           "apisUsing": [
             {
@@ -39018,7 +39018,7 @@
         {
           "name": "Entitled Solutions Private Limited",
           "clientId": "entitled_solutions_private_limited",
-          "totalRevenue": 251,
+          "totalRevenue": 83,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -39084,7 +39084,7 @@
         {
           "name": "Karya",
           "clientId": "karya",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -39150,7 +39150,7 @@
         {
           "name": "Bvndle",
           "clientId": "splitar",
-          "totalRevenue": 288,
+          "totalRevenue": 62,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -39284,7 +39284,7 @@
         {
           "name": "FISS VN",
           "clientId": "fiss_digital_insurance_vietnam",
-          "totalRevenue": 41,
+          "totalRevenue": 10,
           "kam": "Nam Nguyen",
           "apisUsing": [
             {
@@ -39328,7 +39328,7 @@
         {
           "name": "MySellerCentral",
           "clientId": "my_seller_central",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -39407,7 +39407,7 @@
         {
           "name": "Giftpack",
           "clientId": "gift_pack",
-          "totalRevenue": 800,
+          "totalRevenue": 200,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -39493,7 +39493,7 @@
         {
           "name": "Dotpe",
           "clientId": "dotpe",
-          "totalRevenue": 223,
+          "totalRevenue": 111,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -39592,7 +39592,7 @@
         {
           "name": "Finbox",
           "clientId": "finbox",
-          "totalRevenue": 35776,
+          "totalRevenue": 10803,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -39644,7 +39644,7 @@
         {
           "name": "Shoonya",
           "clientId": "shoonya",
-          "totalRevenue": 5119,
+          "totalRevenue": 5101,
           "kam": "Sales",
           "apisUsing": [
             {
@@ -39798,7 +39798,7 @@
     {
       "segment": "Crypto",
       "totalClients": 33,
-      "totalRevenue": 80361,
+      "totalRevenue": 53801,
       "segmentAPIs": [
         {
           "name": "ID Card Validation",
@@ -40412,7 +40412,7 @@
         {
           "name": "Coinswitch",
           "clientId": "coin_switch",
-          "totalRevenue": 12304,
+          "totalRevenue": 4901,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -40538,7 +40538,7 @@
         {
           "name": "ZebPay",
           "clientId": "zebpay",
-          "totalRevenue": 5253,
+          "totalRevenue": 2804,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -40633,7 +40633,7 @@
         {
           "name": "KoinBX",
           "clientId": "koin_bx",
-          "totalRevenue": 3019,
+          "totalRevenue": 1059,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -40724,7 +40724,7 @@
         {
           "name": "PDAX",
           "clientId": "pdax",
-          "totalRevenue": 7842,
+          "totalRevenue": 1492,
           "kam": "Harshit Shrivastava",
           "apisUsing": [
             {
@@ -40868,7 +40868,7 @@
         {
           "name": "Remitano (babylons)",
           "clientId": "remitano",
-          "totalRevenue": 2335,
+          "totalRevenue": 709,
           "kam": "Minh Nguyen Duc",
           "apisUsing": [
             {
@@ -41260,7 +41260,7 @@
         {
           "name": "Mudrex",
           "clientId": "mudrex",
-          "totalRevenue": 4700,
+          "totalRevenue": 2173,
           "kam": "Akanksha Pandaw",
           "apisUsing": [
             {
@@ -42036,7 +42036,7 @@
         {
           "name": "UnoCoin",
           "clientId": "uno_coin",
-          "totalRevenue": 216,
+          "totalRevenue": 0,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -42168,7 +42168,7 @@
         {
           "name": "Floxy Labs Informtion Technology LLC",
           "clientId": "metaspace_labs_information_technology_llc",
-          "totalRevenue": 89,
+          "totalRevenue": 20,
           "kam": "Karthik Shivakumara",
           "apisUsing": [
             {
@@ -42561,7 +42561,7 @@
         {
           "name": "Neofi",
           "clientId": "neofi",
-          "totalRevenue": 361,
+          "totalRevenue": 249,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -42757,7 +42757,7 @@
         {
           "name": "Coinsbit",
           "clientId": "coinsbit",
-          "totalRevenue": 76,
+          "totalRevenue": 18,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -43125,7 +43125,7 @@
         {
           "name": "Cipherepay",
           "clientId": "cipherepay",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -43356,7 +43356,7 @@
         {
           "name": "Unitic Exchange",
           "clientId": "unitic_exchange",
-          "totalRevenue": 179,
+          "totalRevenue": 89,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -43425,7 +43425,7 @@
         {
           "name": "Infliv Cryptoswap",
           "clientId": "infliv_cryptoswap",
-          "totalRevenue": 359,
+          "totalRevenue": 89,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -43516,7 +43516,7 @@
         {
           "name": "Blockoville",
           "clientId": "blockoville",
-          "totalRevenue": 179,
+          "totalRevenue": 89,
           "kam": "Naveen Shankar Choudhury",
           "apisUsing": [
             {
@@ -43601,7 +43601,7 @@
         {
           "name": "PlatinX",
           "clientId": "platinx",
-          "totalRevenue": 7,
+          "totalRevenue": 3,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -43692,7 +43692,7 @@
         {
           "name": "Marianas Rai Corp",
           "clientId": "marianas_rai_corp",
-          "totalRevenue": 5000,
+          "totalRevenue": 2000,
           "kam": "Michelle George",
           "apisUsing": [
             {
@@ -44074,7 +44074,7 @@
     {
       "segment": "Lending Marketplace",
       "totalClients": 9,
-      "totalRevenue": 46691,
+      "totalRevenue": 12686,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -44367,7 +44367,7 @@
         {
           "name": "Renmoney",
           "clientId": "renmoney_ng",
-          "totalRevenue": 15075,
+          "totalRevenue": 3454,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -44476,7 +44476,7 @@
         {
           "name": "Jar",
           "clientId": "jar",
-          "totalRevenue": 11977,
+          "totalRevenue": 2431,
           "kam": "Sai Prasaanth",
           "apisUsing": [
             {
@@ -44568,7 +44568,7 @@
         {
           "name": "Kredete NG",
           "clientId": "kredete_ng",
-          "totalRevenue": 770,
+          "totalRevenue": 41,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -44768,7 +44768,7 @@
         {
           "name": "GrayQuest",
           "clientId": "greyquest",
-          "totalRevenue": 480,
+          "totalRevenue": 243,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -44893,7 +44893,7 @@
         {
           "name": "Go-Yubi",
           "clientId": "go_yubi",
-          "totalRevenue": 5803,
+          "totalRevenue": 2155,
           "kam": "Sai Prasaanth",
           "apisUsing": [
             {
@@ -45012,7 +45012,7 @@
         {
           "name": "Navi",
           "clientId": "navi",
-          "totalRevenue": 12406,
+          "totalRevenue": 4362,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -45215,7 +45215,7 @@
         {
           "name": "Abcom In",
           "clientId": "ab_cartridge",
-          "totalRevenue": 180,
+          "totalRevenue": 0,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -45289,7 +45289,7 @@
     {
       "segment": "E-commerce",
       "totalClients": 9,
-      "totalRevenue": 2559,
+      "totalRevenue": 1642,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -45505,7 +45505,7 @@
         {
           "name": "Timon Cards",
           "clientId": "timon_cards",
-          "totalRevenue": 1050,
+          "totalRevenue": 250,
           "kam": "Lawrence Osayemi",
           "apisUsing": [
             {
@@ -45679,7 +45679,7 @@
         {
           "name": "Urban Match",
           "clientId": "urbanmatch",
-          "totalRevenue": 223,
+          "totalRevenue": 111,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -46213,7 +46213,7 @@
         {
           "name": "Motovolt",
           "clientId": "motovolt",
-          "totalRevenue": 12,
+          "totalRevenue": 8,
           "kam": "Veer Ramesh Chembath",
           "apisUsing": [
             {
@@ -46274,7 +46274,7 @@
         {
           "name": "City Furnish",
           "clientId": "city_furnish",
-          "totalRevenue": 412,
+          "totalRevenue": 411,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -46336,7 +46336,7 @@
     {
       "segment": "Bike/Car Rental",
       "totalClients": 8,
-      "totalRevenue": 3723,
+      "totalRevenue": 3717,
       "segmentAPIs": [
         {
           "name": "ID Card Validation",
@@ -46990,7 +46990,7 @@
         {
           "name": "Touro Bikes",
           "clientId": "tourobikes",
-          "totalRevenue": 9,
+          "totalRevenue": 3,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -47098,7 +47098,7 @@
     {
       "segment": "Ed-tech/Learning",
       "totalClients": 6,
-      "totalRevenue": 3152,
+      "totalRevenue": 1470,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -47312,7 +47312,7 @@
         {
           "name": "LightHouse Learning",
           "clientId": "lighthouse_learning",
-          "totalRevenue": 447,
+          "totalRevenue": 111,
           "kam": "Anshuman Gill",
           "apisUsing": [],
           "apisMissing": [
@@ -47481,7 +47481,7 @@
         {
           "name": "Marrowmed",
           "clientId": "marrowmed",
-          "totalRevenue": 2330,
+          "totalRevenue": 984,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -47518,7 +47518,7 @@
     {
       "segment": "Telecom",
       "totalClients": 4,
-      "totalRevenue": 90815,
+      "totalRevenue": 66855,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -47624,7 +47624,7 @@
         {
           "name": "RELIANCEJIO",
           "clientId": "reliance",
-          "totalRevenue": 23780,
+          "totalRevenue": 6045,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -47733,7 +47733,7 @@
         {
           "name": "VIL",
           "clientId": "vodafone",
-          "totalRevenue": 66779,
+          "totalRevenue": 60555,
           "kam": "Ashutosh Daga",
           "apisUsing": [
             {
@@ -47932,7 +47932,7 @@
         {
           "name": "Fibmesh",
           "clientId": "fibmesh",
-          "totalRevenue": 1,
+          "totalRevenue": 0,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -48016,7 +48016,7 @@
     {
       "segment": "Gaming",
       "totalClients": 27,
-      "totalRevenue": 2040,
+      "totalRevenue": 1188,
       "segmentAPIs": [
         {
           "name": "Digilocker",
@@ -48445,7 +48445,7 @@
         {
           "name": "BuyStars",
           "clientId": "buy_stars",
-          "totalRevenue": 8,
+          "totalRevenue": 0,
           "kam": "Arunima Srivastava",
           "apisUsing": [],
           "apisMissing": [
@@ -48797,7 +48797,7 @@
         {
           "name": "MoneyRush",
           "clientId": "moneyrush",
-          "totalRevenue": 359,
+          "totalRevenue": 89,
           "kam": "Arunima Srivastava",
           "apisUsing": [],
           "apisMissing": [
@@ -48973,7 +48973,7 @@
         {
           "name": "Sachiko Gaming",
           "clientId": "sachiko_gaming",
-          "totalRevenue": 36,
+          "totalRevenue": 10,
           "kam": "Sales",
           "apisUsing": [
             {
@@ -49012,7 +49012,7 @@
         {
           "name": "Fantasy Akhada",
           "clientId": "fantasy_akhada",
-          "totalRevenue": 2,
+          "totalRevenue": 0,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -49230,7 +49230,7 @@
         {
           "name": "MPL",
           "clientId": "mpl",
-          "totalRevenue": 377,
+          "totalRevenue": 118,
           "kam": "Aditya Rao",
           "apisUsing": [
             {
@@ -49267,7 +49267,7 @@
         {
           "name": "Paytm First Games",
           "clientId": "paytm_first_games",
-          "totalRevenue": 40,
+          "totalRevenue": 9,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -49294,7 +49294,7 @@
         {
           "name": "Pokerbaazi",
           "clientId": "pokerbaazi",
-          "totalRevenue": 257,
+          "totalRevenue": 73,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -49346,7 +49346,7 @@
         {
           "name": "Rario",
           "clientId": "rario",
-          "totalRevenue": 73,
+          "totalRevenue": 1,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -49403,7 +49403,7 @@
     {
       "segment": "Wealth Management",
       "totalClients": 7,
-      "totalRevenue": 2529,
+      "totalRevenue": 1273,
       "segmentAPIs": [
         {
           "name": "Bank Account Verification",
@@ -49630,7 +49630,7 @@
         {
           "name": "Equirus Wealth",
           "clientId": "equirus_wealth",
-          "totalRevenue": 91,
+          "totalRevenue": 19,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -49741,7 +49741,7 @@
         {
           "name": "Finofin Investment Advisory",
           "clientId": "finofin_investment_advisory",
-          "totalRevenue": 46,
+          "totalRevenue": 26,
           "kam": "Gokul M",
           "apisUsing": [],
           "apisMissing": [
@@ -50246,7 +50246,7 @@
         {
           "name": "Scripbox",
           "clientId": "scripbox",
-          "totalRevenue": 2235,
+          "totalRevenue": 1111,
           "kam": "Maline K L",
           "apisUsing": [
             {
@@ -50361,7 +50361,7 @@
         {
           "name": "Thryve",
           "clientId": "thryve",
-          "totalRevenue": 3,
+          "totalRevenue": 0,
           "kam": "Karthik Shivakumara",
           "apisUsing": [
             {
@@ -50518,7 +50518,7 @@
         {
           "name": "Invsify",
           "clientId": "invsify",
-          "totalRevenue": 43,
+          "totalRevenue": 6,
           "kam": "Anshuman Gill",
           "apisUsing": [
             {
@@ -50672,7 +50672,7 @@
     {
       "segment": "Marketplaces",
       "totalClients": 5,
-      "totalRevenue": 2197,
+      "totalRevenue": 750,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -50810,7 +50810,7 @@
         {
           "name": "Furlenco",
           "clientId": "FURLENCO",
-          "totalRevenue": 1846,
+          "totalRevenue": 745,
           "kam": "Kritika Ramesh",
           "apisUsing": [
             {
@@ -50852,7 +50852,7 @@
         {
           "name": "Hood",
           "clientId": "hood",
-          "totalRevenue": 6,
+          "totalRevenue": 0,
           "kam": "Arunima Srivastava",
           "apisUsing": [
             {
@@ -50888,7 +50888,7 @@
         {
           "name": "Hey wavelength dating",
           "clientId": "hey_wavelength_dating",
-          "totalRevenue": 345,
+          "totalRevenue": 5,
           "kam": "Veeramesh",
           "apisUsing": [
             {
@@ -50935,7 +50935,7 @@
     {
       "segment": "Healthcare",
       "totalClients": 2,
-      "totalRevenue": 424,
+      "totalRevenue": 205,
       "segmentAPIs": [
         {
           "name": "ID Card Validation",
@@ -50964,7 +50964,7 @@
         {
           "name": "Jubilant",
           "clientId": "jubilant",
-          "totalRevenue": 291,
+          "totalRevenue": 72,
           "kam": "Veer Ramesh Chembath",
           "apisUsing": [],
           "apisMissing": [
@@ -51027,7 +51027,7 @@
     {
       "segment": "Investment",
       "totalClients": 3,
-      "totalRevenue": 16,
+      "totalRevenue": 15,
       "segmentAPIs": [
         {
           "name": "ID Card Validation",
@@ -51198,7 +51198,7 @@
         {
           "name": "Tititada",
           "clientId": "tititada",
-          "totalRevenue": 16,
+          "totalRevenue": 15,
           "kam": "Nam Nguyen",
           "apisUsing": [
             {
@@ -51235,7 +51235,7 @@
     {
       "segment": "Real Estate Development",
       "totalClients": 3,
-      "totalRevenue": 7,
+      "totalRevenue": 0,
       "segmentAPIs": [
         {
           "name": "CKYC Validate",
@@ -51275,7 +51275,7 @@
         {
           "name": "32nd Vistas Pvt Ltd",
           "clientId": "32nd_vistas_pvt_ltd",
-          "totalRevenue": 6,
+          "totalRevenue": 0,
           "kam": "Kritika Ramesh",
           "apisUsing": [],
           "apisMissing": [
@@ -51371,7 +51371,7 @@
         {
           "name": "Tata Housing",
           "clientId": "tata_housing",
-          "totalRevenue": 1,
+          "totalRevenue": 0,
           "kam": "Aishwarya Paraskar",
           "apisUsing": [
             {
@@ -51403,7 +51403,7 @@
     {
       "segment": "CLM",
       "totalClients": 40,
-      "totalRevenue": 7106,
+      "totalRevenue": 3458,
       "segmentAPIs": [
         {
           "name": "Selfie Validation",
@@ -51876,7 +51876,7 @@
         {
           "name": "Respo",
           "clientId": "respo",
-          "totalRevenue": 6316,
+          "totalRevenue": 2668,
           "kam": "Sriya",
           "apisUsing": [
             {
@@ -52054,13 +52054,13 @@
     {
       "segment": "Travel",
       "totalClients": 2,
-      "totalRevenue": 22,
+      "totalRevenue": 4,
       "segmentAPIs": [],
       "clients": [
         {
           "name": "Atlys",
           "clientId": "altys",
-          "totalRevenue": 22,
+          "totalRevenue": 4,
           "kam": "Arunima Srivastava",
           "apisUsing": [],
           "apisMissing": [],

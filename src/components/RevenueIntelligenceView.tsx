@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import useSWR from 'swr';
 import {
   Target, Users, TrendingUp, AlertTriangle,
-  Search, ChevronRight, ChevronDown, ArrowUpDown,
+  Search, ArrowUpDown,
   ArrowUp, ArrowDown, SlidersHorizontal,
-  X, Shield, FlaskConical,
+  X, Shield, FlaskConical, Info,
 } from 'lucide-react';
 
 // ─── Types ───
@@ -162,6 +162,8 @@ export default function RevenueIntelligenceView() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [showMethodology, setShowMethodology] = useState(false);
+  const [detailTab, setDetailTab] = useState<'upsell' | 'active' | 'attention'>('upsell');
   const [sortField, setSortField] = useState<SortField>('potentialRevenue');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -279,6 +281,9 @@ export default function RevenueIntelligenceView() {
     return filteredClients.find(c => `${c.segment}:${c.name}` === selectedClient) || null;
   }, [selectedClient, filteredClients]);
 
+  // Reset detail tab when client changes
+  useEffect(() => { setDetailTab('upsell'); }, [selectedClient]);
+
   // Animated values
   const animRevenue = useAnimatedNumber(kpis.totalRevenue);
   const animPotential = useAnimatedNumber(kpis.totalPotential);
@@ -357,10 +362,13 @@ export default function RevenueIntelligenceView() {
           <div className="text-[12px] text-slate-500 mt-1">{kpis.totalClients} clients across {new Set(filteredClients.map(c => c.segment)).size} segments</div>
         </div>
 
-        <div className="bg-white rounded-xl px-5 py-4 border border-stone-200 group relative">
+        <div className="bg-white rounded-xl px-5 py-4 border border-stone-200">
           <div className="flex items-center gap-2 mb-1.5">
             <Target size={15} className="text-amber-500" />
             <span className="text-[12px] font-medium text-slate-400 uppercase tracking-wider">Upsell Pipeline</span>
+            <button onClick={() => setShowMethodology(true)} className="ml-auto p-0.5 rounded hover:bg-stone-100 cursor-pointer" title="How is this calculated?">
+              <Info size={14} className="text-slate-400 hover:text-slate-600" />
+            </button>
           </div>
           <div className="flex items-baseline gap-3">
             <div>
@@ -371,15 +379,6 @@ export default function RevenueIntelligenceView() {
             <div>
               <div className="text-lg font-semibold text-slate-500 tracking-tight">{fmt(animPotentialAvg)}</div>
               <div className="text-[11px] text-slate-400 mt-0.5">Avg. pricing</div>
-            </div>
-          </div>
-          {/* Methodology tooltip on hover */}
-          <div className="absolute left-0 top-full mt-1 z-30 w-80 p-3 bg-slate-800 text-slate-200 text-[11px] leading-relaxed rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200">
-            <div className="font-semibold text-white mb-1.5">How this is calculated</div>
-            <div className="space-y-1.5">
-              <p><span className="text-amber-400 font-medium">Usage-based:</span> Client&apos;s avg API calls &times; the API&apos;s revenue-per-call across peers. Capped at max peer revenue. Falls back to median if no call data.</p>
-              <p><span className="text-blue-400 font-medium">Avg. pricing:</span> Simple mean of what all segment peers pay for each API. Higher because it includes large clients.</p>
-              <p>Both use production data only, last 4 months, APIs with &ge;20% segment adoption.</p>
             </div>
           </div>
         </div>
@@ -626,114 +625,312 @@ export default function RevenueIntelligenceView() {
               </table>
             </div>
 
-            {/* Detail Body */}
-            <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-5">
+            {/* Tab Bar */}
+            {(() => {
+              const activeApis = selectedClientData.apisUsing.filter(a => a.revenue > 0);
+              const attentionApis = selectedClientData.apisUsing.filter(a => a.revenue <= 0);
+              return <>
+              <div className="flex border-b border-stone-200 px-5 bg-white">
+                {([
+                  { key: 'upsell' as const, label: 'Upsell', count: selectedClientData.apisMissing.length },
+                  { key: 'active' as const, label: 'Active APIs', count: activeApis.length },
+                  { key: 'attention' as const, label: 'Needs Attention', count: attentionApis.length },
+                ]).map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setDetailTab(tab.key)}
+                    className={`px-3 py-2.5 text-[12px] font-medium border-b-2 transition-colors cursor-pointer ${
+                      detailTab === tab.key
+                        ? 'border-amber-500 text-slate-800'
+                        : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    {tab.label}
+                    <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full tabular-nums ${
+                      detailTab === tab.key ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-slate-500'
+                    }`}>{tab.count}</span>
+                  </button>
+                ))}
+              </div>
 
-              {/* Upsell Opportunities — table */}
-              <div>
-                <h3 className="text-[13px] font-semibold text-slate-700 mb-2">
-                  Upsell Opportunities <span className="text-slate-400 font-normal">({selectedClientData.apisMissing.length})</span>
-                </h3>
-                {selectedClientData.apisMissing.length > 0 ? (
-                  <>
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b border-stone-200">
-                          <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pr-2">API</th>
-                          <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2 whitespace-nowrap">Est. Usage</th>
-                          <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2 whitespace-nowrap">Est. Avg</th>
-                          <th className="text-center text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2">Peers</th>
-                          <th className="text-center text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pl-2">Priority</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedClientData.apisMissing
-                          .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.avgPeerRevenue - a.avgPeerRevenue)
-                          .map((gap, i) => (
-                            <tr key={i} className="border-b border-stone-100 hover:bg-stone-50/50">
-                              <td className="py-2 pr-2">
-                                <div className="text-[12px] font-semibold text-slate-800">{gap.name}</div>
-                                <div className="flex items-center gap-1 mt-0.5">
-                                  <div className="w-10 h-1 bg-stone-200 rounded-full overflow-hidden">
-                                    <div className={`h-full rounded-full ${adoptionBg(Math.round(gap.peerAdoptionRate * 100))}`} style={{ width: `${Math.min(100, gap.peerAdoptionRate * 100)}%` }} />
+              {/* Detail Body */}
+              <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4">
+
+                {/* ── Tab: Upsell Opportunities ── */}
+                {detailTab === 'upsell' && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-[11px] text-slate-400">APIs peers in <span className="font-medium text-slate-500">{selectedClientData.segment}</span> use that this client doesn&apos;t</p>
+                      <button onClick={() => setShowMethodology(true)} className="p-0.5 rounded hover:bg-stone-100 cursor-pointer shrink-0" title="How is this calculated?">
+                        <Info size={12} className="text-slate-400 hover:text-slate-600" />
+                      </button>
+                    </div>
+                    {selectedClientData.apisMissing.length > 0 ? (
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-stone-200">
+                            <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pr-2">API</th>
+                            <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2">Adoption</th>
+                            <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2 whitespace-nowrap">Est. Rev</th>
+                            <th className="text-center text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pl-2">Priority</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedClientData.apisMissing
+                            .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.avgPeerRevenue - a.avgPeerRevenue)
+                            .map((gap, i) => (
+                              <React.Fragment key={i}>
+                                <tr className="hover:bg-stone-50/50">
+                                  <td className="py-2 pr-2">
+                                    <div className="text-[12px] font-semibold text-slate-800">{gap.name}</div>
+                                  </td>
+                                  <td className="py-2 px-2 text-right">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <div className="w-10 h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                                        <div className={`h-full rounded-full ${adoptionBg(Math.round(gap.peerAdoptionRate * 100))}`} style={{ width: `${Math.min(100, gap.peerAdoptionRate * 100)}%` }} />
+                                      </div>
+                                      <span className="text-[11px] text-slate-500 tabular-nums">{Math.round(gap.peerAdoptionRate * 100)}%</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-2 text-right">
+                                    <span className="text-[12px] font-bold text-amber-600 tabular-nums">{fmt(gap.avgPeerRevenue)}</span>
+                                  </td>
+                                  <td className="py-2 pl-2 text-center">
+                                    <PriorityBadge priority={gap.priority} />
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-stone-100">
+                                  <td colSpan={4} className="px-2 pb-3 pt-0">
+                                    <div className="space-y-1.5 bg-stone-50 rounded-lg p-2.5">
+                                      {gap.reason && <p className="text-[11px] text-slate-600 leading-relaxed">{gap.reason}</p>}
+                                      {gap.topPeers && gap.topPeers.length > 0 && (
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="text-[10px] font-medium text-slate-400">Used by:</span>
+                                          {gap.topPeers.slice(0, 5).map((peer, j) => (
+                                            <span key={j} className="text-[10px] px-1.5 py-0.5 rounded-full bg-white border border-stone-200 text-slate-600">{peer}</span>
+                                          ))}
+                                          {gap.topPeers.length > 5 && <span className="text-[10px] text-slate-400">+{gap.topPeers.length - 5} more</span>}
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-4 text-[10px]">
+                                        <span className="text-slate-400">Usage est: <span className="font-semibold text-amber-600">{fmt(gap.avgPeerRevenue)}</span></span>
+                                        <span className="text-slate-400">Avg est: <span className="font-semibold text-slate-600">{fmt(gap.avgPricingRevenue || 0)}</span></span>
+                                        <span className="text-slate-400">{gap.peersUsing} peers using</span>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </React.Fragment>
+                            ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-[12px] text-slate-400 py-8 text-center">Full adoption — no upsell gaps found</div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Tab: Active APIs ── */}
+                {detailTab === 'active' && (
+                  <div>
+                    <p className="text-[11px] text-slate-400 mb-2">APIs generating revenue this month</p>
+                    {activeApis.length > 0 ? (
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-stone-200">
+                            <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pr-2">API</th>
+                            <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2">Calls</th>
+                            <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pl-2">Revenue</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activeApis
+                            .sort((a, b) => b.revenue - a.revenue)
+                            .map((api, i) => (
+                              <tr key={i} className="border-b border-stone-100">
+                                <td className="py-1.5 pr-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[12px] text-slate-700">{api.name}</span>
+                                    {api.environment === 'production' && (
+                                      <span className="shrink-0 inline-flex items-center gap-0.5 px-1 py-px text-[9px] font-bold uppercase rounded bg-emerald-100 text-emerald-700">
+                                        <Shield size={9} />P
+                                      </span>
+                                    )}
+                                    {api.environment === 'staging' && (
+                                      <span className="shrink-0 inline-flex items-center gap-0.5 px-1 py-px text-[9px] font-bold uppercase rounded bg-purple-100 text-purple-700">
+                                        <FlaskConical size={9} />S
+                                      </span>
+                                    )}
                                   </div>
-                                  <span className="text-[10px] text-slate-400">{Math.round(gap.peerAdoptionRate * 100)}%</span>
-                                </div>
-                              </td>
-                              <td className="py-2 px-2 text-right">
-                                <span className="text-[12px] font-bold text-amber-600 tabular-nums">{fmt(gap.avgPeerRevenue)}</span>
-                              </td>
-                              <td className="py-2 px-2 text-right">
-                                <span className="text-[12px] font-medium text-slate-500 tabular-nums">{fmt(gap.avgPricingRevenue || 0)}</span>
-                              </td>
-                              <td className="py-2 px-2 text-center">
-                                <span className="text-[11px] text-slate-500 tabular-nums">{gap.peersUsing}</span>
-                              </td>
-                              <td className="py-2 pl-2 text-center">
-                                <PriorityBadge priority={gap.priority} />
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                    {/* Single methodology note */}
-                    <p className="text-[11px] text-slate-400 mt-2.5 leading-relaxed">
-                      Estimates based on production API data from the last 4 months. &quot;Usage&quot; scales by this client&apos;s call volume; &quot;Avg&quot; is the mean peer revenue. Only APIs with &ge;20% segment adoption are shown.
-                    </p>
-                  </>
-                ) : (
-                  <div className="text-[12px] text-slate-400 py-4 text-center">No upsell opportunities for this client</div>
+                                </td>
+                                <td className="py-1.5 px-2 text-right">
+                                  <span className="text-[11px] text-slate-400 tabular-nums">{api.usage > 0 ? fmtNum(api.usage) : '–'}</span>
+                                </td>
+                                <td className="py-1.5 pl-2 text-right">
+                                  <span className="text-[12px] font-semibold text-emerald-600 tabular-nums">{fmt(api.revenue)}</span>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-[12px] text-slate-400 py-8 text-center">No active APIs with revenue</div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Tab: Needs Attention ── */}
+                {detailTab === 'attention' && (
+                  <div>
+                    <p className="text-[11px] text-slate-400 mb-2">APIs integrated but generating $0 revenue — potential activation or billing issues</p>
+                    {attentionApis.length > 0 ? (
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-stone-200">
+                            <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pr-2">API</th>
+                            <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2">Calls</th>
+                            <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2">Revenue</th>
+                            <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pl-2">Likely Issue</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {attentionApis
+                            .sort((a, b) => b.usage - a.usage)
+                            .map((api, i) => {
+                              const issue = api.usage > 1000
+                                ? { label: 'Free tier / No billing', color: 'text-amber-600 bg-amber-50' }
+                                : api.usage > 0
+                                ? { label: 'Low usage', color: 'text-blue-600 bg-blue-50' }
+                                : { label: 'Inactive', color: 'text-slate-500 bg-stone-100' };
+                              return (
+                                <tr key={i} className="border-b border-stone-100">
+                                  <td className="py-1.5 pr-2">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[12px] text-slate-700">{api.name}</span>
+                                      {api.environment === 'staging' && (
+                                        <span className="shrink-0 inline-flex items-center gap-0.5 px-1 py-px text-[9px] font-bold uppercase rounded bg-purple-100 text-purple-700">
+                                          <FlaskConical size={9} />S
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-1.5 px-2 text-right">
+                                    <span className="text-[11px] text-slate-500 tabular-nums">{api.usage > 0 ? fmtNum(api.usage) : '0'}</span>
+                                  </td>
+                                  <td className="py-1.5 px-2 text-right">
+                                    <span className="text-[12px] font-semibold text-slate-400 tabular-nums">$0</span>
+                                  </td>
+                                  <td className="py-1.5 pl-2 text-right">
+                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${issue.color}`}>{issue.label}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-[12px] text-emerald-600 py-8 text-center">All APIs are generating revenue</div>
+                    )}
+                  </div>
                 )}
               </div>
-
-              {/* Current APIs — table */}
-              <div>
-                <h3 className="text-[13px] font-semibold text-slate-700 mb-2">
-                  Current APIs <span className="text-slate-400 font-normal">({selectedClientData.apisUsing.length})</span>
-                </h3>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b border-stone-200">
-                      <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pr-2">API</th>
-                      <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 px-2">Calls</th>
-                      <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-1.5 pl-2">Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedClientData.apisUsing
-                      .sort((a, b) => b.revenue - a.revenue)
-                      .map((api, i) => (
-                        <tr key={i} className="border-b border-stone-100">
-                          <td className="py-1.5 pr-2">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[12px] text-slate-700">{api.name}</span>
-                              {api.environment === 'production' && (
-                                <span className="shrink-0 inline-flex items-center gap-0.5 px-1 py-px text-[9px] font-bold uppercase rounded bg-emerald-100 text-emerald-700">
-                                  <Shield size={9} />P
-                                </span>
-                              )}
-                              {api.environment === 'staging' && (
-                                <span className="shrink-0 inline-flex items-center gap-0.5 px-1 py-px text-[9px] font-bold uppercase rounded bg-purple-100 text-purple-700">
-                                  <FlaskConical size={9} />S
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-1.5 px-2 text-right">
-                            <span className="text-[11px] text-slate-400 tabular-nums">{api.usage > 0 ? fmtNum(api.usage) : '–'}</span>
-                          </td>
-                          <td className="py-1.5 pl-2 text-right">
-                            <span className="text-[12px] font-semibold text-emerald-600 tabular-nums">{fmt(api.revenue)}</span>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+              </>;
+            })()}
           </div>
         )}
       </div>
+
+      {/* ─── Methodology Modal ─── */}
+      {showMethodology && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowMethodology(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-[520px] max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 sticky top-0 bg-white rounded-t-2xl">
+              <h2 className="text-[15px] font-bold text-slate-800">How upsell estimates work</h2>
+              <button onClick={() => setShowMethodology(false)} className="p-1 rounded hover:bg-stone-100 cursor-pointer"><X size={18} className="text-slate-400" /></button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+
+              {/* How we find opportunities */}
+              <div>
+                <div className="text-[13px] font-semibold text-slate-800 mb-2">Which APIs do we recommend?</div>
+                <div className="bg-stone-50 rounded-xl p-4 text-[12px] text-slate-600 space-y-2.5 border border-stone-100">
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-bold flex items-center justify-center mt-0.5">1</span>
+                    <span>We look at all clients in the same <span className="font-semibold text-slate-800">segment</span> (e.g., all NBFCs)</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-bold flex items-center justify-center mt-0.5">2</span>
+                    <span>If <span className="font-semibold text-amber-600">&ge;20% of peers</span> use an API but this client doesn&apos;t &rarr; that&apos;s an opportunity</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-bold flex items-center justify-center mt-0.5">3</span>
+                    <span>Higher peer adoption = higher priority (<span className="text-rose-500 font-medium">High</span> &ge;60%, <span className="text-amber-500 font-medium">Med</span> &ge;35%)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Two estimates explained visually */}
+              <div>
+                <div className="text-[13px] font-semibold text-slate-800 mb-2">Two ways to estimate revenue</div>
+                <div className="grid grid-cols-2 gap-3">
+
+                  {/* Usage-based card */}
+                  <div className="rounded-xl border-2 border-amber-200 bg-amber-50/50 p-4">
+                    <div className="text-[12px] font-bold text-amber-700 mb-2">Usage-based</div>
+                    <div className="text-[11px] text-slate-600 space-y-2">
+                      <p>Based on <span className="font-semibold text-slate-800">this client&apos;s</span> actual call volume.</p>
+                      <p className="text-slate-400">&ldquo;If they make 22M calls on their current APIs, they&apos;d likely do similar volume on a new one &mdash; so what would that cost?&rdquo;</p>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-amber-200/60 text-[11px] text-slate-500">
+                      <span className="font-medium text-slate-700">FE Credit</span> &rarr; avg 22M calls<br />
+                      Face Match costs $0.011/call<br />
+                      <span className="font-bold text-amber-600">= $250K estimate</span>
+                    </div>
+                  </div>
+
+                  {/* Avg pricing card */}
+                  <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-4">
+                    <div className="text-[12px] font-bold text-slate-600 mb-2">Avg. pricing</div>
+                    <div className="text-[11px] text-slate-600 space-y-2">
+                      <p>What <span className="font-semibold text-slate-800">peers pay</span> on average for this API.</p>
+                      <p className="text-slate-400">&ldquo;25 NBFCs use Face Match and pay $560K total &mdash; so on average each pays $22K.&rdquo;</p>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-stone-200/60 text-[11px] text-slate-500">
+                      <span className="font-medium text-slate-700">Any NBFC</span> &rarr; same number<br />
+                      $560K &divide; 25 peers<br />
+                      <span className="font-bold text-slate-700">= $22K estimate</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick comparison */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 text-[11px]">
+                <div className="grid grid-cols-3 gap-2">
+                  <div></div>
+                  <div className="font-bold text-amber-600 text-center">Usage</div>
+                  <div className="font-bold text-slate-500 text-center">Avg</div>
+
+                  <div className="text-slate-600">Personalized?</div>
+                  <div className="text-center text-emerald-600 font-medium">Yes, per client</div>
+                  <div className="text-center text-slate-400">Same for all</div>
+
+                  <div className="text-slate-600">Best for</div>
+                  <div className="text-center">Sales pitches</div>
+                  <div className="text-center">Market reference</div>
+                </div>
+              </div>
+
+              {/* Fine print */}
+              <div className="text-[11px] text-slate-400 leading-relaxed">
+                Production data only &middot; Last 4 months &middot; Capped at max peer revenue per API
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1632,8 +1632,10 @@ function MatrixView({
     }
 
     // Sort: when a segment is selected, sort by adoption count (most users first)
-    // Otherwise sort by total revenue
+    // Otherwise sort by total revenue. "Unattributed Revenue" always goes to the end.
     return [...apis].sort((a, b) => {
+      if (a === 'Unattributed Revenue') return 1;
+      if (b === 'Unattributed Revenue') return -1;
       if (currentSegmentAdoption) {
         const aCount = currentSegmentAdoption.apiAdoption[a]?.clientCount || 0;
         const bCount = currentSegmentAdoption.apiAdoption[b]?.clientCount || 0;

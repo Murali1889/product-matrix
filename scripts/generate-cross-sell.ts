@@ -156,7 +156,7 @@ async function generate() {
     }
 
     const totalRev = mc.actualRevenue
-      ? (mc.actualRevenue.jan_26 || 0) + (mc.actualRevenue.dec_25 || 0) + (mc.actualRevenue.nov_25 || 0) + (mc.actualRevenue.oct_25 || 0)
+      ? (mc.actualRevenue.jan_26 || 0)
       : 0;
 
     clientInfos.push({
