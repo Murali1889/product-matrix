@@ -476,6 +476,7 @@ export default function RevenueIntelligenceView() {
             <option value="">Any Priority</option>
             <option value="high">High Only</option>
             <option value="medium">Medium Only</option>
+            <option value="low">Low Only</option>
           </select>
         </div>
       )}
@@ -627,8 +628,8 @@ export default function RevenueIntelligenceView() {
 
             {/* Tab Bar */}
             {(() => {
-              const activeApis = selectedClientData.apisUsing.filter(a => a.revenue > 0);
-              const attentionApis = selectedClientData.apisUsing.filter(a => a.revenue <= 0);
+              const activeApis = selectedClientData.apisUsing.filter(a => a.revenue > 50);
+              const attentionApis = selectedClientData.apisUsing.filter(a => a.revenue <= 50);
               return <>
               <div className="flex border-b border-stone-200 px-5 bg-white">
                 {([
@@ -733,7 +734,7 @@ export default function RevenueIntelligenceView() {
                 {/* ── Tab: Active APIs ── */}
                 {detailTab === 'active' && (
                   <div>
-                    <p className="text-[11px] text-slate-400 mb-2">APIs generating revenue this month</p>
+                    <p className="text-[11px] text-slate-400 mb-2">APIs generating &gt;$50 revenue this month</p>
                     {activeApis.length > 0 ? (
                       <table className="w-full border-collapse">
                         <thead>
@@ -782,7 +783,7 @@ export default function RevenueIntelligenceView() {
                 {/* ── Tab: Needs Attention ── */}
                 {detailTab === 'attention' && (
                   <div>
-                    <p className="text-[11px] text-slate-400 mb-2">APIs integrated but generating $0 revenue — potential activation or billing issues</p>
+                    <p className="text-[11px] text-slate-400 mb-2">APIs generating negligible revenue (&le;$50) — potential billing, pricing, or adoption issues</p>
                     {attentionApis.length > 0 ? (
                       <table className="w-full border-collapse">
                         <thead>
@@ -797,8 +798,10 @@ export default function RevenueIntelligenceView() {
                           {attentionApis
                             .sort((a, b) => b.usage - a.usage)
                             .map((api, i) => {
-                              const issue = api.usage > 1000
+                              const issue = api.revenue === 0 && api.usage > 1000
                                 ? { label: 'Free tier / No billing', color: 'text-amber-600 bg-amber-50' }
+                                : api.revenue > 0 && api.revenue <= 50
+                                ? { label: 'Negligible revenue', color: 'text-orange-600 bg-orange-50' }
                                 : api.usage > 0
                                 ? { label: 'Low usage', color: 'text-blue-600 bg-blue-50' }
                                 : { label: 'Inactive', color: 'text-slate-500 bg-stone-100' };
@@ -818,7 +821,7 @@ export default function RevenueIntelligenceView() {
                                     <span className="text-[11px] text-slate-500 tabular-nums">{api.usage > 0 ? fmtNum(api.usage) : '0'}</span>
                                   </td>
                                   <td className="py-1.5 px-2 text-right">
-                                    <span className="text-[12px] font-semibold text-slate-400 tabular-nums">$0</span>
+                                    <span className={`text-[12px] font-semibold tabular-nums ${api.revenue > 0 ? 'text-slate-500' : 'text-slate-400'}`}>{fmt(api.revenue)}</span>
                                   </td>
                                   <td className="py-1.5 pl-2 text-right">
                                     <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${issue.color}`}>{issue.label}</span>
@@ -829,7 +832,7 @@ export default function RevenueIntelligenceView() {
                         </tbody>
                       </table>
                     ) : (
-                      <div className="text-[12px] text-emerald-600 py-8 text-center">All APIs are generating revenue</div>
+                      <div className="text-[12px] text-emerald-600 py-8 text-center">All APIs are generating healthy revenue</div>
                     )}
                   </div>
                 )}
