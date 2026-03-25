@@ -96,6 +96,7 @@ export async function POST(request: Request) {
       geography,
       legal_name,
       billing_currency,
+      billable_filter,
       notes,
     } = body;
 
@@ -114,10 +115,11 @@ export async function POST(request: Request) {
           client_id,
           client_name,
           industry,
-          segment: segment || industry, // segment same as industry for now
+          segment: segment || industry,
           geography,
           legal_name,
           billing_currency,
+          billable_filter,
           notes,
           updated_by: updatedBy,
         },

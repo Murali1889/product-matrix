@@ -5,21 +5,24 @@ import { requireServerSupabaseClient } from '@/lib/supabase-server';
 /**
  * Matrix API Route
  *
- * GET: Load client data from local file (complete_client_data.json)
+ * GET: Load client data from Google Sheets API
  * POST: Save revenue edits to Supabase (client_api_overrides)
  *
- * SINGLE SOURCE OF TRUTH: complete_client_data_1770268082596.json
+ * Query params:
+ * - view: 'matrix' | 'summary' | 'apis'
+ * - months: Comma-separated YYYY-MM months (default: current month)
  */
 
-// GET - Fetch matrix data from local file
+// GET - Fetch matrix data
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const view = searchParams.get('view'); // 'matrix' | 'summary' | 'apis'
+    const view = searchParams.get('view');
+    const month = searchParams.get('month') || undefined;
 
     // Return summary stats
     if (view === 'summary') {
-      const summary = await getDataSummary();
+      const summary = await getDataSummary(month);
       return NextResponse.json(summary);
     }
 
@@ -30,16 +33,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Default: Return full matrix data
-    const matrixData = await loadMatrixData();
+    const matrixData = await loadMatrixData(month);
 
-    // Transform to expected format for the dashboard
     const response = {
       clients: matrixData.clients.map(c => ({
         client_name: c.client_name,
         client_id: c.client_id,
         profile: c.profile,
         monthly_data: c.monthly_data,
-        // Add computed fields expected by MatrixView
         totalRevenue: c.totalRevenue,
         months: c.monthly_data.length,
         avgMonthly: c.monthly_data.length > 0
@@ -51,9 +52,10 @@ export async function GET(request: NextRequest) {
       })),
       apis: matrixData.apis,
       months: matrixData.months,
+      availableMonths: matrixData.availableMonths,
       count: matrixData.totalClients,
       extractedAt: matrixData.extractedAt,
-      source: 'local_file',
+      source: 'google_sheets_api',
     };
 
     return NextResponse.json(response);
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      const apiName = api || month; // 'api' from cell edit, 'month' from pending edits
+      const apiName = api || month;
 
       const { data, error } = await supabase
         .from('client_api_overrides')

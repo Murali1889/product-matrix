@@ -76,6 +76,13 @@ button:focus-visible {
   to { opacity: 1; }
 }
 
+/* Progress bar sweep animation */
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(60%); }
+  100% { transform: translateX(200%); }
+}
+
 /* Scale in animation */
 @keyframes scaleIn {
   from {

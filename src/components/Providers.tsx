@@ -28,6 +28,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         dedupingInterval: 60_000,
         revalidateOnFocus: false,
         revalidateOnReconnect: true,
+        keepPreviousData: true,
       }}
     >
       <FeedbackWrapper userName={userName}>

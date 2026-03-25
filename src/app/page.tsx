@@ -121,19 +121,66 @@ export default function Dashboard() {
   const isAuthenticated = !!authUser;
   const currentUser = authUser?.name || '';
 
-  const [data, setData] = useState<AnalyticsResponse>({
-    clients: [],
-    count: 0,
-    summary: { total_revenue: 0, segments: {}, avg_months: 0 }
-  });
-  const [masterAPIs, setMasterAPIs] = useState<MasterAPI[]>([]);
+  // ============ PER-MONTH LOCAL CACHE ============
+  // Each month's data cached separately in sessionStorage.
+  // Switching months = instant from cache, background sync updates.
 
-  // SWR data fetching — cached & deduped across view switches
-  const { data: analyticsData, isLoading: loadingAnalytics, error: analyticsError } = useSWR<AnalyticsResponse>('/api/analytics?all=true');
+  const emptyData: AnalyticsResponse = { clients: [], count: 0, summary: { total_revenue: 0, segments: {}, avg_months: 0 } };
+
+  // Helper: read/write per-month cache
+  const readCache = (key: string) => {
+    if (typeof window === 'undefined') return null;
+    try { const v = sessionStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; }
+  };
+  const writeCache = (key: string, val: unknown) => {
+    try { sessionStorage.setItem(key, JSON.stringify(val)); } catch { /* quota */ }
+  };
+
+  // Selected month (YYYY-MM). Empty = server default (last completed month).
+  const [apiMonth, setApiMonth] = useState<string>('');
+  const cacheKey = `pm_data_${apiMonth || 'default'}`;
+
+  // State: data shown on screen (hydrated from cache immediately)
+  const [data, setData] = useState<AnalyticsResponse>(() => readCache(cacheKey) || readCache('pm_data_default') || emptyData);
+  const [masterAPIs, setMasterAPIs] = useState<MasterAPI[]>(() => readCache('pm_apis') || []);
+  const [availableMonths, setAvailableMonths] = useState<string[]>(() => readCache('pm_available_months') || []);
+
+  // Sync state
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done'>('idle');
+  const hasCachedData = data.clients.length > 0;
+
+  // When month changes, instantly load from local cache
+  useEffect(() => {
+    const cached = readCache(cacheKey);
+    if (cached) setData(cached);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheKey]);
+
+  // Build SWR URL
+  const analyticsUrl = useMemo(() => {
+    const base = '/api/analytics?all=true';
+    return apiMonth ? `${base}&month=${apiMonth}` : base;
+  }, [apiMonth]);
+
+  // SWR — background fetch, keepPreviousData set globally
+  const { data: analyticsData, isLoading: loadingAnalytics, isValidating: isRevalidating, error: analyticsError } = useSWR<AnalyticsResponse & { availableMonths?: string[] }>(analyticsUrl);
   const { data: apisData, isLoading: loadingApis } = useSWR<{ masterAPIs?: MasterAPI[]; apis?: MasterAPI[]; unmatchedAPIs?: { name: string }[] }>('/api/apis');
 
-  const loading = loadingAnalytics || loadingApis;
-  const error = analyticsError ? 'Failed to load data' : null;
+  // Only show loading if zero data (very first visit, no cache at all)
+  const loading = !hasCachedData && (loadingAnalytics || loadingApis);
+  const error = analyticsError && !hasCachedData ? 'Failed to load data' : null;
+
+  // Sync indicator (thin bar at top, never blocks content)
+  useEffect(() => {
+    if (isRevalidating || loadingAnalytics) {
+      setSyncState('syncing');
+    } else if (syncState === 'syncing') {
+      setSyncState('done');
+      const t = setTimeout(() => setSyncState('idle'), 2000);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRevalidating, loadingAnalytics]);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'revenue' | 'latest' | 'name'>('revenue');
@@ -360,19 +407,27 @@ export default function Dashboard() {
         mutate('/api/comments');
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'client_overrides' }, () => {
-        mutate('/api/analytics?all=true');
+        mutate(analyticsUrl);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'client_api_overrides' }, () => {
-        mutate('/api/analytics?all=true');
+        mutate(analyticsUrl);
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [isAuthenticated, currentUser]);
 
-  // Sync SWR data into local state
+  // When fresh data arrives from SWR → update state + write to per-month cache
   useEffect(() => {
-    if (analyticsData) setData(analyticsData);
+    if (analyticsData) {
+      setData(analyticsData);
+      writeCache(cacheKey, analyticsData);
+      if (analyticsData.availableMonths) {
+        setAvailableMonths(analyticsData.availableMonths);
+        writeCache('pm_available_months', analyticsData.availableMonths);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analyticsData]);
 
   useEffect(() => {
@@ -381,6 +436,7 @@ export default function Dashboard() {
       setMasterAPIs(apis);
       const unmatched = (apisData.unmatchedAPIs || []).map((a) => a.name);
       setUnmatchedAPIList(unmatched);
+      writeCache('pm_apis', apis);
     }
   }, [apisData]);
 
@@ -485,15 +541,15 @@ export default function Dashboard() {
       .filter(c => c.isInMasterList)
       .map(client => {
         const curr = client.profile?.billing_currency;
-        // Use only Jan 2026 (latest month) as the single source of truth
-        const jan2026 = client.monthly_data?.find(m => m.month === 'Jan 2026');
-        const totalRevenue = convertToUSD(jan2026?.total_revenue_usd || 0, curr);
+        // Use the latest month with data as single source of truth
+        const latestMonth = client.monthly_data?.[0];
+        const totalRevenue = convertToUSD(latestMonth?.total_revenue_usd || 0, curr);
         const months = client.monthly_data?.length || 0;
         const avgMonthly = months > 0 ? totalRevenue : 0;
 
-        // Build API revenue map from Jan 2026 (keep native currency — converted at display)
+        // Build API revenue map from latest month (keep native currency — converted at display)
         const apiRevenues: Record<string, number> = {};
-        jan2026?.apis?.forEach(api => {
+        latestMonth?.apis?.forEach(api => {
           if (api.name) {
             apiRevenues[api.name] = api.revenue_usd || 0;
           }
@@ -505,7 +561,7 @@ export default function Dashboard() {
           months,
           avgMonthly,
           latestRevenue: totalRevenue,
-          latestMonth: jan2026?.month || '-',
+          latestMonth: latestMonth?.month || '-',
           apiRevenues
         };
       })
@@ -793,60 +849,14 @@ export default function Dashboard() {
   const needsConversion = (): boolean => false;
 
   if (loading) {
+    // Minimal progress indicator — not a skeleton, just a centered loading bar
     return (
-      <div className="min-h-screen bg-stone-50">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          {/* Skeleton Header */}
-          <div className="mb-10 animate-fade-in">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="skeleton h-8 w-40 mb-2" />
-                <div className="skeleton h-4 w-56" />
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="skeleton h-10 w-64 rounded-lg" />
-                <div className="skeleton h-10 w-32 rounded-lg" />
-              </div>
-            </div>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="w-48 h-1 bg-stone-200 rounded-full overflow-hidden mb-4">
+            <div className="h-full bg-amber-400 rounded-full" style={{ width: '60%', animation: 'progress 1.5s ease-in-out infinite' }} />
           </div>
-
-          {/* Skeleton Metrics */}
-          <div className="grid grid-cols-4 gap-8 mb-10">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="bg-white border border-stone-200 rounded-lg p-6 animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="skeleton h-8 w-24 mb-2" />
-                <div className="skeleton h-4 w-32" />
-              </div>
-            ))}
-          </div>
-
-          {/* Skeleton Chart */}
-          <div className="bg-white border border-stone-200 rounded-lg p-6 mb-10 animate-fade-in" style={{ animationDelay: '500ms' }}>
-            <div className="skeleton h-4 w-32 mb-6" />
-            <div className="flex items-end gap-4 h-40">
-              {[65, 80, 55, 90, 70, 85, 60, 75].map((height, i) => (
-                <div key={i} className="flex-1 skeleton rounded-t" style={{ height: `${height}%` }} />
-              ))}
-            </div>
-          </div>
-
-          {/* Skeleton Table */}
-          <div className="bg-white border border-stone-200 rounded-lg overflow-hidden animate-fade-in" style={{ animationDelay: '700ms' }}>
-            <div className="p-5 border-b border-stone-100">
-              <div className="skeleton h-5 w-32" />
-            </div>
-            <div className="divide-y divide-stone-100">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="px-6 py-4 flex items-center gap-6">
-                  <div className="skeleton h-4 w-4 rounded" />
-                  <div className="skeleton h-5 w-40" />
-                  <div className="skeleton h-5 w-24 ml-auto" />
-                  <div className="skeleton h-5 w-24" />
-                  <div className="skeleton h-5 w-16" />
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="text-[13px] text-slate-400">Loading data...</p>
         </div>
       </div>
     );
@@ -885,6 +895,13 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen bg-stone-50 flex flex-col overflow-hidden">
+      {/* Sync status bar — thin progress line at very top */}
+      {syncState === 'syncing' && (
+        <div className="fixed top-0 left-0 right-0 z-[60] h-0.5 bg-stone-200 overflow-hidden">
+          <div className="h-full bg-amber-400 rounded-full" style={{ width: '30%', animation: 'progress 1.5s ease-in-out infinite' }} />
+        </div>
+      )}
+
       {/* Floating view switcher — no layout space */}
       <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full px-1.5 py-1 shadow-lg">
         <button
@@ -965,7 +982,6 @@ export default function Dashboard() {
             onEditSave={async (clientName, api, oldValue) => {
               const newValue = parseFloat(editValue) || 0;
               handleCellEdit(clientName, api, newValue, oldValue);
-              // handleCellEdit saves to Supabase and falls back to localStorage
             }}
             onEditCancel={() => {
               setEditingCell(null);
@@ -974,6 +990,11 @@ export default function Dashboard() {
             pendingEdits={pendingEdits}
             unmatchedAPIs={unmatchedAPIList}
             currentUser={currentUser}
+            availableMonthsYYYYMM={availableMonths}
+            isLoadingMonth={syncState === 'syncing'}
+            onLoadMonth={(yyyyMM: string) => {
+              setApiMonth(yyyyMM);
+            }}
           />
         )}
 
@@ -1043,7 +1064,11 @@ export default function Dashboard() {
 
         {/* Revenue Intelligence View */}
         {view === 'revenue-intel' && (
-          <RevenueIntelligenceView />
+          <RevenueIntelligenceView
+            month={apiMonth || undefined}
+            availableMonths={availableMonths}
+            onMonthChange={(m) => setApiMonth(m)}
+          />
         )}
 
         {/* Analytics View - REMOVED: replaced by Revenue Intelligence */}
@@ -1305,7 +1330,10 @@ function MatrixView({
   onEditCancel,
   pendingEdits,
   unmatchedAPIs = [],
-  currentUser = 'admin'
+  currentUser = 'admin',
+  availableMonthsYYYYMM = [],
+  isLoadingMonth = false,
+  onLoadMonth,
 }: {
   clients: ProcessedClient[];
   masterAPIs: string[];
@@ -1322,6 +1350,9 @@ function MatrixView({
   pendingEdits: CellEdit[];
   unmatchedAPIs?: string[];
   currentUser?: string;
+  availableMonthsYYYYMM?: string[];
+  isLoadingMonth?: boolean;
+  onLoadMonth?: (yyyyMM: string) => void;
 }) {
   // View mode: 'matrix' for API columns, 'mismatches' for fixing API names
   const [viewMode, setViewMode] = useState<'matrix' | 'mismatches'>('matrix');
@@ -1465,27 +1496,53 @@ function MatrixView({
     }
   };
 
-  // Fixed list of available months (only show these 5 months)
-  const AVAILABLE_MONTHS = ['Jan 2026', 'Dec 2025', 'Nov 2025', 'Oct 2025', 'Sep 2025'];
+  // Available months from API (YYYY-MM format) → display format
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const formatMonthYYYYMM = (yyyyMM: string) => {
+    const [year, month] = yyyyMM.split('-');
+    return `${MONTH_NAMES[parseInt(month) - 1]} ${year}`;
+  };
+  const parseMonthToYYYYMM = (display: string) => {
+    const [monthStr, year] = display.split(' ');
+    const monthIdx = MONTH_NAMES.indexOf(monthStr);
+    return `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+  };
 
-  // Get months that actually have data (filtered to available months)
+  // Get months that actually have data (from API response)
   const allMonths = useMemo(() => {
     const monthsWithData = new Set<string>();
     clients.forEach(c => {
       c.monthly_data?.forEach(m => {
-        if (m.month && AVAILABLE_MONTHS.includes(m.month)) {
-          monthsWithData.add(m.month);
-        }
+        if (m.month) monthsWithData.add(m.month);
       });
     });
-    // Return in order of AVAILABLE_MONTHS
-    return AVAILABLE_MONTHS.filter(m => monthsWithData.has(m));
+    // Sort newest first
+    return Array.from(monthsWithData).sort((a, b) => {
+      const [aM, aY] = a.split(' ');
+      const [bM, bY] = b.split(' ');
+      if (aY !== bY) return parseInt(bY) - parseInt(aY);
+      return MONTH_NAMES.indexOf(bM) - MONTH_NAMES.indexOf(aM);
+    });
   }, [clients]);
+
+  // Selectable months: loaded months + available months that haven't been loaded
+  const selectableMonths = useMemo(() => {
+    const loaded = new Set(allMonths);
+    const available = (availableMonthsYYYYMM || []).map(formatMonthYYYYMM);
+    // Merge: loaded first, then unloaded available months
+    const all = new Set([...allMonths, ...available]);
+    return Array.from(all).sort((a, b) => {
+      const [aM, aY] = a.split(' ');
+      const [bM, bY] = b.split(' ');
+      if (aY !== bY) return parseInt(bY) - parseInt(aY);
+      return MONTH_NAMES.indexOf(bM) - MONTH_NAMES.indexOf(aM);
+    });
+  }, [allMonths, availableMonthsYYYYMM]);
 
   // Get API revenue for a client based on selected month
   // Returns native-currency values (caller must convert for display/aggregation)
   const getClientAPIData = useCallback((client: ProcessedClient, apiName: string): { revenue: number; usage: number; hasUsageNoRevenue: boolean } => {
-    const month = selectedMonth || 'Jan 2026';
+    const month = selectedMonth || allMonths[0] || '';
     const monthData = client.monthly_data?.find(m => m.month === month) || client.monthly_data?.[0];
     if (!monthData) return { revenue: 0, usage: 0, hasUsageNoRevenue: false };
     const apiData = monthData.apis?.find(a => a.name === apiName);
@@ -1513,10 +1570,10 @@ function MatrixView({
 
   // Get client's total revenue for selected month (native currency)
   const getClientTotalForMonth = useCallback((client: ProcessedClient): number => {
-    const month = selectedMonth || 'Jan 2026';
+    const month = selectedMonth || allMonths[0] || '';
     const monthData = client.monthly_data?.find(m => m.month === month) || client.monthly_data?.[0];
     return monthData?.total_revenue_usd || 0;
-  }, [selectedMonth]);
+  }, [selectedMonth, allMonths]);
 
   // Calculate the sum of all API revenues for a client (for validation)
   const getClientAPISum = useCallback((client: ProcessedClient): number => {
@@ -1524,13 +1581,7 @@ function MatrixView({
   }, [masterAPIs, getClientAPIData]);
 
   // Check if total matches sum of API revenues (with tolerance for rounding)
-  // Disabled for months where MIS actualRevenue overrides the billing total
-  const MIS_OVERRIDE_MONTHS = new Set(['Jan 2026', 'Dec 2025', 'Nov 2025', 'Oct 2025']);
   const hasDiscrepancy = useCallback((client: ProcessedClient): { hasIssue: boolean; total: number; apiSum: number; diff: number } => {
-    const month = selectedMonth || 'Jan 2026';
-    if (MIS_OVERRIDE_MONTHS.has(month)) {
-      return { hasIssue: false, total: 0, apiSum: 0, diff: 0 };
-    }
     const total = getClientTotalForMonth(client);
     const apiSum = getClientAPISum(client);
     const diff = total - apiSum;
@@ -1538,7 +1589,7 @@ function MatrixView({
     const tolerance = Math.max(total * 0.01, 1);
     const hasIssue = total > 0 && Math.abs(diff) > tolerance;
     return { hasIssue, total, apiSum, diff };
-  }, [getClientTotalForMonth, getClientAPISum, selectedMonth]);
+  }, [getClientTotalForMonth, getClientAPISum]);
 
   // Get row status based on ACTUAL data
   const getRowStatus = useCallback((client: ProcessedClient) => {
@@ -2016,16 +2067,26 @@ function MatrixView({
 
               <select
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
+                onChange={(e) => {
+                  const month = e.target.value;
+                  setSelectedMonth(month);
+                  // Switch to this month's data
+                  if (onLoadMonth) {
+                    onLoadMonth(month ? parseMonthToYYYYMM(month) : '');
+                  }
+                }}
                 className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-colors duration-200 cursor-pointer ${
                   selectedMonth ? 'border-amber-400 bg-amber-50 text-amber-700 font-medium' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
                 <option value="">Latest</option>
-                {allMonths.map(month => (
+                {selectableMonths.map(month => (
                   <option key={month} value={month}>{month}</option>
                 ))}
               </select>
+              {isLoadingMonth && (
+                <div className="w-3 h-3 border-[1.5px] border-amber-400 border-t-transparent rounded-full animate-spin shrink-0" />
+              )}
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
@@ -2488,6 +2549,13 @@ function MatrixView({
             </div>
           )}
 
+          {/* Inner sync indicator — thin bar, not blocking */}
+          {isLoadingMonth && (
+            <div className="h-0.5 bg-stone-200 rounded-full overflow-hidden mb-1">
+              <div className="h-full bg-amber-400 rounded-full" style={{ width: '30%', animation: 'progress 1.5s ease-in-out infinite' }} />
+            </div>
+          )}
+
           {/* API Matrix Table */}
           <div ref={tableRef} className="overflow-auto flex-1 min-h-0">
             <table className="matrix-table w-max border-collapse">
@@ -2900,6 +2968,7 @@ function MatrixView({
         toUSD={toUSD}
         needsConversion={needsConversion}
         selectedMonth={selectedMonth}
+        masterAPINames={masterAPIs}
       />
     </div>
   );
@@ -3096,6 +3165,7 @@ function ClientDetailsPanel({
   needsConversion,
   selectedMonth: initialMonth,
   availableMonths,
+  masterAPINames = [],
 }: {
   client: ProcessedClient | null;
   onClose: () => void;
@@ -3105,8 +3175,9 @@ function ClientDetailsPanel({
   needsConversion: (currency?: string | null) => boolean;
   selectedMonth?: string;
   availableMonths?: string[];
+  masterAPINames?: string[];
 }) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'notes' | 'revenue' | 'legal'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('overview');
   const [panelMonth, setPanelMonth] = useState<string>('');
 
   // Edit state
@@ -3127,6 +3198,28 @@ function ClientDetailsPanel({
     }
   }, [client, initialMonth]);
 
+  // Billing filters state — must be before any early return
+  interface FilterRow { type: 'discount' | 'codes' | 'kibana_exclude' | 'kibana_include'; value: string; api?: string; }
+  const [filterRows, setFilterRows] = useState<FilterRow[]>([]);
+  const [filterSaving, setFilterSaving] = useState(false);
+  const [clientFilters, setClientFilters] = useState<Record<string, Record<string, { discount?: number; codes?: string[]; kibana_exclude?: string[]; kibana_include?: string[] }>>>({});
+  // ^ Structure: { "default": { "__client__": { discount: 10, codes: ["200"] }, "PAN Verification": { codes: ["200","400"] } } }
+
+  // Load existing filters when client changes
+  useEffect(() => {
+    if (!client?.client_id) return;
+    fetch(`/api/client-overrides?clientId=${encodeURIComponent(client.client_id)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.override?.billable_filter) {
+          setClientFilters(d.override.billable_filter);
+        } else {
+          setClientFilters({});
+        }
+      })
+      .catch(() => setClientFilters({}));
+  }, [client?.client_id]);
+
   // Get current month's data
   const currentMonthData = useMemo(() => {
     if (!client || !panelMonth) return client?.monthly_data?.[0];
@@ -3135,12 +3228,100 @@ function ClientDetailsPanel({
 
   if (!client) return null;
 
+  // Add a new empty filter row
+  const addFilterRow = () => setFilterRows(prev => [...prev, { type: 'codes', value: '', api: '' }]);
+
+  // Update a filter row
+  const updateFilterRow = (idx: number, patch: Partial<FilterRow>) =>
+    setFilterRows(prev => prev.map((r, i) => i === idx ? { ...r, ...patch } : r));
+
+  // Remove a filter row
+  const removeFilterRow = (idx: number) => setFilterRows(prev => prev.filter((_, i) => i !== idx));
+
+  // Save all filter rows for current month
+  const handleSaveFilters = async () => {
+    if (!client || filterRows.length === 0) return;
+    setFilterSaving(true);
+    const month = panelMonth || 'default';
+
+    // Group rows by API scope
+    const byApi: Record<string, { discount?: number; codes?: string[]; kibana_exclude?: string[]; kibana_include?: string[] }> = {};
+    filterRows.forEach(row => {
+      if (!row.value.trim()) return;
+      const apiKey = row.api?.trim() || '__client__'; // __client__ = applies to whole client
+      if (!byApi[apiKey]) byApi[apiKey] = {};
+      const vals = row.value.split(',').map(s => s.trim()).filter(Boolean);
+      switch (row.type) {
+        case 'discount': byApi[apiKey].discount = parseFloat(row.value) || 0; break;
+        case 'codes': byApi[apiKey].codes = vals; break;
+        case 'kibana_exclude': byApi[apiKey].kibana_exclude = vals; break;
+        case 'kibana_include': byApi[apiKey].kibana_include = vals; break;
+      }
+    });
+
+    const updated = { ...clientFilters, [month]: { ...(clientFilters[month] || {}), ...byApi } };
+
+    try {
+      const res = await fetch('/api/client-overrides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: client.client_id,
+          client_name: client.client_name,
+          billable_filter: updated,
+        }),
+      });
+      if (res.ok) {
+        setClientFilters(updated);
+        setFilterRows([]);
+        showToast('success', `Filters saved for ${month}`);
+      } else {
+        showToast('error', 'Failed to save filters');
+      }
+    } catch {
+      showToast('error', 'Error saving filters');
+    } finally {
+      setFilterSaving(false);
+    }
+  };
+
+  // Delete a specific API's filters for a month
+  const handleDeleteFilter = async (month: string, apiKey: string) => {
+    if (!client) return;
+    const updated = { ...clientFilters };
+    if (updated[month]) {
+      const monthCopy = { ...updated[month] };
+      delete monthCopy[apiKey];
+      if (Object.keys(monthCopy).length === 0) {
+        delete updated[month];
+      } else {
+        updated[month] = monthCopy;
+      }
+    }
+    setFilterSaving(true);
+    try {
+      const res = await fetch('/api/client-overrides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: client.client_id, client_name: client.client_name, billable_filter: updated }),
+      });
+      if (res.ok) {
+        setClientFilters(updated);
+        showToast('success', 'Filter removed');
+      }
+    } catch {
+      showToast('error', 'Error removing filter');
+    } finally {
+      setFilterSaving(false);
+    }
+  };
+
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: Building2 },
     { id: 'apis' as const, label: 'APIs', icon: Activity },
+    { id: 'filters' as const, label: 'Filters', icon: Filter },
     { id: 'notes' as const, label: 'Notes', icon: StickyNote },
     { id: 'revenue' as const, label: 'Revenue', icon: TrendingUp },
-    { id: 'legal' as const, label: 'Legal', icon: CreditCard },
   ];
 
   const handleIndustryChange = (value: string) => {
@@ -3593,6 +3774,203 @@ function ClientDetailsPanel({
             </div>
           )}
 
+          {/* Filters Tab */}
+          {activeTab === 'filters' && (() => {
+            // Resolve effective filters: month-specific merged over defaults
+            const defaults = clientFilters['default'] || {};
+            const monthSpecific = panelMonth && clientFilters[panelMonth] ? clientFilters[panelMonth] : {};
+            const effective: Record<string, { discount?: number; codes?: string[]; kibana_exclude?: string[]; kibana_include?: string[] }> = {};
+            // Merge: defaults first, month-specific overwrites
+            for (const [k, v] of Object.entries(defaults)) effective[k] = { ...v };
+            for (const [k, v] of Object.entries(monthSpecific)) effective[k] = { ...(effective[k] || {}), ...v };
+            const hasAnyFilter = Object.keys(effective).length > 0;
+            const hasMonthOverride = panelMonth && Object.keys(monthSpecific).length > 0;
+
+            const FilterBadge = ({ label, color, onRemove }: { label: string; color: 'amber' | 'emerald' | 'rose' | 'blue'; onRemove?: () => void }) => {
+              const colors = {
+                amber: 'bg-amber-50 text-amber-700 border-amber-200',
+                emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                rose: 'bg-rose-50 text-rose-600 border-rose-200',
+                blue: 'bg-blue-50 text-blue-600 border-blue-200',
+              };
+              return (
+                <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border font-medium ${colors[color]}`}>
+                  {label}
+                  {onRemove && <button onClick={onRemove} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>}
+                </span>
+              );
+            };
+
+            return (
+            <div className="space-y-5">
+              {/* Effective filters — what actually applies */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="text-[13px] font-semibold text-slate-800">Active Billing Filters</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {hasMonthOverride ? (
+                        <><span className="text-amber-600 font-medium">{panelMonth}</span> overrides applied</>
+                      ) : hasAnyFilter ? (
+                        <>Default filters (apply to all months)</>
+                      ) : (
+                        <>No filters — all status codes billed</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {hasAnyFilter ? (
+                  <div className="space-y-2">
+                    {Object.entries(effective).map(([apiKey, f]) => (
+                      <div key={apiKey} className="bg-white border border-slate-200 rounded-lg p-3">
+                        <div className="text-[12px] font-semibold text-slate-700 mb-2">
+                          {apiKey === '__client__' ? 'All APIs (Client Level)' : apiKey}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {f.discount !== undefined && f.discount > 0 && <FilterBadge label={`Discount ${f.discount}%`} color="amber" />}
+                          {f.codes?.map(c => <FilterBadge key={c} label={`Code ${c}`} color="emerald" />)}
+                          {f.kibana_exclude?.map(e => <FilterBadge key={e} label={`Exclude: ${e}`} color="rose" />)}
+                          {f.kibana_include?.map(e => <FilterBadge key={e} label={`Include: ${e}`} color="blue" />)}
+                          {!f.discount && !f.codes?.length && !f.kibana_exclude?.length && !f.kibana_include?.length && (
+                            <span className="text-[11px] text-slate-400">No rules</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 border border-dashed border-slate-200 rounded-lg py-6 text-center">
+                    <p className="text-[12px] text-slate-400">All status codes billed at full price</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Add / Edit section */}
+              <div className="border-t border-slate-100 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-[13px] font-semibold text-slate-800">
+                    {filterRows.length > 0 ? 'New Filters' : 'Add Filters'}
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400">
+                      Saving to: <span className="font-semibold text-slate-600">{panelMonth || 'default'}</span>
+                    </span>
+                    <button
+                      onClick={addFilterRow}
+                      className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700 cursor-pointer"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </div>
+
+                {filterRows.length > 0 ? (
+                  <div className="space-y-2">
+                    {filterRows.map((row, idx) => (
+                      <div key={idx} className="grid grid-cols-[130px_1fr_110px_28px] gap-2 items-center">
+                        <select
+                          value={row.type}
+                          onChange={e => updateFilterRow(idx, { type: e.target.value as FilterRow['type'] })}
+                          className="text-[12px] border border-slate-200 rounded-md px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                        >
+                          <option value="codes">Status Codes</option>
+                          <option value="discount">Discount %</option>
+                          <option value="kibana_exclude">Kibana Exclude</option>
+                          <option value="kibana_include">Kibana Include</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={row.value}
+                          onChange={e => updateFilterRow(idx, { value: e.target.value })}
+                          placeholder={
+                            row.type === 'discount' ? 'e.g. 15' :
+                            row.type === 'codes' ? 'e.g. 200, 400, 422' :
+                            'e.g. internal_test, staging'
+                          }
+                          className="text-[12px] border border-slate-200 rounded-md px-2.5 py-2 bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                        />
+                        <select
+                          value={row.api || ''}
+                          onChange={e => updateFilterRow(idx, { api: e.target.value })}
+                          className="text-[12px] border border-slate-200 rounded-md px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                        >
+                          <option value="">All APIs</option>
+                          {(() => {
+                            const clientApiNames = new Set((currentMonthData?.apis || []).map(a => a.name).filter(Boolean));
+                            const allNames = new Set([...clientApiNames, ...masterAPINames]);
+                            return Array.from(allNames).sort().map(name => (
+                              <option key={name} value={name}>
+                                {name}{clientApiNames.has(name) ? '' : ' (catalog)'}
+                              </option>
+                            ));
+                          })()}
+                        </select>
+                        <button onClick={() => removeFilterRow(idx)} className="p-1.5 rounded-md hover:bg-slate-100 cursor-pointer">
+                          <X size={14} className="text-slate-400" />
+                        </button>
+                      </div>
+                    ))}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={handleSaveFilters}
+                        disabled={filterSaving || filterRows.every(r => !r.value.trim())}
+                        className="flex-1 py-2 text-[12px] font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-40 cursor-pointer"
+                      >
+                        {filterSaving ? 'Saving...' : 'Save Filters'}
+                      </button>
+                      <button
+                        onClick={() => setFilterRows([])}
+                        className="px-4 py-2 text-[12px] font-medium text-slate-500 bg-slate-100 rounded-md hover:bg-slate-200 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-400">Click <strong>+ Add</strong> to create discount, status code, or kibana filters.</p>
+                )}
+              </div>
+
+              {/* Raw config — collapsible */}
+              {Object.keys(clientFilters).length > 0 && (
+                <details className="border-t border-slate-100 pt-3">
+                  <summary className="text-[11px] text-slate-400 cursor-pointer hover:text-slate-600">All saved filters by month</summary>
+                  <div className="mt-2 space-y-2">
+                    {Object.entries(clientFilters).map(([month, apiFilters]) => (
+                      <div key={month} className="bg-slate-50 rounded-lg p-3">
+                        <div className="text-[11px] font-bold text-slate-600 uppercase mb-1.5 flex items-center justify-between">
+                          {month}
+                          {month === 'default' && <span className="text-[9px] font-normal text-slate-400 normal-case">Applies to all months unless overridden</span>}
+                        </div>
+                        {Object.entries(apiFilters).map(([apiKey, f]) => (
+                          <div key={apiKey} className="flex items-center justify-between py-1.5 border-t border-slate-100 first:border-t-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[11px] font-medium text-slate-600 min-w-[80px]">{apiKey === '__client__' ? 'All APIs' : apiKey}</span>
+                              <div className="flex flex-wrap gap-1">
+                                {f.discount ? <FilterBadge label={`${f.discount}%`} color="amber" /> : null}
+                                {f.codes?.map(c => <FilterBadge key={c} label={c} color="emerald" />)}
+                                {f.kibana_exclude?.map(e => <FilterBadge key={e} label={`-${e}`} color="rose" />)}
+                                {f.kibana_include?.map(e => <FilterBadge key={e} label={`+${e}`} color="blue" />)}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteFilter(month, apiKey)}
+                              className="p-1 rounded hover:bg-slate-200 cursor-pointer shrink-0"
+                            >
+                              <Trash2 size={11} className="text-slate-400" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
+            );
+          })()}
+
           {/* Notes Tab */}
           {activeTab === 'notes' && (
             <ClientNotesTab clientName={client.client_name} currentUser="admin" />
@@ -3614,19 +3992,6 @@ function ClientDetailsPanel({
               {!client.monthly_data?.length && (
                 <div className="text-sm text-slate-400 text-center py-8">No revenue data available</div>
               )}
-            </div>
-          )}
-
-          {/* Legal Tab */}
-          {activeTab === 'legal' && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                <CreditCard size={28} className="text-slate-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-700 mb-2">Coming Soon</h3>
-              <p className="text-sm text-slate-500 max-w-xs">
-                Contract details, MSA status, payment terms, and compliance information will appear here.
-              </p>
             </div>
           )}
         </div>

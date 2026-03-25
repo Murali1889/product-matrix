@@ -1,14 +1,27 @@
 /**
  * Client Data Loader
- * Loads and transforms data from complete_client_data.json
+ * Loads and transforms data from Google Sheets API
  * Maps billing data to the matrix format expected by the dashboard
+ *
+ * DATA SOURCE: Google Sheets API (replaces local JSON files)
+ * OVERRIDES: Supabase (client_overrides, client_api_overrides)
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
+import {
+  fetchClients,
+  fetchProducts,
+  fetchUsage,
+  getLastCompletedMonth,
+  getAvailableMonths,
+  formatMonthDisplay,
+  type GSClient,
+  type GSUsage,
+  type GSProduct,
+} from './google-sheets-api';
 
 // ============== TYPES ==============
 
+// Keep for backward compatibility with existing imports
 export interface UsageRow {
   moduleName: string;
   unit: string;
@@ -19,7 +32,7 @@ export interface UsageRow {
 }
 
 export interface BillingPeriod {
-  period: string; // "Jan 2026", "Dec 2025", etc.
+  period: string;
   data: {
     appId: Record<string, { usageRows: UsageRow[]; totalCost: number }>;
     buid: Record<string, Record<string, { usageRows: UsageRow[]; totalCost: number }>>;
@@ -68,7 +81,6 @@ export interface CompleteClientDataFile {
   data: RawClientData[];
 }
 
-// Client master list entry (from clients.json)
 export interface ClientMasterEntry {
   id: number;
   name: string;
@@ -101,7 +113,7 @@ export interface APIUsage {
 }
 
 export interface MonthlyData {
-  month: string;          // "Jan 2026"
+  month: string;          // "Feb 2026"
   total_revenue_usd: number;
   hv_api_revenue_usd: number;
   other_revenue_usd: number;
@@ -128,391 +140,357 @@ export interface TransformedClient {
     billing_start_month?: string;
     zoho_name?: string;
     business_units?: string[];
+    // New fields from Google Sheets API
+    invoice_type?: string;
+    trial_expires?: string;
+    buid_count?: number;
+    app_id_count?: number;
+    prod_app_id_count?: number;
   };
   monthly_data: MonthlyData[];
-  // Aggregated data
   totalRevenue: number;
   latestRevenue: number;
   latestMonth: string;
-  apiRevenues: Record<string, number>; // API name -> total revenue across all months
+  apiRevenues: Record<string, number>;
   // Status flags
-  isInMasterList: boolean;  // Is this client in clients.json?
-  hasJan2026Data: boolean;  // Does client have Jan 2026 billing data?
-  isActive: boolean;        // In master list AND has Jan 2026 data
+  isInMasterList: boolean;   // Client has status 'live' in API
+  hasJan2026Data: boolean;   // Has data in the latest fetched month (backward compat field name)
+  isActive: boolean;         // isInMasterList AND has latest month data
 }
 
 export interface MatrixData {
   clients: TransformedClient[];
-  apis: string[];           // Unique API names found in data
-  months: string[];         // Available months
+  apis: string[];
+  months: string[];          // Display format: "Feb 2026", "Jan 2026", ...
+  availableMonths: string[]; // All selectable months in YYYY-MM format
   extractedAt: string;
   totalClients: number;
 }
 
-// ============== CONSTANTS ==============
-
-// Keep values in INR (no conversion) - display currency is INR
-const INR_TO_USD = 1;
-
-// SINGLE SOURCE OF TRUTH - Primary data files
-// Using path.join to work in both dev and production
-const DATA_FILE_PATH = path.join(process.cwd(), 'data', 'complete_client_data_1770268082596.json');
-const CLIENT_MASTER_PATH = path.join(process.cwd(), 'data', 'clients.json');
-
-// ============== LOADER FUNCTIONS ==============
-
-let cachedData: CompleteClientDataFile | null = null;
-let cacheTimestamp: number = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// ============== HELPERS ==============
 
 /**
- * Load raw data from complete_client_data.json
- * SINGLE SOURCE OF TRUTH - uses only one file
+ * Create API name from module + sub-module
  */
-export async function loadRawClientData(): Promise<CompleteClientDataFile> {
-  const now = Date.now();
-
-  // Return cached data if fresh
-  if (cachedData && (now - cacheTimestamp) < CACHE_TTL) {
-    return cachedData;
-  }
-
-  try {
-    const content = await fs.readFile(DATA_FILE_PATH, 'utf-8');
-    const data = JSON.parse(content) as CompleteClientDataFile;
-    console.log(`[ClientDataLoader] Loaded ${data.totalClients} clients from: ${DATA_FILE_PATH}`);
-
-    cachedData = data;
-    cacheTimestamp = now;
-    return data;
-  } catch (e) {
-    console.error(`[ClientDataLoader] Failed to load data from: ${DATA_FILE_PATH}`, e);
-    throw new Error(`Could not load client data from ${DATA_FILE_PATH}`);
-  }
-}
-
-// Cache for client master list
-let cachedClientMaster: ClientMasterFile | null = null;
-let clientMasterCacheTimestamp: number = 0;
-
-/**
- * Load client master list from clients.json
- * This defines the canonical list of all clients and their order
- */
-export async function loadClientMaster(): Promise<ClientMasterFile> {
-  const now = Date.now();
-
-  // Return cached data if fresh
-  if (cachedClientMaster && (now - clientMasterCacheTimestamp) < CACHE_TTL) {
-    return cachedClientMaster;
-  }
-
-  try {
-    const content = await fs.readFile(CLIENT_MASTER_PATH, 'utf-8');
-    const data = JSON.parse(content) as ClientMasterFile;
-    console.log(`[ClientDataLoader] Loaded ${data.clients.length} clients from master: ${CLIENT_MASTER_PATH}`);
-
-    cachedClientMaster = data;
-    clientMasterCacheTimestamp = now;
-    return data;
-  } catch (e) {
-    console.warn(`[ClientDataLoader] Could not load client master from ${CLIENT_MASTER_PATH}:`, e);
-    return { clients: [] };
-  }
-}
-
-/**
- * Extract production appIds from businessUnits credentialList
- */
-function getProductionAppIds(businessUnits: RawClientData['clientDetails']['businessUnits']): Set<string> {
-  const productionAppIds = new Set<string>();
-  if (!businessUnits) return productionAppIds;
-
-  for (const bu of Object.values(businessUnits)) {
-    if (bu.credentialList) {
-      for (const cred of bu.credentialList) {
-        if (cred.type === 'PRODUCTION' && cred.appId) {
-          productionAppIds.add(cred.appId);
-        }
-      }
-    }
-  }
-
-  return productionAppIds;
-}
-
-/**
- * Consolidate usage rows for a specific set of appIds in a billing period.
- * If allowedAppIds is empty, includes all appIds (safety fallback).
- */
-function consolidateUsageRows(billingData: BillingPeriod['data'] | undefined, allowedAppIds: Set<string>): UsageRow[] {
-  if (!billingData) return [];
-
-  const consolidated: Map<string, UsageRow> = new Map();
-
-  if (billingData.appId) {
-    const shouldFilter = allowedAppIds.size > 0;
-
-    Object.entries(billingData.appId).forEach(([appId, app]) => {
-      if (shouldFilter && !allowedAppIds.has(appId)) return;
-
-      app?.usageRows?.forEach(row => {
-        const key = `${row.moduleName}|${row.unit}`;
-        const existing = consolidated.get(key);
-        if (existing) {
-          existing.success += row.success || 0;
-          existing.total += row.total || 0;
-          existing.cost = (existing.cost || 0) + (row.cost || 0);
-        } else {
-          consolidated.set(key, { ...row, cost: row.cost || 0 });
-        }
-      });
-    });
-  }
-
-  return Array.from(consolidated.values());
-}
-
-/**
- * Get staging appIds: all appIds in billing data that are NOT in the production set
- */
-function getStagingAppIds(billingData: BillingPeriod['data'] | undefined, productionAppIds: Set<string>): Set<string> {
-  const stagingAppIds = new Set<string>();
-  if (!billingData?.appId || productionAppIds.size === 0) return stagingAppIds;
-
-  for (const appId of Object.keys(billingData.appId)) {
-    if (!productionAppIds.has(appId)) {
-      stagingAppIds.add(appId);
-    }
-  }
-
-  return stagingAppIds;
-}
-
-/**
- * Convert currency to USD
- */
-function toUSD(amount: number | null, currency: string): number {
-  if (amount === null || amount === undefined) return 0;
-  if (currency === 'USD') return amount;
-  if (currency === 'INR') return amount * INR_TO_USD;
-  return amount; // Default to assuming USD
-}
-
-/**
- * Create API name from module + unit
- */
-function createAPIName(moduleName: string, unit: string): string {
-  if (!unit || unit === '-' || unit === moduleName) {
+function createAPIName(moduleName: string, subModule: string): string {
+  if (!subModule || subModule === '-' || subModule === moduleName) {
     return moduleName;
   }
-  return `${moduleName} - ${unit}`;
+  return `${moduleName} - ${subModule}`;
 }
 
 /**
- * Infer segment from industry
+ * Exact mapping for API industry values
  */
-function inferSegment(industry: string[]): string {
-  if (!industry || industry.length === 0) return 'Unknown';
+const INDUSTRY_TO_SEGMENT: Record<string, string> = {
+  'traditional_nbfc': 'NBFC',
+  'nbfc': 'NBFC',
+  'digital_lender': 'Digital Lender',
+  'digitallender': 'Digital Lender',
+  'banking': 'Banking',
+  'bank': 'Banking',
+  'insurance': 'Insurance',
+  'securities_and_brokerage': 'Brokerage',
+  'securities': 'Brokerage',
+  'brokerage': 'Brokerage',
+  'wallet': 'Payment Service Provider',
+  'payment': 'Payment Service Provider',
+  'crypto': 'Crypto/Web3',
+  'gaming': 'Gaming',
+  'fantasy': 'Gaming',
+  'ecommerce': 'E-commerce',
+  'retail': 'E-commerce',
+  'mutual_funds': 'Wealth Management',
+  'wealth': 'Wealth Management',
+  'asset': 'Wealth Management',
+  'tech': 'Tech',
+  'fintech': 'Fintech',
+  'government': 'Government',
+  'channel_partner': 'Channel Partner',
+  'healthcare': 'Healthcare',
+  'health': 'Healthcare',
+  'medical': 'Healthcare',
+  'telecom': 'Telecom',
+  'logistics': 'Logistics',
+  'delivery': 'Logistics',
+  'gig': 'Gig Economy',
+  'hr': 'HR/Staffing',
+  'staffing': 'HR/Staffing',
+  'edtech': 'EdTech',
+  'travel': 'Travel',
+  'real_estate': 'Real Estate',
+};
 
-  const ind = industry[0].toLowerCase();
+/**
+ * Infer segment from industry string.
+ * Handles exact API values (traditional_NBFC, digital_lender, etc.)
+ * and comma-separated multi-values.
+ * "any" = unknown (no classification from API).
+ */
+function inferSegment(industry: string): string {
+  if (!industry || industry === 'any') return 'Other';
 
-  if (ind.includes('nbfc') || ind.includes('lending')) return 'NBFC';
-  if (ind.includes('bank')) return 'Banking';
-  if (ind.includes('insurance')) return 'Insurance';
-  if (ind.includes('broker') || ind.includes('stock') || ind.includes('trading')) return 'Brokerage';
-  if (ind.includes('payment') || ind.includes('wallet')) return 'Payment Service Provider';
-  if (ind.includes('gig') || ind.includes('delivery') || ind.includes('logistics')) return 'Gig Economy';
-  if (ind.includes('gaming') || ind.includes('fantasy')) return 'Gaming';
-  if (ind.includes('ecommerce') || ind.includes('retail')) return 'E-commerce';
-  if (ind.includes('wealth') || ind.includes('asset')) return 'Wealth Management';
-  if (ind.includes('health') || ind.includes('medical')) return 'Healthcare';
-  if (ind.includes('telecom')) return 'Telecom';
-  if (ind === 'any' || ind === 'fintech') return 'Fintech';
+  // Handle comma-separated (e.g. "wallet,digitalLender,securities")
+  const parts = industry.split(',').map(s => s.trim().toLowerCase());
+
+  for (const part of parts) {
+    // Exact match first
+    const exact = INDUSTRY_TO_SEGMENT[part];
+    if (exact) return exact;
+
+    // Fuzzy match
+    for (const [key, segment] of Object.entries(INDUSTRY_TO_SEGMENT)) {
+      if (part.includes(key) || key.includes(part)) return segment;
+    }
+  }
 
   return 'Other';
 }
 
 /**
- * Transform raw client data to dashboard format
- */
-export function transformClientData(raw: RawClientData): TransformedClient {
-  const { clientName, clientId, clientDetails, billing } = raw;
-  const company = clientDetails.companyDetails;
-
-  // Extract production appIds from credential lists
-  const productionAppIds = getProductionAppIds(clientDetails.businessUnits);
-
-  // Transform monthly data
-  const monthlyData: MonthlyData[] = billing.map(period => {
-    const billingCurrency = company.billingCurrency || 'INR';
-
-    // Helper to convert usage rows to APIUsage objects
-    const toApiUsage = (rows: UsageRow[], env: 'production' | 'staging'): APIUsage[] =>
-      rows
-        .filter(row => (row.cost !== null && row.cost > 0) || row.total > 0 || row.success > 0)
-        .map(row => ({
-          name: createAPIName(row.moduleName, row.unit),
-          moduleName: row.moduleName,
-          subModule: row.unit === '-' ? '' : row.unit,
-          revenue_usd: toUSD(row.cost, billingCurrency),
-          usage: row.total,
-          success: row.success,
-          currency: billingCurrency,
-          environment: env,
-        }));
-
-    // Production APIs
-    const productionRows = consolidateUsageRows(period.data, productionAppIds);
-    const productionApis = toApiUsage(productionRows, 'production');
-
-    // Staging APIs (all appIds not in production set)
-    const stagingAppIds = getStagingAppIds(period.data, productionAppIds);
-    const stagingRows = consolidateUsageRows(period.data, stagingAppIds);
-    const stagingApis = toApiUsage(stagingRows, 'staging');
-
-    // Combine: production first, then staging
-    const apis: APIUsage[] = [...productionApis, ...stagingApis];
-
-    // Revenue = sum of PRODUCTION API costs only
-    const total_revenue_usd = productionApis.reduce((sum, api) => sum + api.revenue_usd, 0);
-
-    return {
-      month: period.period,
-      total_revenue_usd,
-      hv_api_revenue_usd: total_revenue_usd,
-      other_revenue_usd: 0,
-      apis,
-    };
-  });
-
-  // Calculate aggregates
-  const totalRevenue = monthlyData.reduce((sum, m) => sum + m.total_revenue_usd, 0);
-  const latestMonth = monthlyData[0]?.month || '';
-  const latestRevenue = monthlyData[0]?.total_revenue_usd || 0;
-
-  // Calculate API totals across all months
-  const apiRevenues: Record<string, number> = {};
-  monthlyData.forEach(m => {
-    m.apis.forEach(api => {
-      apiRevenues[api.name] = (apiRevenues[api.name] || 0) + api.revenue_usd;
-    });
-  });
-
-  // Check if has Jan 2026 data
-  const hasJan2026Data = monthlyData.some(m => m.month === 'Jan 2026');
-
-  return {
-    client_name: clientName,
-    client_id: clientId,
-    profile: {
-      legal_name: company.name,
-      geography: (company.geography || ['Unknown'])[0],
-      segment: inferSegment(company.industry || []),
-      industry: (company.industry || ['Unknown'])[0],
-      status: company.operationalStatus || 'unknown',
-      account_owner: company.accountOwner,
-      billing_currency: company.billingCurrency || 'INR',
-      client_type: company.clientType,
-      billing_type: company.billingType,
-      domain_list: company.domainList,
-      go_live_date: company.goLiveDate || company.billing?.startMonth,
-      billing_start_month: company.billing?.startMonth,
-      zoho_name: Object.values(clientDetails.businessUnits || {})[0]?.zohoName,
-      business_units: Object.values(clientDetails.businessUnits || {}).map(bu => bu.name).filter(Boolean),
-    },
-    monthly_data: monthlyData,
-    totalRevenue,
-    latestRevenue,
-    latestMonth,
-    apiRevenues,
-    // Default values - will be set properly in loadMatrixData
-    isInMasterList: false,
-    hasJan2026Data,
-    isActive: false,
-  };
-}
-
-/**
- * Normalize name for matching (lowercase, remove punctuation, trim)
+ * Normalize name for matching
  */
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 }
 
 /**
- * Load and transform all client data for the matrix view
- * Merges billing data with client master list to show all clients
+ * Build client profile from GSClient data
  */
-export async function loadMatrixData(): Promise<MatrixData> {
-  const [raw, clientMaster] = await Promise.all([
-    loadRawClientData(),
-    loadClientMaster()
+function buildProfile(client: GSClient | undefined): TransformedClient['profile'] {
+  if (!client) {
+    return {
+      geography: 'Unknown',
+      segment: 'Unknown',
+      industry: 'Unknown',
+      status: 'unknown',
+      billing_currency: 'INR',
+    };
+  }
+
+  return {
+    legal_name: client['Client Name'],
+    geography: client['Country'] || 'Unknown',
+    segment: inferSegment(client['Industry'] || ''),
+    industry: client['Industry'] || 'Unknown',
+    status: client['Status'] || 'unknown',
+    account_owner: client['Account Owner'],
+    billing_currency: client['Currency'] || 'INR',
+    client_type: client['Type'],
+    billing_type: client['Billing Type'],
+    domain_list: client['Domains'] ? client['Domains'].split(',').map(d => d.trim()).filter(Boolean) : [],
+    go_live_date: client['Created At'],
+    invoice_type: client['Invoice Type'],
+    trial_expires: client['Trial Expires'],
+    buid_count: client['BUIDs'],
+    app_id_count: client['App IDs'],
+    prod_app_id_count: client['PROD App IDs'],
+  };
+}
+
+// ============== CACHING ==============
+
+const matrixCache = new Map<string, { data: MatrixData; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// ============== MAIN DATA LOADER ==============
+
+/**
+ * Load and transform all client data for the matrix view
+ *
+ * @param month Single month in YYYY-MM format (e.g., '2026-02').
+ *   Defaults to last completed month.
+ */
+export async function loadMatrixData(month?: string): Promise<MatrixData> {
+  const selectedMonth = month || getLastCompletedMonth();
+  const months = [selectedMonth];
+  const cacheKey = selectedMonth;
+
+  // Check cache
+  const cached = matrixCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    console.log(`[ClientDataLoader] Cache hit for months: ${cacheKey}`);
+    return cached.data;
+  }
+
+  console.log(`[ClientDataLoader] Loading data for months: ${months.join(', ')}`);
+
+  // Fetch clients and usage in parallel
+  // Live clients = "master list", usage data may include non-live clients
+  const [liveClients, ...usageByMonth] = await Promise.all([
+    fetchClients('live'),
+    ...months.map(m => fetchUsage(m)),
   ]);
 
-  // Transform all clients from billing data
-  const billingClients = raw.data.map(transformClientData);
-
-  // Create a map of normalized names to billing clients for matching
-  const billingClientMap = new Map<string, TransformedClient>();
-  billingClients.forEach(c => {
-    billingClientMap.set(normalizeName(c.client_name), c);
-    // Also add by client_id for better matching
-    if (c.client_id) {
-      billingClientMap.set(normalizeName(c.client_id), c);
+  // Build client lookup from live clients (deduplicate, exclude internal)
+  const clientMap = new Map<string, GSClient>();
+  liveClients.forEach(c => {
+    if (c['Client ID'] && !clientMap.has(c['Client ID']) && c['Type'] !== 'internal') {
+      clientMap.set(c['Client ID'], c);
     }
   });
+  console.log(`[ClientDataLoader] ${liveClients.length} raw clients → ${clientMap.size} unique clients`);
 
-  // Create client order map from master list
-  const masterClientOrder = new Map<string, number>();
-  clientMaster.clients.forEach((c, idx) => {
-    masterClientOrder.set(normalizeName(c.name), idx);
-    masterClientOrder.set(normalizeName(c.clientId), idx);
+  // Determine the latest month for "active" status
+  const latestMonthYYYYMM = [...months].sort().reverse()[0];
+  const latestMonthDisplay = formatMonthDisplay(latestMonthYYYYMM);
+
+  // Group usage by Client ID → month → rows
+  const usageByClientMonth = new Map<string, Map<string, GSUsage[]>>();
+
+  months.forEach((month, idx) => {
+    const displayMonth = formatMonthDisplay(month);
+    const usageRows = usageByMonth[idx];
+
+    if (!usageRows || !Array.isArray(usageRows)) {
+      console.warn(`[ClientDataLoader] No usage data for ${month}`);
+      return;
+    }
+
+    usageRows.forEach(row => {
+      const clientId = row['Client ID'];
+      if (!clientId) return;
+
+      if (!usageByClientMonth.has(clientId)) {
+        usageByClientMonth.set(clientId, new Map());
+      }
+      const monthMap = usageByClientMonth.get(clientId)!;
+      if (!monthMap.has(displayMonth)) {
+        monthMap.set(displayMonth, []);
+      }
+      monthMap.get(displayMonth)!.push(row);
+    });
   });
 
-  // Helper to check if client has Jan 2026 data
-  const hasJan2026 = (client: TransformedClient): boolean => {
-    return client.monthly_data.some(m => m.month === 'Jan 2026');
-  };
+  // Build TransformedClient for each client
+  const transformedClients: TransformedClient[] = [];
+  const allAPIs = new Set<string>();
+  const processedClientIds = new Set<string>();
 
-  // Merge: use master list as base, enrich with billing data
-  const mergedClients: TransformedClient[] = [];
-  const addedClientIds = new Set<string>();
+  // Process clients that have usage data
+  usageByClientMonth.forEach((monthMap, clientId) => {
+    processedClientIds.add(clientId);
+    const clientInfo = clientMap.get(clientId);
+    const isLive = clientInfo !== undefined;
 
-  // First, add all clients from master list (preserving order)
-  clientMaster.clients.forEach(masterClient => {
-    const normalizedName = normalizeName(masterClient.name);
-    const normalizedId = normalizeName(masterClient.clientId);
+    // Also check the usage row for client info if not in live list
+    let clientName = clientInfo?.['Client Name'] || clientId;
+    let currency = clientInfo?.['Currency'] || 'INR';
 
-    // Try to find matching billing client
-    const billingClient = billingClientMap.get(normalizedName) || billingClientMap.get(normalizedId);
+    // Build monthly data
+    const monthlyData: MonthlyData[] = [];
+    const apiRevenues: Record<string, number> = {};
 
-    if (billingClient) {
-      // Client has billing data - use enriched version
-      const hasJan26 = hasJan2026(billingClient);
-      mergedClients.push({
-        ...billingClient,
-        client_name: masterClient.name, // Use master list name for consistency
-        isInMasterList: true,
-        hasJan2026Data: hasJan26,
-        isActive: hasJan26, // Active = in master list AND has Jan 2026 data
-      });
-      addedClientIds.add(normalizeName(billingClient.client_name));
-      if (billingClient.client_id) {
-        addedClientIds.add(normalizeName(billingClient.client_id));
+    // Sort months newest first
+    const sortedDisplayMonths = Array.from(monthMap.keys()).sort((a, b) => {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const parseM = (m: string) => {
+        const [mon, year] = m.split(' ');
+        return parseInt(year) * 12 + monthNames.indexOf(mon);
+      };
+      return parseM(b) - parseM(a);
+    });
+
+    sortedDisplayMonths.forEach(month => {
+      const rows = monthMap.get(month)!;
+
+      // Get client name from usage rows if needed
+      if (!clientInfo && rows.length > 0) {
+        clientName = rows[0]['Client Name'] || clientId;
+        currency = 'INR'; // Default for non-live clients
       }
-    } else {
-      // Client in master list but no billing data - add empty entry
-      mergedClients.push({
-        client_name: masterClient.name,
-        client_id: masterClient.clientId,
-        profile: {
-          geography: 'Unknown',
-          segment: 'Unknown',
-          industry: 'Unknown',
-          status: 'unknown',
-          billing_currency: 'INR',
-        },
+
+      // Consolidate rows by Module Name + Sub-Module
+      const consolidated = new Map<string, {
+        usage: number;
+        billable: number;
+        cost: number;
+        unitPrice: number;
+        moduleName: string;
+        subModule: string;
+      }>();
+
+      rows.forEach(row => {
+        const modName = row['Module Name'] || '';
+        const subMod = row['Sub-Module'] || '';
+        const key = `${modName}|${subMod}`;
+        const existing = consolidated.get(key);
+
+        if (existing) {
+          existing.usage += row['Total Count'] || 0;
+          existing.billable += row['Billable Count'] || 0;
+          existing.cost += row['Effective Cost'] || 0;
+        } else {
+          consolidated.set(key, {
+            usage: row['Total Count'] || 0,
+            billable: row['Billable Count'] || 0,
+            cost: row['Effective Cost'] || 0,
+            unitPrice: row['Unit Price'] || 0,
+            moduleName: modName,
+            subModule: subMod,
+          });
+        }
+      });
+
+      // Build API usage list
+      const apis: APIUsage[] = [];
+      consolidated.forEach((data) => {
+        if (data.cost <= 0 && data.usage <= 0 && data.billable <= 0) return;
+
+        const apiName = createAPIName(data.moduleName, data.subModule);
+        allAPIs.add(apiName);
+
+        apis.push({
+          name: apiName,
+          moduleName: data.moduleName,
+          subModule: data.subModule === '-' ? '' : data.subModule,
+          revenue_usd: data.cost,
+          usage: data.usage,
+          success: data.billable,
+          currency,
+          environment: 'production',
+        });
+
+        apiRevenues[apiName] = (apiRevenues[apiName] || 0) + data.cost;
+      });
+
+      const totalRevenue = apis.reduce((sum, a) => sum + a.revenue_usd, 0);
+
+      monthlyData.push({
+        month,
+        total_revenue_usd: totalRevenue,
+        hv_api_revenue_usd: totalRevenue,
+        other_revenue_usd: 0,
+        apis,
+      });
+    });
+
+    const totalRevenue = monthlyData.reduce((sum, m) => sum + m.total_revenue_usd, 0);
+    const hasLatestMonth = monthlyData.some(m => m.month === latestMonthDisplay && m.total_revenue_usd > 0);
+
+    transformedClients.push({
+      client_name: clientName,
+      client_id: clientId,
+      profile: buildProfile(clientInfo),
+      monthly_data: monthlyData,
+      totalRevenue,
+      latestRevenue: monthlyData[0]?.total_revenue_usd || 0,
+      latestMonth: monthlyData[0]?.month || '',
+      apiRevenues,
+      isInMasterList: isLive,
+      hasJan2026Data: hasLatestMonth, // Backward compat: "has latest month data"
+      isActive: isLive && hasLatestMonth,
+    });
+  });
+
+  // Add live clients without usage data (0 revenue placeholders)
+  liveClients.forEach(c => {
+    const clientId = c['Client ID'];
+    if (!processedClientIds.has(clientId)) {
+      transformedClients.push({
+        client_name: c['Client Name'],
+        client_id: clientId,
+        profile: buildProfile(c),
         monthly_data: [],
         totalRevenue: 0,
         latestRevenue: 0,
@@ -525,254 +503,134 @@ export async function loadMatrixData(): Promise<MatrixData> {
     }
   });
 
-  // Then add any billing clients not in master list
-  billingClients.forEach(c => {
-    const normalizedName = normalizeName(c.client_name);
-    const normalizedId = c.client_id ? normalizeName(c.client_id) : '';
-    if (!addedClientIds.has(normalizedName) && !addedClientIds.has(normalizedId)) {
-      const hasJan26 = hasJan2026(c);
-      mergedClients.push({
-        ...c,
-        isInMasterList: false,
-        hasJan2026Data: hasJan26,
-        isActive: false, // Not in master list = not active
-      });
-    }
-  });
-
-  // Override monthly totals with MIS actualRevenue from clients.json
-  // MIS values are in USD; convert back to native billing currency so the
-  // frontend's convertToUSD(native, currency) round-trips correctly.
-  const USD_TO_NATIVE: Record<string, number> = {
-    'USD': 1.0,
-    'INR': 1 / 0.012,    // ~83.33
-    'VND': 1 / 0.000039, // ~25641
-    'NGN': 1 / 0.00062,  // ~1612.9
-    'NGR': 1 / 0.00062,
-  };
-  const MONTH_TO_KEY: Record<string, 'jan_26' | 'dec_25' | 'nov_25' | 'oct_25'> = {
-    'Jan 2026': 'jan_26',
-    'Dec 2025': 'dec_25',
-    'Nov 2025': 'nov_25',
-    'Oct 2025': 'oct_25',
-  };
-
-  // Build lookup from normalized client name → master entry with actualRevenue
-  const masterEntryMap = new Map<string, ClientMasterEntry>();
-  clientMaster.clients.forEach(mc => {
-    if (mc.actualRevenue) {
-      masterEntryMap.set(normalizeName(mc.name), mc);
-      masterEntryMap.set(normalizeName(mc.clientId), mc);
-    }
-  });
-
-  let overrideCount = 0;
-  const MIS_MONTHS: Array<{ month: string; key: 'jan_26' | 'dec_25' | 'nov_25' | 'oct_25' }> = [
-    { month: 'Jan 2026', key: 'jan_26' },
-    { month: 'Dec 2025', key: 'dec_25' },
-    { month: 'Nov 2025', key: 'nov_25' },
-    { month: 'Oct 2025', key: 'oct_25' },
-  ];
-
-  mergedClients.forEach(client => {
-    const masterEntry = masterEntryMap.get(normalizeName(client.client_name))
-      || (client.client_id ? masterEntryMap.get(normalizeName(client.client_id)) : undefined);
-
-    if (!masterEntry?.actualRevenue) return;
-
-    const currency = (client.profile?.billing_currency || 'USD').toUpperCase();
-    const usdToNative = USD_TO_NATIVE[currency] || 1;
-
-    // Build a set of existing months for quick lookup
-    const existingMonths = new Set(client.monthly_data.map(m => m.month));
-
-    // Override existing monthly data with actualRevenue from clients.json
-    // If MIS total > sum of production APIs, add "Unattributed Revenue" entry for the gap
-    for (const monthData of client.monthly_data) {
-      const key = MONTH_TO_KEY[monthData.month];
-      if (key !== undefined) {
-        const misTotal = masterEntry.actualRevenue[key] * usdToNative;
-        const apiSum = monthData.apis.reduce((sum, api) => sum + api.revenue_usd, 0);
-        const diff = misTotal - apiSum;
-
-        if (diff > 0.01) {
-          monthData.apis.push({
-            name: 'Unattributed Revenue',
-            moduleName: 'Unattributed Revenue',
-            subModule: '',
-            revenue_usd: diff,
-            usage: 0,
-            success: 0,
-            currency: currency,
-          });
-        }
-
-        monthData.total_revenue_usd = misTotal;
-      }
-    }
-
-    // Create missing monthly entries from actualRevenue
-    for (const { month, key } of MIS_MONTHS) {
-      if (!existingMonths.has(month)) {
-        const usdVal = masterEntry.actualRevenue[key];
-        if (usdVal && usdVal > 0) {
-          client.monthly_data.unshift({
-            month,
-            total_revenue_usd: usdVal * usdToNative,
-            hv_api_revenue_usd: 0,
-            other_revenue_usd: 0,
-            apis: [],
-          });
-        }
-      }
-    }
-
-    // Recalculate aggregates from the (now overridden) monthly data
-    client.totalRevenue = client.monthly_data.reduce((sum, m) => sum + m.total_revenue_usd, 0);
-    client.latestMonth = client.monthly_data[0]?.month || '';
-    client.latestRevenue = client.monthly_data[0]?.total_revenue_usd || 0;
-
-    // Update active status if client now has Jan 2026 data
-    if (!client.hasJan2026Data && client.monthly_data.some(m => m.month === 'Jan 2026' && m.total_revenue_usd > 0)) {
-      client.hasJan2026Data = true;
-      if (client.isInMasterList) client.isActive = true;
-    }
-
-    overrideCount++;
-  });
-  console.log(`[MIS Override] Applied actualRevenue overrides to ${overrideCount} clients`);
-
-  // Sort clients by priority:
-  // 1. Active (in master list + has Jan 2026 data) - sorted by name
-  // 2. In master list but no Jan 2026 data - sorted by name
-  // 3. Not in master list but has Jan 2026 data - sorted by revenue
-  mergedClients.sort((a, b) => {
-    // Priority 1: Active clients first
+  // Sort: active first (by name), then live without data (by name), then others (by revenue)
+  transformedClients.sort((a, b) => {
     if (a.isActive && !b.isActive) return -1;
     if (!a.isActive && b.isActive) return 1;
 
-    // Priority 2: In master list
     if (a.isInMasterList && !b.isInMasterList) return -1;
     if (!a.isInMasterList && b.isInMasterList) return 1;
 
-    // Within same category: sort by name for master list clients, by revenue for others
     if (a.isInMasterList && b.isInMasterList) {
       return a.client_name.localeCompare(b.client_name);
     }
 
-    // Non-master list clients: sort by revenue (descending)
     return b.totalRevenue - a.totalRevenue;
   });
 
-  // Count stats
-  const activeCount = mergedClients.filter(c => c.isActive).length;
-  const masterOnlyCount = mergedClients.filter(c => c.isInMasterList && !c.isActive).length;
-  const otherCount = mergedClients.filter(c => !c.isInMasterList).length;
-
-  console.log(`[ClientDataLoader] Sorted: ${mergedClients.length} total (${activeCount} active, ${masterOnlyCount} master-only, ${otherCount} others)`);
-
-  // Extract unique APIs across all clients
-  const apiSet = new Set<string>();
-  mergedClients.forEach(c => {
-    c.monthly_data.forEach(m => {
-      m.apis.forEach(api => {
-        apiSet.add(api.name);
-      });
-    });
-  });
+  // Stats
+  const activeCount = transformedClients.filter(c => c.isActive).length;
+  const liveOnlyCount = transformedClients.filter(c => c.isInMasterList && !c.isActive).length;
+  const otherCount = transformedClients.filter(c => !c.isInMasterList).length;
+  console.log(`[ClientDataLoader] ${transformedClients.length} clients (${activeCount} active, ${liveOnlyCount} live-only, ${otherCount} others)`);
 
   // Sort APIs by total revenue
   const apiRevenueTotals: Record<string, number> = {};
-  mergedClients.forEach(c => {
+  transformedClients.forEach(c => {
     Object.entries(c.apiRevenues).forEach(([api, rev]) => {
       apiRevenueTotals[api] = (apiRevenueTotals[api] || 0) + rev;
     });
   });
 
-  const apis = Array.from(apiSet).sort((a, b) =>
+  const apis = Array.from(allAPIs).sort((a, b) =>
     (apiRevenueTotals[b] || 0) - (apiRevenueTotals[a] || 0)
   );
 
-  // Get unique months
-  const monthSet = new Set<string>();
-  mergedClients.forEach(c => {
-    c.monthly_data.forEach(m => {
-      monthSet.add(m.month);
-    });
-  });
-
-  // Sort months chronologically (newest first)
-  const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const months = Array.from(monthSet).sort((a, b) => {
+  // Display months (newest first)
+  const displayMonths = months.map(formatMonthDisplay);
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  displayMonths.sort((a, b) => {
     const [aMonth, aYear] = a.split(' ');
     const [bMonth, bYear] = b.split(' ');
     if (aYear !== bYear) return parseInt(bYear) - parseInt(aYear);
-    return monthOrder.indexOf(bMonth) - monthOrder.indexOf(aMonth);
+    return monthNames.indexOf(bMonth) - monthNames.indexOf(aMonth);
   });
 
-  return {
-    clients: mergedClients,
+  const result: MatrixData = {
+    clients: transformedClients,
     apis,
-    months,
-    extractedAt: raw.extractedAt,
-    totalClients: mergedClients.length,
+    months: displayMonths,
+    availableMonths: getAvailableMonths(10),
+    extractedAt: new Date().toISOString(),
+    totalClients: transformedClients.length,
   };
+
+  // Cache
+  matrixCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  return result;
 }
 
-// Master API list path
-const MASTER_API_PATH = path.join(process.cwd(), 'data', 'api.json');
+// ============== MASTER API CATALOG ==============
+
+let masterAPIsCache: { moduleName: string; subModuleName: string; billingUnit: string; moduleOwner?: string }[] | null = null;
+let masterAPIsCacheTimestamp = 0;
 
 /**
- * Load master API list from api.json
+ * Load master API list from Google Sheets API products endpoint
+ * Replaces data/api.json
  */
 export async function loadMasterAPIs(): Promise<{ moduleName: string; subModuleName: string; billingUnit: string; moduleOwner?: string }[]> {
+  const now = Date.now();
+  if (masterAPIsCache && now - masterAPIsCacheTimestamp < CACHE_TTL) {
+    return masterAPIsCache;
+  }
+
   try {
-    const content = await fs.readFile(MASTER_API_PATH, 'utf-8');
-    const data = JSON.parse(content);
-    console.log(`[ClientDataLoader] Loaded ${data.length} master APIs from: ${MASTER_API_PATH}`);
-    return data;
+    const products = await fetchProducts();
+    console.log(`[ClientDataLoader] Loaded ${products.length} products from API`);
+
+    masterAPIsCache = products.map(p => ({
+      moduleName: p['Module Name'] || '',
+      subModuleName: p['Sub-Module'] || '',
+      billingUnit: p['Unit (Billing Key)'] || '',
+      moduleOwner: p['Added By'] || undefined,
+    }));
+    masterAPIsCacheTimestamp = now;
+    return masterAPIsCache;
   } catch (e) {
-    console.warn(`[ClientDataLoader] Could not load api.json from ${MASTER_API_PATH}:`, e);
-    return [];
+    console.error('[ClientDataLoader] Failed to load products from API:', e);
+    return masterAPIsCache || [];
   }
 }
 
+// ============== CLIENT LOOKUP ==============
+
 /**
- * Get client data by name
+ * Get client data by name or ID
+ * Searches from the matrix data (uses latest month)
  */
 export async function getClientByName(clientName: string): Promise<TransformedClient | null> {
-  const raw = await loadRawClientData();
-  const client = raw.data.find(c =>
-    c.clientName.toLowerCase() === clientName.toLowerCase() ||
-    c.clientId.toLowerCase() === clientName.toLowerCase()
-  );
+  const matrixData = await loadMatrixData();
+  const lower = clientName.toLowerCase();
+  const normalized = normalizeName(clientName);
 
-  if (!client) return null;
-  return transformClientData(client);
+  return matrixData.clients.find(c =>
+    c.client_name.toLowerCase() === lower ||
+    c.client_id.toLowerCase() === lower ||
+    normalizeName(c.client_name) === normalized ||
+    normalizeName(c.client_id) === normalized
+  ) || null;
 }
 
 /**
  * Search clients by name
  */
 export async function searchClients(query: string, limit = 20): Promise<TransformedClient[]> {
-  const raw = await loadRawClientData();
+  const matrixData = await loadMatrixData();
   const lowerQuery = query.toLowerCase();
 
-  const matches = raw.data
+  return matrixData.clients
     .filter(c =>
-      c.clientName.toLowerCase().includes(lowerQuery) ||
-      c.clientId.toLowerCase().includes(lowerQuery)
+      c.client_name.toLowerCase().includes(lowerQuery) ||
+      c.client_id.toLowerCase().includes(lowerQuery)
     )
-    .slice(0, limit)
-    .map(transformClientData);
-
-  return matches;
+    .slice(0, limit);
 }
 
 /**
  * Get summary statistics
  */
-export async function getDataSummary(): Promise<{
+export async function getDataSummary(month?: string): Promise<{
   totalClients: number;
   clientsWithRevenue: number;
   totalRevenue: number;
@@ -780,9 +638,8 @@ export async function getDataSummary(): Promise<{
   months: string[];
   segments: { name: string; count: number; revenue: number }[];
 }> {
-  const { clients, months } = await loadMatrixData();
+  const { clients, months } = await loadMatrixData(month);
 
-  // Calculate API stats
   const apiStats: Record<string, { revenue: number; clients: Set<string> }> = {};
   clients.forEach(c => {
     Object.entries(c.apiRevenues).forEach(([api, rev]) => {
@@ -803,7 +660,6 @@ export async function getDataSummary(): Promise<{
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 20);
 
-  // Calculate segment stats
   const segmentStats: Record<string, { count: number; revenue: number }> = {};
   clients.forEach(c => {
     const seg = c.profile.segment;
@@ -826,4 +682,30 @@ export async function getDataSummary(): Promise<{
     months,
     segments,
   };
+}
+
+// ============== BACKWARD COMPAT ==============
+
+/**
+ * @deprecated No longer loads from file. Returns empty structure.
+ * Use loadMatrixData() instead.
+ */
+export async function loadRawClientData(): Promise<CompleteClientDataFile> {
+  console.warn('[ClientDataLoader] loadRawClientData() is deprecated. Use loadMatrixData() instead.');
+  return {
+    extractedAt: new Date().toISOString(),
+    totalClients: 0,
+    successful: 0,
+    failed: 0,
+    data: [],
+  };
+}
+
+/**
+ * @deprecated No longer loads from file. Returns empty structure.
+ * Client list now comes from Google Sheets API.
+ */
+export async function loadClientMaster(): Promise<ClientMasterFile> {
+  console.warn('[ClientDataLoader] loadClientMaster() is deprecated. Client data comes from API.');
+  return { clients: [] };
 }

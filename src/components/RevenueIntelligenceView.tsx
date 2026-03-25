@@ -144,12 +144,17 @@ function useAnimatedNumber(target: number, duration = 800): number {
 
 // ─── Main Component ───
 
-export default function RevenueIntelligenceView() {
+export default function RevenueIntelligenceView({ month, availableMonths, onMonthChange }: {
+  month?: string;
+  availableMonths?: string[];
+  onMonthChange?: (yyyyMM: string) => void;
+}) {
+  const monthParam = month ? `&month=${month}` : '';
   const { data: crossSellResp, isLoading: csLoading } = useSWR<CrossSellResponse>(
-    '/api/segment-intelligence?action=all', fetcher, { revalidateOnFocus: false }
+    `/api/segment-intelligence?action=all${monthParam}`, fetcher, { revalidateOnFocus: false, keepPreviousData: true }
   );
   const { data: metaResp, isLoading: metaLoading } = useSWR<ClientMetaResponse>(
-    '/api/segment-intelligence?action=client-meta', fetcher, { revalidateOnFocus: false }
+    `/api/segment-intelligence?action=client-meta${monthParam}`, fetcher, { revalidateOnFocus: false, keepPreviousData: true }
   );
 
   const loading = csLoading || metaLoading;
@@ -278,7 +283,7 @@ export default function RevenueIntelligenceView() {
   // Selected client detail
   const selectedClientData = useMemo(() => {
     if (!selectedClient) return null;
-    return filteredClients.find(c => `${c.segment}:${c.name}` === selectedClient) || null;
+    return filteredClients.find((c, idx) => `${c.segment}:${c.clientId || c.name}:${idx}` === selectedClient) || null;
   }, [selectedClient, filteredClients]);
 
   // Reset detail tab when client changes
@@ -409,8 +414,27 @@ export default function RevenueIntelligenceView() {
         </div>
       </div>
 
-      {/* ─── Filter Bar: 3 main + advanced toggle ─── */}
+      {/* ─── Filter Bar: month + filters ─── */}
       <div className="flex items-center gap-3 shrink-0 flex-wrap">
+        {availableMonths && availableMonths.length > 0 && (
+          <select
+            value={month || ''}
+            onChange={e => onMonthChange?.(e.target.value)}
+            className={filterCls(!!month)}
+          >
+            <option value="">Latest</option>
+            {availableMonths.map(m => {
+              const MNAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+              const [y, mo] = m.split('-');
+              const display = `${MNAMES[parseInt(mo) - 1]} ${y}`;
+              return <option key={m} value={m}>{display}</option>;
+            })}
+          </select>
+        )}
+        {(csLoading || metaLoading) && (
+          <div className="w-3 h-3 border-[1.5px] border-amber-400 border-t-transparent rounded-full animate-spin shrink-0" />
+        )}
+
         <select value={filters.segment} onChange={e => updateFilter('segment', e.target.value)} className={filterCls(!!filters.segment)}>
           <option value="">All Segments</option>
           {filterOptions.segments.map(s => <option key={s} value={s}>{s}</option>)}
@@ -524,8 +548,8 @@ export default function RevenueIntelligenceView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredClients.map(client => {
-                    const key = `${client.segment}:${client.name}`;
+                  {filteredClients.map((client, idx) => {
+                    const key = `${client.segment}:${client.clientId || client.name}:${idx}`;
                     const isSelected = selectedClient === key;
                     return (
                       <tr

@@ -19,6 +19,7 @@ interface ClientOverride {
   geography?: string;
   legal_name?: string;
   billing_currency?: string;
+  billable_filter?: Record<string, { codes?: string[]; discount?: number; kibana_exclude?: string[]; [key: string]: unknown }>;
   notes?: string;
   updated_by?: string;
   updated_at?: string;
@@ -37,24 +38,25 @@ interface ApiCostOverride {
   updated_at?: string;
 }
 
+// Total revenue overrides use client_api_overrides with api_name = '__total_revenue__'
+const TOTAL_REVENUE_KEY = '__total_revenue__';
+
 /**
  * Analytics API Route
  *
- * SINGLE SOURCE OF TRUTH: complete_client_data_1770268082596.json
- * ENRICHED WITH: Database overrides (client_overrides, client_api_overrides)
- *
- * Returns client data and summary stats for the dashboard
+ * DATA SOURCE: Google Sheets API (via client-data-loader)
+ * ENRICHED WITH: Supabase overrides (client_overrides, client_api_overrides, monthly_revenue_overrides)
  *
  * Query params:
  * - page: Page number (default: 1)
  * - limit: Items per page (default: 50, max: 200)
  * - all: If "true", returns all data (for Matrix view)
+ * - months: Comma-separated YYYY-MM months (default: current month)
  */
 
-// Cache for processed data (5 minutes)
-let cachedResponse: any = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// Cache for processed data (5 minutes), keyed by months
+const responseCache = new Map<string, { data: AnalyticsResponse; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000;
 
 export async function GET(request: Request) {
   try {
@@ -62,77 +64,92 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
     const returnAll = searchParams.get('all') === 'true';
+    const month = searchParams.get('month') || undefined;
+    const cacheKey = month || 'default';
 
-    // Check cache first
-    const now = Date.now();
-    if (cachedResponse && (now - cacheTimestamp) < CACHE_TTL) {
-      console.log('[Analytics] Returning cached response');
+    // Check cache
+    const cached = responseCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log('[Analytics] Cache hit');
 
       if (returnAll) {
-        return NextResponse.json(cachedResponse, {
-          headers: {
-            'Cache-Control': 'public, max-age=300', // Browser cache 5 min
-          },
+        return NextResponse.json(cached.data, {
+          headers: { 'Cache-Control': 'public, max-age=300' },
         });
       }
 
-      // Return paginated response
       const startIndex = (page - 1) * limit;
-      const paginatedClients = cachedResponse.clients.slice(startIndex, startIndex + limit);
+      const paginatedClients = cached.data.clients.slice(startIndex, startIndex + limit);
 
       return NextResponse.json({
-        ...cachedResponse,
+        ...cached.data,
         clients: paginatedClients,
         pagination: {
           page,
           limit,
-          total: cachedResponse.count,
-          totalPages: Math.ceil(cachedResponse.count / limit),
-          hasMore: startIndex + limit < cachedResponse.count,
+          total: cached.data.count,
+          totalPages: Math.ceil(cached.data.count / limit),
+          hasMore: startIndex + limit < cached.data.count,
         },
       }, {
-        headers: {
-          'Cache-Control': 'public, max-age=300',
-        },
+        headers: { 'Cache-Control': 'public, max-age=300' },
       });
     }
-    // Load base data from JSON file
-    const matrixData = await loadMatrixData();
 
-    // Fetch overrides from database (parallel for performance)
+    // Load base data from Google Sheets API
+    const matrixData = await loadMatrixData(month);
+
+    // Fetch overrides from Supabase (parallel)
     let clientOverrides: ClientOverride[] = [];
     let apiCostOverrides: ApiCostOverride[] = [];
 
+    // Also fetch from clients table for segment data
+    let clientsTableSegments = new Map<string, { segment?: string; geography?: string }>();
+
     try {
-      const [clientRes, apiRes] = await Promise.all([
+      const [clientRes, apiRes, clientsRes] = await Promise.all([
         supabase.from('client_overrides').select('*'),
         supabase.from('client_api_overrides').select('*'),
+        supabase.from('clients').select('client_name, segment, geography'),
       ]);
 
       clientOverrides = clientRes.data || [];
       apiCostOverrides = apiRes.data || [];
 
-      console.log(`[Analytics] Loaded ${clientOverrides.length} client overrides, ${apiCostOverrides.length} API cost overrides from database`);
+      // Build clients table lookup by name (lowercase) AND original case
+      (clientsRes.data || []).forEach((c: { client_name: string; segment?: string; geography?: string }) => {
+        if (c.client_name) {
+          clientsTableSegments.set(c.client_name.toLowerCase(), c);
+          clientsTableSegments.set(c.client_name, c);
+        }
+      });
+
+      console.log(`[Analytics] Overrides: ${clientOverrides.length} client_overrides, ${apiCostOverrides.length} API, ${clientsTableSegments.size} clients table entries`);
     } catch (dbError) {
-      console.warn('[Analytics] Could not fetch database overrides (tables may not exist yet):', dbError);
+      console.warn('[Analytics] Could not fetch overrides (tables may not exist):', dbError);
     }
 
-    // Create lookup maps for fast merging
+    // Build lookup maps
     const clientOverrideMap = new Map<string, ClientOverride>();
     clientOverrides.forEach(o => clientOverrideMap.set(o.client_id, o));
 
-    // Group API cost overrides by client_id + api_name + month
+    // Separate API overrides from total revenue overrides
     const apiOverrideMap = new Map<string, ApiCostOverride>();
+    const revenueOverrideMap = new Map<string, ApiCostOverride>();
     apiCostOverrides.forEach(o => {
-      const key = `${o.client_id}|${o.api_name}|${o.month}`;
-      apiOverrideMap.set(key, o);
+      if (o.api_name === TOTAL_REVENUE_KEY) {
+        revenueOverrideMap.set(`${o.client_id}|${o.month}`, o);
+      } else {
+        apiOverrideMap.set(`${o.client_id}|${o.api_name}|${o.month}`, o);
+      }
     });
 
-    // Apply overrides to matrix data
+    // Apply overrides
+    // Priority: client_overrides (by client_id) > clients table (by name) > inferSegment()
     matrixData.clients.forEach(client => {
+      // Priority 1: client_overrides table
       const override = clientOverrideMap.get(client.client_id);
       if (override) {
-        // Apply client-level overrides
         if (override.industry) client.profile.industry = override.industry;
         if (override.segment) client.profile.segment = override.segment;
         if (override.geography) client.profile.geography = override.geography;
@@ -140,32 +157,63 @@ export async function GET(request: Request) {
         if (override.billing_currency) client.profile.billing_currency = override.billing_currency;
       }
 
-      // Apply API cost overrides
+      // Priority 2: clients table segment (only if client_overrides didn't set segment)
+      if (!override?.segment) {
+        const ct = clientsTableSegments.get(client.client_name.toLowerCase())
+          || clientsTableSegments.get(client.client_name)
+          || clientsTableSegments.get(client.client_id);
+        if (ct?.segment) client.profile.segment = ct.segment;
+        if (ct?.geography && (!client.profile.geography || client.profile.geography === 'Unknown')) {
+          client.profile.geography = ct.geography;
+        }
+      }
+
+      // API cost overrides + Revenue overrides
       client.monthly_data.forEach(monthData => {
+        // Per-API overrides
         monthData.apis.forEach(api => {
           const apiKey = `${client.client_id}|${api.name}|${monthData.month}`;
           const apiOverride = apiOverrideMap.get(apiKey);
           if (apiOverride && apiOverride.cost_override !== undefined) {
             api.revenue_usd = apiOverride.cost_override;
-            // Update usage if provided
             if (apiOverride.usage_override !== undefined) {
               api.usage = apiOverride.usage_override;
             }
           }
         });
+
+        // Monthly total revenue override (uses client_api_overrides with api_name='__total_revenue__')
+        const revKey = `${client.client_id}|${monthData.month}`;
+        const revOverride = revenueOverrideMap.get(revKey);
+        if (revOverride && revOverride.cost_override !== undefined) {
+          const apiSum = monthData.apis.reduce((sum, api) => sum + api.revenue_usd, 0);
+          const overrideTotal = revOverride.cost_override;
+          const diff = overrideTotal - apiSum;
+
+          // Add unattributed revenue if override > API sum
+          if (diff > 0.01) {
+            monthData.apis.push({
+              name: 'Unattributed Revenue',
+              moduleName: 'Unattributed Revenue',
+              subModule: '',
+              revenue_usd: diff,
+              usage: 0,
+              success: 0,
+              currency: client.profile.billing_currency || 'INR',
+            });
+          }
+
+          monthData.total_revenue_usd = overrideTotal;
+        }
       });
 
-      // Recalculate aggregates after applying overrides
-      // Use total_revenue_usd (which includes MIS actualRevenue overrides) not API sums
-      const totalRevenue = client.monthly_data.reduce((sum, m) => sum + m.total_revenue_usd, 0);
-      client.totalRevenue = totalRevenue;
-
+      // Recalculate aggregates
+      client.totalRevenue = client.monthly_data.reduce((sum, m) => sum + m.total_revenue_usd, 0);
       const latestMonth = client.monthly_data[0];
       if (latestMonth) {
         client.latestRevenue = latestMonth.total_revenue_usd;
       }
 
-      // Recalculate API revenues
       client.apiRevenues = {};
       client.monthly_data.forEach(m => {
         m.apis.forEach(api => {
@@ -188,7 +236,7 @@ export async function GET(request: Request) {
       ? Math.round(totalMonths / matrixData.clients.length)
       : 0;
 
-    // Transform to expected ClientData format
+    // Transform to ClientData format
     const clients = matrixData.clients.map(c => ({
       client_name: c.client_name,
       client_id: c.client_id,
@@ -237,13 +285,12 @@ export async function GET(request: Request) {
           .slice(0, 5)
           .map(([name]) => name),
       },
-      // Status flags
       isInMasterList: c.isInMasterList,
       hasJan2026Data: c.hasJan2026Data,
       isActive: c.isActive,
     }));
 
-    const response: AnalyticsResponse = {
+    const response: AnalyticsResponse & { availableMonths?: string[] } = {
       clients,
       count: matrixData.clients.length,
       summary: {
@@ -251,23 +298,19 @@ export async function GET(request: Request) {
         segments,
         avg_months: avgMonths,
       },
+      availableMonths: matrixData.availableMonths,
     };
 
-    // Cache the full response
-    cachedResponse = response;
-    cacheTimestamp = Date.now();
-    console.log(`[Analytics] Cached ${response.count} clients`);
+    // Cache
+    responseCache.set(cacheKey, { data: response, timestamp: Date.now() });
+    console.log(`[Analytics] Cached ${response.count} clients (months: ${cacheKey})`);
 
-    // Return based on pagination params
     if (returnAll) {
       return NextResponse.json(response, {
-        headers: {
-          'Cache-Control': 'public, max-age=300',
-        },
+        headers: { 'Cache-Control': 'public, max-age=300' },
       });
     }
 
-    // Return paginated response
     const startIndex = (page - 1) * limit;
     const paginatedClients = clients.slice(startIndex, startIndex + limit);
 
@@ -282,9 +325,7 @@ export async function GET(request: Request) {
         hasMore: startIndex + limit < response.count,
       },
     }, {
-      headers: {
-        'Cache-Control': 'public, max-age=300',
-      },
+      headers: { 'Cache-Control': 'public, max-age=300' },
     });
   } catch (error) {
     console.error('Analytics API error:', error);
