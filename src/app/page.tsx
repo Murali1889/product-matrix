@@ -419,7 +419,7 @@ export default function Dashboard() {
 
   // When fresh data arrives from SWR → update state + write to per-month cache
   useEffect(() => {
-    if (analyticsData) {
+    if (analyticsData && Array.isArray(analyticsData.clients)) {
       setData(analyticsData);
       writeCache(cacheKey, analyticsData);
       if (analyticsData.availableMonths) {

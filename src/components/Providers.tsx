@@ -5,7 +5,11 @@ import { SWRConfig } from 'swr';
 import FeedbackWrapper from './FeedbackWrapper';
 import ToastNotifications from './ToastNotifications';
 
-const swrFetcher = (url: string) => fetch(url).then((res) => res.json());
+const swrFetcher = (url: string) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json();
+  });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState('Anonymous');

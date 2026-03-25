@@ -114,7 +114,25 @@ async function fetchAPI<T>(params: Record<string, string>): Promise<T> {
     throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
   }
 
-  const data = (await response.json()) as T;
+  // Google Apps Script returns HTML error pages on failure (e.g. session expired)
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
+
+  if (!contentType.includes('application/json') && text.trimStart().startsWith('<')) {
+    // Extract error message from HTML if possible
+    const match = text.match(/<div[^>]*style="text-align:center[^"]*"[^>]*>(.*?)<\/div>/);
+    const errorMsg = match ? match[1].replace(/&quot;/g, '"') : 'Non-JSON response from Google Sheets API';
+    console.error(`[GoogleSheetsAPI] HTML error for ?${url.searchParams.toString()}: ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+
+  let data: T;
+  try {
+    data = JSON.parse(text) as T;
+  } catch {
+    throw new Error(`Invalid JSON from Google Sheets API: ${text.slice(0, 200)}`);
+  }
+
   const elapsed = Date.now() - start;
   console.log(`[GoogleSheetsAPI] Fetched ?${url.searchParams.toString()} in ${elapsed}ms`);
   return data;
@@ -132,6 +150,7 @@ export async function fetchProducts(): Promise<GSProduct[]> {
   if (cached) return cached;
 
   const data = await fetchAPI<GSProduct[]>({ action: 'products' });
+  if (!Array.isArray(data)) throw new Error(`Expected products array, got: ${typeof data}`);
   console.log(`[GoogleSheetsAPI] Loaded ${data.length} products`);
   setCache(cacheKey, data);
   return data;
@@ -147,6 +166,7 @@ export async function fetchClients(status: string = 'live'): Promise<GSClient[]>
   if (cached) return cached;
 
   const data = await fetchAPI<GSClient[]>({ action: 'clients', status });
+  if (!Array.isArray(data)) throw new Error(`Expected clients array, got: ${typeof data}`);
   console.log(`[GoogleSheetsAPI] Loaded ${data.length} clients (status=${status})`);
   setCache(cacheKey, data);
   return data;
@@ -161,6 +181,7 @@ export async function fetchPricing(): Promise<GSPricing[]> {
   if (cached) return cached;
 
   const data = await fetchAPI<GSPricing[]>({ action: 'pricing' });
+  if (!Array.isArray(data)) throw new Error(`Expected pricing array, got: ${typeof data}`);
   console.log(`[GoogleSheetsAPI] Loaded ${data.length} pricing rows`);
   setCache(cacheKey, data);
   return data;
@@ -183,6 +204,10 @@ export async function fetchUsage(month: string, noCache: boolean = false): Promi
   if (noCache) params.noCache = 'true';
 
   const data = await fetchAPI<GSUsage[]>(params);
+  if (!Array.isArray(data)) {
+    console.warn(`[GoogleSheetsAPI] Usage for ${month} returned non-array (${typeof data}), returning empty`);
+    return [];
+  }
   console.log(`[GoogleSheetsAPI] Loaded ${data.length} usage rows for ${month}`);
   setCache(cacheKey, data);
   return data;
