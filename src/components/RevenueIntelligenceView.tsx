@@ -105,7 +105,7 @@ type SortDir = 'asc' | 'desc';
 // ─── Helpers ───
 
 function fmt(value: number): string {
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
   if (value >= 1) return `$${Math.round(value)}`;
   return '$0';
