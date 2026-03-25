@@ -228,7 +228,7 @@ export function getLastCompletedMonth(): string {
 }
 
 /**
- * Get available months: current month + N months back
+ * Get available months: completed months only (excludes current incomplete month)
  * @param count Number of previous months (default 10)
  * @returns Array of YYYY-MM strings, newest first
  */
@@ -236,8 +236,8 @@ export function getAvailableMonths(count: number = 10): string[] {
   const months: string[] = [];
   const now = new Date();
 
-  // Include current month
-  for (let i = 0; i <= count; i++) {
+  // Start from 1 to skip current incomplete month
+  for (let i = 1; i <= count; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
