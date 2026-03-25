@@ -141,7 +141,6 @@ async function computeCrossSellData(month?: string): Promise<CrossSellData> {
   let grandTotalPotentialAvg = 0;
 
   Object.entries(bySegment).forEach(([segment, segClients]) => {
-    if (segClients.length < 2) return; // Skip segments with < 2 clients
 
     // Compute per-API adoption within this segment
     const apiStats: Record<string, {
