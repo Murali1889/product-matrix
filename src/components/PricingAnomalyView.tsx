@@ -131,7 +131,7 @@ export default function PricingAnomalyView() {
 
   const [search, setSearch] = useState('');
   const [debSearch, setDebSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<AnomalyType | ''>('');
+  const [typeFilters, setTypeFilters] = useState<Set<AnomalyType>>(new Set(['cross-module', 'overlap', 'duplicate', 'price-inversion', 'gap']));
   const [sevFilter, setSevFilter] = useState<Severity | ''>('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sortField, setSortField] = useState<SortField>('critical');
@@ -153,7 +153,7 @@ export default function PricingAnomalyView() {
       const q = debSearch.toLowerCase();
       list = list.filter(a => a.company.toLowerCase().includes(q) || a.clientId.toLowerCase().includes(q) || a.unit.toLowerCase().includes(q) || a.accountOwner.toLowerCase().includes(q) || a.moduleType.toLowerCase().includes(q));
     }
-    if (typeFilter) list = list.filter(a => a.type === typeFilter);
+    if (typeFilters.size > 0) list = list.filter(a => typeFilters.has(a.type));
     if (sevFilter) list = list.filter(a => a.severity === sevFilter);
     if (statusFilter) list = list.filter(a => a.status === statusFilter);
 
@@ -182,7 +182,7 @@ export default function PricingAnomalyView() {
       }
       return sortDir === 'desc' ? -cmp : cmp;
     });
-  }, [anomalies, debSearch, typeFilter, sevFilter, statusFilter, sortField, sortDir]);
+  }, [anomalies, debSearch, typeFilters, sevFilter, statusFilter, sortField, sortDir]);
 
   const selected = useMemo(() => selectedClient ? clients.find(c => c.clientId === selectedClient) || null : null, [selectedClient, clients]);
 
@@ -205,7 +205,17 @@ export default function PricingAnomalyView() {
     else { setSortField(f); setSortDir('desc'); }
   };
 
-  const hasFilters = !!typeFilter || !!sevFilter || !!statusFilter || !!search;
+  const toggleType = (t: AnomalyType) => {
+    setTypeFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t); else next.add(t);
+      return next;
+    });
+  };
+
+  const allTypes: AnomalyType[] = ['cross-module', 'overlap', 'duplicate', 'price-inversion', 'gap', 'outlier', 'missing-top', 'null-module'];
+  const allTypesSelected = allTypes.every(t => typeFilters.has(t));
+  const hasFilters = !!sevFilter || !!statusFilter || !!search;
   const totalFiltered = clients.reduce((s, c) => s + c.anomalies.length, 0);
 
   const animTotal = useAnimNum(stats?.totalAnomalies || 0);
@@ -302,15 +312,31 @@ export default function PricingAnomalyView() {
         </div>
       </div>
 
-      {/* ─── Filter Bar ─── */}
-      <div className="flex items-center gap-3 shrink-0 flex-wrap">
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as AnomalyType | '')} className={filterCls(!!typeFilter)}>
-          <option value="">All Types</option>
-          {Object.entries(TYPE_META).map(([k, v]) => {
-            const cnt = stats?.byType?.[k]?.count || 0;
-            return cnt > 0 ? <option key={k} value={k}>{v.label} ({cnt})</option> : null;
-          })}
-        </select>
+      {/* ─── Type Toggle Pills ─── */}
+      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+        <button
+          onClick={() => setTypeFilters(new Set(allTypesSelected ? [] : allTypes))}
+          className={`text-[11px] font-medium px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors border ${
+            allTypesSelected ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-stone-200 hover:border-stone-300'
+          }`}
+        >All</button>
+        {allTypes.map(t => {
+          const cnt = stats?.byType?.[t]?.count || 0;
+          if (cnt === 0) return null;
+          const meta = TYPE_META[t];
+          const active = typeFilters.has(t);
+          return (
+            <button
+              key={t}
+              onClick={() => toggleType(t)}
+              className={`text-[11px] font-medium px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors border ${
+                active ? `${meta.bg} ${meta.color} ${meta.border}` : 'bg-white text-slate-400 border-stone-200 hover:border-stone-300'
+              }`}
+            >{meta.label} <span className="opacity-70">{cnt}</span></button>
+          );
+        })}
+
+        <div className="w-px h-5 bg-stone-200 mx-1" />
 
         <select value={sevFilter} onChange={e => setSevFilter(e.target.value as Severity | '')} className={filterCls(!!sevFilter)}>
           <option value="">All Severity</option>
@@ -336,8 +362,8 @@ export default function PricingAnomalyView() {
         </div>
 
         {hasFilters && (
-          <button onClick={() => { setSearch(''); setTypeFilter(''); setSevFilter(''); setStatusFilter(''); }} className="text-[12px] text-amber-600 hover:text-amber-700 font-medium cursor-pointer">
-            Clear all
+          <button onClick={() => { setSearch(''); setSevFilter(''); setStatusFilter(''); }} className="text-[12px] text-amber-600 hover:text-amber-700 font-medium cursor-pointer">
+            Clear
           </button>
         )}
 
@@ -504,24 +530,47 @@ export default function PricingAnomalyView() {
                       )}
                     </div>
 
-                    {/* Slab entries */}
-                    <div className="divide-y divide-stone-50">
-                      {a.entries.map((entry, ei) => {
-                        const priceMismatch = a.entries.some((o, oi) => oi !== ei && o.unitPrice !== entry.unitPrice);
-                        const endMismatch = a.entries.some((o, oi) => oi !== ei && o.end !== entry.end);
-                        return (
-                          <div key={ei} className="flex items-center px-4 py-2 gap-3 text-[12px]">
-                            <span className="font-mono text-slate-500 truncate flex-1 min-w-0">{entry.moduleType}</span>
-                            <span className={`w-28 text-right font-mono ${endMismatch ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
-                              {fmtSlab(entry.start)} — {fmtSlab(entry.end)}
-                            </span>
-                            <span className={`w-16 text-right font-mono font-bold ${priceMismatch ? 'text-rose-600' : 'text-slate-700'}`}>
-                              {curr(selected.billingCurrency)}{entry.unitPrice}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {/* Slab entries — side-by-side for overlap/cross-module (2 entries), stacked otherwise */}
+                    {(a.type === 'overlap' || a.type === 'cross-module' || a.type === 'duplicate') && a.entries.length === 2 ? (
+                      <div className="grid grid-cols-2 divide-x divide-stone-200">
+                        {a.entries.map((entry, ei) => {
+                          const other = a.entries[1 - ei];
+                          const priceMismatch = other.unitPrice !== entry.unitPrice;
+                          const endMismatch = other.end !== entry.end;
+                          return (
+                            <div key={ei} className="px-4 py-2.5">
+                              <div className="text-[11px] font-mono text-slate-400 truncate mb-1">{entry.moduleType}</div>
+                              <div className="flex items-baseline justify-between">
+                                <span className={`text-[12px] font-mono ${endMismatch ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
+                                  {fmtSlab(entry.start)} — {fmtSlab(entry.end)}
+                                </span>
+                                <span className={`text-[14px] font-mono font-bold ${priceMismatch ? 'text-rose-600' : 'text-slate-700'}`}>
+                                  {curr(selected.billingCurrency)}{entry.unitPrice}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-stone-50">
+                        {a.entries.map((entry, ei) => {
+                          const priceMismatch = a.entries.some((o, oi) => oi !== ei && o.unitPrice !== entry.unitPrice);
+                          const endMismatch = a.entries.some((o, oi) => oi !== ei && o.end !== entry.end);
+                          return (
+                            <div key={ei} className="flex items-center px-4 py-2 gap-3 text-[12px]">
+                              <span className="font-mono text-slate-500 truncate flex-1 min-w-0">{entry.moduleType}</span>
+                              <span className={`w-28 text-right font-mono ${endMismatch ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
+                                {fmtSlab(entry.start)} — {fmtSlab(entry.end)}
+                              </span>
+                              <span className={`w-16 text-right font-mono font-bold ${priceMismatch ? 'text-rose-600' : 'text-slate-700'}`}>
+                                {curr(selected.billingCurrency)}{entry.unitPrice}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
