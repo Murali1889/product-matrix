@@ -11,6 +11,7 @@ import type { CellComment as CellCommentType, ClientComment as ClientCommentType
 import { getSlackSettings, saveSlackSettings, testSlackWebhook, notifyComment, notifyRevenueEdit } from '@/lib/slack';
 import type { SlackSettings } from '@/lib/slack';
 import RevenueIntelligenceView from '@/components/RevenueIntelligenceView';
+import PricingAnomalyView from '@/components/PricingAnomalyView';
 import LoginPage from '@/components/LoginPage';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
 import { showToast } from '@/components/ToastNotifications';
@@ -184,7 +185,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'revenue' | 'latest' | 'name'>('revenue');
-  const [view, setView] = useState<'revenue-intel' | 'matrix'>('revenue-intel');
+  const [view, setView] = useState<'revenue-intel' | 'matrix' | 'anomalies'>('revenue-intel');
   const [selectedCell, setSelectedCell] = useState<{ client: string; api: string } | null>(null);
 
   // Pagination state
@@ -926,6 +927,17 @@ export default function Dashboard() {
           <LayoutGrid size={14} />
           Matrix
         </button>
+        <button
+          onClick={() => setView('anomalies')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium rounded-full transition-all cursor-pointer ${
+            view === 'anomalies'
+              ? 'bg-slate-800 text-white shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <AlertCircle size={14} />
+          Anomalies
+        </button>
       </div>
 
       {/* Floating nav actions — settings, save, logout */}
@@ -1069,6 +1081,11 @@ export default function Dashboard() {
             availableMonths={availableMonths}
             onMonthChange={(m) => setApiMonth(m)}
           />
+        )}
+
+        {/* Pricing Anomaly View */}
+        {view === 'anomalies' && (
+          <PricingAnomalyView />
         )}
 
         {/* Analytics View - REMOVED: replaced by Revenue Intelligence */}
