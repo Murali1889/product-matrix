@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import useSWR, { mutate } from 'swr';
-import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers } from 'lucide-react';
 import { useFeedback } from 'react-visual-feedback';
 import { computeSegmentAdoption, findCrossSellOpportunities, buildCrossSellLookup } from '@/lib/adoption-analytics';
 import type { CrossSellOpportunity } from '@/lib/adoption-analytics';
@@ -1427,14 +1427,32 @@ function MatrixView({
   const [crossSellMode, setCrossSellMode] = useState(false);
 
   // Pricing anomalies for matrix columns
-  const [anomalyMode, setAnomalyMode] = useState(false);
-  interface PricingAnomaly { clientId: string; clientName: string; status: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number; }
-  const { data: anomalyData, isLoading: anomalyLoading } = useSWR<{ matrixAnomalies: Record<string, PricingAnomaly[]>; stats: { totalAnomalies: number; totalCompanies: number; productsAffected: number } }>(
-    anomalyMode ? '/api/pricing-anomalies' : null,
+  const [conflictMode, setConflictMode] = useState(false);
+  const [overlapMode, setOverlapMode] = useState(false);
+  const anomalyMode = conflictMode || overlapMode;
+  interface PricingAnomaly { type: string; clientId: string; clientName: string; status: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number; }
+  interface AnomalyStats { conflicts: number; conflictClients: number; conflictProducts: number; overlaps: number; overlapClients: number; overlapProducts: number; totalRows: number; }
+  const { data: anomalyData, isLoading: anomalyLoading, mutate: mutateAnomalies } = useSWR<{ pricingConflicts: Record<string, PricingAnomaly[]>; slabOverlaps: Record<string, PricingAnomaly[]>; stats: AnomalyStats }>(
+    '/api/pricing-anomalies',
     (url: string) => fetch(url).then(r => r.json()),
     { revalidateOnFocus: false }
   );
-  const matrixAnomalies = anomalyData?.matrixAnomalies || {};
+  // Merge active anomaly types into a single matrixAnomalies map
+  const matrixAnomalies = useMemo(() => {
+    if (!anomalyData) return {} as Record<string, PricingAnomaly[]>;
+    const merged: Record<string, PricingAnomaly[]> = {};
+    if (conflictMode) {
+      for (const [k, v] of Object.entries(anomalyData.pricingConflicts || {})) {
+        merged[k] = [...(merged[k] || []), ...v];
+      }
+    }
+    if (overlapMode) {
+      for (const [k, v] of Object.entries(anomalyData.slabOverlaps || {})) {
+        merged[k] = [...(merged[k] || []), ...v];
+      }
+    }
+    return merged;
+  }, [anomalyData, conflictMode, overlapMode]);
   const anomalyStats = anomalyData?.stats;
 
   // API column search
@@ -2169,33 +2187,45 @@ function MatrixView({
                 )}
               </div>
 
-              {/* Anomaly toggle */}
+              {/* Pricing Conflict toggle */}
               <button
-                onClick={() => setAnomalyMode(!anomalyMode)}
+                onClick={() => setConflictMode(!conflictMode)}
                 className={`flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium border rounded-lg shrink-0 cursor-pointer transition-colors ${
-                  anomalyMode
+                  conflictMode
                     ? 'bg-rose-50 border-rose-300 text-rose-700'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
-                title={anomalyMode ? 'Show all clients' : 'Show only clients with pricing slab conflicts'}
+                title="Same product + same slab start but different prices"
               >
                 <AlertCircle size={12} />
-                Anomalies
-                {anomalyMode && anomalyLoading && (
-                  <span className="w-3 h-3 border-[1.5px] border-rose-400 border-t-transparent rounded-full animate-spin" />
-                )}
-                {anomalyMode && anomalyStats && (
-                  <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.totalCompanies}</span>
-                )}
+                Conflicts
+                {conflictMode && anomalyLoading && <span className="w-3 h-3 border-[1.5px] border-rose-400 border-t-transparent rounded-full animate-spin" />}
+                {conflictMode && anomalyStats && <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.conflictClients}</span>}
               </button>
+              {/* Slab Overlap toggle */}
+              <button
+                onClick={() => setOverlapMode(!overlapMode)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium border rounded-lg shrink-0 cursor-pointer transition-colors ${
+                  overlapMode
+                    ? 'bg-amber-50 border-amber-300 text-amber-700'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+                title="Same product but slab ranges overlap"
+              >
+                <Layers size={12} />
+                Overlaps
+                {overlapMode && anomalyLoading && <span className="w-3 h-3 border-[1.5px] border-amber-400 border-t-transparent rounded-full animate-spin" />}
+                {overlapMode && anomalyStats && <span className="text-[9px] bg-amber-200 text-amber-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.overlapClients}</span>}
+              </button>
+              {/* CSV download when any anomaly mode is active */}
               {anomalyMode && anomalyData && Object.keys(matrixAnomalies).length > 0 && (
                 <button
                   onClick={() => {
-                    const csvRows = ['Client ID,Client Name,Status,Product,Module Type,Unit,Slab Start,Slab End,Unit Price,Price Diff'];
+                    const csvRows = ['Type,Client ID,Client Name,Status,Product,Module Type,Unit,Slab Start,Slab End,Unit Price,Price Diff'];
                     for (const items of Object.values(matrixAnomalies)) {
                       for (const a of items) {
                         for (const e of a.entries) {
-                          csvRows.push(`"${a.clientId}","${a.clientName}","${a.status}","${a.productName}","${e.moduleType}","${e.unit}",${e.slabStart},${e.slabEnd},${e.unitPrice},${a.priceDiff.toFixed(2)}`);
+                          csvRows.push(`"${a.type}","${a.clientId}","${a.clientName}","${a.status}","${a.productName}","${e.moduleType}","${e.unit}",${e.slabStart},${e.slabEnd},${e.unitPrice},${a.priceDiff.toFixed(2)}`);
                         }
                       }
                     }
@@ -2207,8 +2237,8 @@ function MatrixView({
                     link.click();
                     URL.revokeObjectURL(url);
                   }}
-                  className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all cursor-pointer shrink-0"
-                  title="Download anomalies as CSV"
+                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer shrink-0"
+                  title="Download as CSV"
                 >
                   <Download size={13} />
                 </button>
@@ -3229,7 +3259,7 @@ function ClientDetailsPanel({
   selectedMonth?: string;
   availableMonths?: string[];
   masterAPINames?: string[];
-  matrixAnomalies?: Record<string, { clientId: string; clientName: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number }[]>;
+  matrixAnomalies?: Record<string, { type: string; clientId: string; clientName: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number }[]>;
 }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('overview');
   const [panelMonth, setPanelMonth] = useState<string>('');
@@ -3768,9 +3798,14 @@ function ClientDetailsPanel({
                         <div className="flex-1 min-w-0">
                           <div className="text-[12px] font-medium text-slate-800 truncate flex items-center gap-1.5">
                             {api.name}
-                            {hasAnomaly && (
+                            {hasAnomaly && apiAnomalies.some(a => a.type === 'pricing-conflict') && (
                               <span className="inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded leading-none shrink-0 bg-rose-200 text-rose-700">
-                                Pricing Conflict
+                                Conflict
+                              </span>
+                            )}
+                            {hasAnomaly && apiAnomalies.some(a => a.type === 'slab-overlap') && (
+                              <span className="inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded leading-none shrink-0 bg-amber-200 text-amber-700">
+                                Overlap
                               </span>
                             )}
                             {api.environment === 'staging' && (
@@ -3787,15 +3822,30 @@ function ClientDetailsPanel({
                             <div className="mt-1.5 space-y-1">
                               {apiAnomalies.map((conflict, ci) => (
                                 <div key={ci} className="flex items-center gap-2 text-[10px]">
-                                  <span className="text-slate-400 shrink-0 w-14 text-right tabular-nums">{conflict.slabStart.toLocaleString()}+</span>
-                                  <div className="flex items-center gap-1 flex-wrap">
-                                    {conflict.entries.map((e, ei) => (
-                                      <span key={ei} className={`px-1.5 py-0.5 rounded font-mono ${ei === 0 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
-                                        {e.unitPrice}
-                                      </span>
-                                    ))}
-                                    <span className="text-rose-500 font-semibold">Δ {conflict.priceDiff.toFixed(2)}</span>
-                                  </div>
+                                  {conflict.type === 'pricing-conflict' ? (
+                                    <>
+                                      <span className="text-slate-400 shrink-0 w-14 text-right tabular-nums">{conflict.slabStart.toLocaleString()}+</span>
+                                      <div className="flex items-center gap-1 flex-wrap">
+                                        {conflict.entries.map((e, ei) => (
+                                          <span key={ei} className={`px-1.5 py-0.5 rounded font-mono ${ei === 0 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {e.unitPrice}
+                                          </span>
+                                        ))}
+                                        <span className="text-rose-500 font-semibold">Δ {conflict.priceDiff.toFixed(2)}</span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-amber-500 shrink-0 text-[9px] font-semibold">OVERLAP</span>
+                                      <div className="flex items-center gap-1 flex-wrap">
+                                        {conflict.entries.map((e, ei) => (
+                                          <span key={ei} className="px-1.5 py-0.5 rounded font-mono bg-amber-50 text-amber-700 border border-amber-200">
+                                            {e.slabStart.toLocaleString()}-{e.slabEnd >= 2147483647 ? '∞' : e.slabEnd.toLocaleString()} @{e.unitPrice}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               ))}
                             </div>

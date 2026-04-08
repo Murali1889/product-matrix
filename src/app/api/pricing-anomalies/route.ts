@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { fetchPricing } from '@/lib/google-sheets-api';
 
 export interface Anomaly {
+  type: 'pricing-conflict' | 'slab-overlap';
   clientId: string;
   clientName: string;
   status: string;
@@ -55,6 +56,7 @@ export async function GET() {
       seenKeys.add(key);
 
       anomalies.push({
+        type: 'pricing-conflict',
         clientId: first['Client ID'],
         clientName: first['Client Name'],
         status: first['Status'],
@@ -103,6 +105,7 @@ export async function GET() {
 
             const priceDiff = Math.abs(a['Unit Price'] - b['Unit Price']);
             anomalies.push({
+              type: 'slab-overlap',
               clientId: a['Client ID'],
               clientName: a['Client Name'],
               status: a['Status'],
@@ -121,22 +124,34 @@ export async function GET() {
       }
     }
 
-    // Group by product name for matrix
-    const matrixAnomalies: Record<string, Anomaly[]> = {};
-    for (const a of anomalies) {
-      if (!matrixAnomalies[a.productName]) matrixAnomalies[a.productName] = [];
-      matrixAnomalies[a.productName].push(a);
+    // Separate by type
+    const pricingConflicts = anomalies.filter(a => a.type === 'pricing-conflict');
+    const slabOverlaps = anomalies.filter(a => a.type === 'slab-overlap');
+
+    // Group by product name for matrix — separate maps
+    const conflictsByProduct: Record<string, Anomaly[]> = {};
+    for (const a of pricingConflicts) {
+      if (!conflictsByProduct[a.productName]) conflictsByProduct[a.productName] = [];
+      conflictsByProduct[a.productName].push(a);
     }
 
-    const uniqueClients = [...new Set(anomalies.map(a => a.clientId))];
+    const overlapsByProduct: Record<string, Anomaly[]> = {};
+    for (const a of slabOverlaps) {
+      if (!overlapsByProduct[a.productName]) overlapsByProduct[a.productName] = [];
+      overlapsByProduct[a.productName].push(a);
+    }
 
     const result = {
-      matrixAnomalies,
+      pricingConflicts: conflictsByProduct,
+      slabOverlaps: overlapsByProduct,
       stats: {
-        totalAnomalies: anomalies.length,
-        totalCompanies: uniqueClients.length,
+        conflicts: pricingConflicts.length,
+        conflictClients: new Set(pricingConflicts.map(a => a.clientId)).size,
+        conflictProducts: Object.keys(conflictsByProduct).length,
+        overlaps: slabOverlaps.length,
+        overlapClients: new Set(slabOverlaps.map(a => a.clientId)).size,
+        overlapProducts: Object.keys(overlapsByProduct).length,
         totalRows: rows.length,
-        productsAffected: Object.keys(matrixAnomalies).length,
       },
     };
 
