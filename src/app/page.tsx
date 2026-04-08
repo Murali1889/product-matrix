@@ -1429,10 +1429,11 @@ function MatrixView({
   // Pricing anomalies for matrix columns
   const [conflictMode, setConflictMode] = useState(false);
   const [overlapMode, setOverlapMode] = useState(false);
-  const anomalyMode = conflictMode || overlapMode;
+  const [unmappedMode, setUnmappedMode] = useState(false);
+  const anomalyMode = conflictMode || overlapMode || unmappedMode;
   interface PricingAnomaly { type: string; clientId: string; clientName: string; status: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number; }
-  interface AnomalyStats { conflicts: number; conflictClients: number; conflictProducts: number; overlaps: number; overlapClients: number; overlapProducts: number; totalRows: number; }
-  const { data: anomalyData, isLoading: anomalyLoading, mutate: mutateAnomalies } = useSWR<{ pricingConflicts: Record<string, PricingAnomaly[]>; slabOverlaps: Record<string, PricingAnomaly[]>; stats: AnomalyStats }>(
+  interface AnomalyStats { conflicts: number; conflictClients: number; conflictProducts: number; overlaps: number; overlapClients: number; overlapProducts: number; unmappedCount: number; unmappedClients: number; totalRows: number; }
+  const { data: anomalyData, isLoading: anomalyLoading, mutate: mutateAnomalies } = useSWR<{ pricingConflicts: Record<string, PricingAnomaly[]>; slabOverlaps: Record<string, PricingAnomaly[]>; unmapped: Record<string, PricingAnomaly[]>; stats: AnomalyStats }>(
     '/api/pricing-anomalies',
     (url: string) => fetch(url).then(r => r.json()),
     { revalidateOnFocus: false }
@@ -1451,8 +1452,13 @@ function MatrixView({
         merged[k] = [...(merged[k] || []), ...v];
       }
     }
+    if (unmappedMode) {
+      for (const [k, v] of Object.entries(anomalyData.unmapped || {})) {
+        merged[k] = [...(merged[k] || []), ...v];
+      }
+    }
     return merged;
-  }, [anomalyData, conflictMode, overlapMode]);
+  }, [anomalyData, conflictMode, overlapMode, unmappedMode]);
   const anomalyStats = anomalyData?.stats;
 
   // API column search
@@ -2216,6 +2222,21 @@ function MatrixView({
                 Overlaps
                 {overlapMode && anomalyLoading && <span className="w-3 h-3 border-[1.5px] border-amber-400 border-t-transparent rounded-full animate-spin" />}
                 {overlapMode && anomalyStats && <span className="text-[9px] bg-amber-200 text-amber-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.overlapClients}</span>}
+              </button>
+              {/* Unmapped toggle */}
+              <button
+                onClick={() => setUnmappedMode(!unmappedMode)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium border rounded-lg shrink-0 cursor-pointer transition-colors ${
+                  unmappedMode
+                    ? 'bg-slate-100 border-slate-400 text-slate-700'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+                title="Products with no Module Name in pricing data"
+              >
+                <AlertCircle size={12} />
+                Unmapped
+                {unmappedMode && anomalyLoading && <span className="w-3 h-3 border-[1.5px] border-slate-400 border-t-transparent rounded-full animate-spin" />}
+                {unmappedMode && anomalyStats && <span className="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.unmappedClients}</span>}
               </button>
               {/* CSV download when any anomaly mode is active */}
               {anomalyMode && anomalyData && Object.keys(matrixAnomalies).length > 0 && (

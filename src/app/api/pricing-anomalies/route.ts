@@ -30,8 +30,8 @@ export async function GET() {
     }
 
     const allRows = await fetchPricing();
-    // Skip rows with empty Module Name — can't map to a product
     const rows = allRows.filter(r => r['Module Name']);
+    const unmappedRows = allRows.filter(r => !r['Module Name']);
 
     // Group by Client ID | Module Name | Sub-Module | Slab Start
     const groups: Record<string, typeof rows> = {};
@@ -126,6 +126,36 @@ export async function GET() {
       }
     }
 
+    // ── Unmapped: rows with no Module Name — detect same issues using moduleType as label ──
+    const unmappedAnomalies: Anomaly[] = [];
+    {
+      const uGroups: Record<string, typeof unmappedRows> = {};
+      for (const row of unmappedRows) {
+        const key = `${row['Client ID']}|${row['Module Type']}|${row['Unit']}|${row['Slab Start']}`;
+        if (!uGroups[key]) uGroups[key] = [];
+        uGroups[key].push(row);
+      }
+      for (const entries of Object.values(uGroups)) {
+        if (entries.length < 2) continue;
+        const prices = new Set(entries.map(e => e['Unit Price']));
+        if (prices.size < 2) continue;
+        const first = entries[0];
+        const label = `${first['Module Type']} (${first['Unit']})`;
+        unmappedAnomalies.push({
+          type: 'pricing-conflict',
+          clientId: first['Client ID'],
+          clientName: first['Client Name'],
+          status: first['Status'],
+          productName: label,
+          moduleName: first['Module Type'] || '',
+          subModule: first['Unit'] || '',
+          slabStart: first['Slab Start'],
+          entries: entries.map(e => ({ moduleType: e['Module Type'], unit: e['Unit'], slabStart: e['Slab Start'], slabEnd: e['Slab End'], unitPrice: e['Unit Price'] })),
+          priceDiff: Math.max(...entries.map(e => e['Unit Price'])) - Math.min(...entries.map(e => e['Unit Price'])),
+        });
+      }
+    }
+
     // Separate by type
     const pricingConflicts = anomalies.filter(a => a.type === 'pricing-conflict');
     const slabOverlaps = anomalies.filter(a => a.type === 'slab-overlap');
@@ -143,9 +173,17 @@ export async function GET() {
       overlapsByProduct[a.productName].push(a);
     }
 
+    // Group unmapped by label
+    const unmappedByLabel: Record<string, Anomaly[]> = {};
+    for (const a of unmappedAnomalies) {
+      if (!unmappedByLabel[a.productName]) unmappedByLabel[a.productName] = [];
+      unmappedByLabel[a.productName].push(a);
+    }
+
     const result = {
       pricingConflicts: conflictsByProduct,
       slabOverlaps: overlapsByProduct,
+      unmapped: unmappedByLabel,
       stats: {
         conflicts: pricingConflicts.length,
         conflictClients: new Set(pricingConflicts.map(a => a.clientId)).size,
@@ -153,7 +191,9 @@ export async function GET() {
         overlaps: slabOverlaps.length,
         overlapClients: new Set(slabOverlaps.map(a => a.clientId)).size,
         overlapProducts: Object.keys(overlapsByProduct).length,
-        totalRows: rows.length,
+        unmappedCount: unmappedAnomalies.length,
+        unmappedClients: new Set(unmappedAnomalies.map(a => a.clientId)).size,
+        totalRows: allRows.length,
       },
     };
 
