@@ -2044,7 +2044,7 @@ function MatrixView({
         {viewMode === 'matrix' && (
           <div className="mt-2.5 animate-fade-in space-y-2">
             {/* Primary filter row */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+            <div className="flex items-center gap-2 pb-0.5">
               {/* Inline search — fixed width, no layout shift */}
               <div className="relative shrink-0">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
