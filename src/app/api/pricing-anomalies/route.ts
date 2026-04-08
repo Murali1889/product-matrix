@@ -278,8 +278,25 @@ export async function GET() {
       bySeverity[a.severity] = (bySeverity[a.severity] || 0) + 1;
     }
 
+    // Lightweight company list for client search
+    const companies = parsed.companyList
+      .filter(c => c.pricing && c.pricing.length > 0)
+      .map(c => ({
+        name: c.name,
+        clientId: c.clientId,
+        status: c.operationalStatus || '',
+        accountOwner: c.accountOwner || '',
+        clientType: c.clientType || '',
+        geography: c.geography || [],
+        industry: c.industry || [],
+        billingCurrency: c.billingCurrency || 'INR',
+        pricingCount: c.pricing.length,
+        anomalyCount: anomalies.filter(a => a.clientId === c.clientId).length,
+      }));
+
     const result = {
       anomalies,
+      companies,
       stats: {
         totalAnomalies: anomalies.length,
         totalCompanies: uniqueClients.size,

@@ -50,8 +50,22 @@ interface Stats {
   byType: Record<string, TypeStat>;
 }
 
+interface CompanyEntry {
+  name: string;
+  clientId: string;
+  status: string;
+  accountOwner: string;
+  clientType: string;
+  geography: string[];
+  industry: string[];
+  billingCurrency: string;
+  pricingCount: number;
+  anomalyCount: number;
+}
+
 interface AnomalyResponse {
   anomalies: Anomaly[];
+  companies: CompanyEntry[];
   stats: Stats;
 }
 
@@ -131,6 +145,8 @@ export default function PricingAnomalyView() {
 
   const [search, setSearch] = useState('');
   const [debSearch, setDebSearch] = useState('');
+  const [clientSearch, setClientSearch] = useState('');
+  const [clientSearchFocused, setClientSearchFocused] = useState(false);
   const [typeFilters, setTypeFilters] = useState<Set<AnomalyType>>(new Set(['cross-module', 'overlap', 'duplicate', 'price-inversion', 'gap']));
   const [sevFilter, setSevFilter] = useState<Severity | ''>('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -142,9 +158,27 @@ export default function PricingAnomalyView() {
   useEffect(() => { const t = setTimeout(() => setDebSearch(search), 250); return () => clearTimeout(t); }, [search]);
 
   const anomalies = data?.anomalies || [];
+  const allCompanies = data?.companies || [];
   const stats = data?.stats;
 
   const statuses = useMemo(() => [...new Set(anomalies.map(a => a.status))].sort(), [anomalies]);
+
+  // Client search suggestions
+  const clientSuggestions = useMemo(() => {
+    if (!clientSearch || clientSearch.length < 2) return [];
+    const q = clientSearch.toLowerCase();
+    return allCompanies
+      .filter(c => c.name.toLowerCase().includes(q) || c.clientId.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [clientSearch, allCompanies]);
+
+  const selectClientFromSearch = (clientId: string) => {
+    setSelectedClient(clientId);
+    setClientSearch('');
+    setClientSearchFocused(false);
+    setDetailTypeFilter('');
+    // Temporarily clear type filters so we see ALL anomalies for this client
+  };
 
   // Group + filter + sort by client
   const clients = useMemo(() => {
@@ -184,7 +218,26 @@ export default function PricingAnomalyView() {
     });
   }, [anomalies, debSearch, typeFilters, sevFilter, statusFilter, sortField, sortDir]);
 
-  const selected = useMemo(() => selectedClient ? clients.find(c => c.clientId === selectedClient) || null : null, [selectedClient, clients]);
+  // Selected could come from the list OR from client search (even if not in filtered list)
+  const selected = useMemo(() => {
+    if (!selectedClient) return null;
+    // First check the filtered list
+    const fromList = clients.find(c => c.clientId === selectedClient);
+    if (fromList) return fromList;
+    // If selected via client search, build a group from ALL anomalies (unfiltered)
+    const clientAnomalies = anomalies.filter(a => a.clientId === selectedClient);
+    const companyEntry = allCompanies.find(c => c.clientId === selectedClient);
+    if (!companyEntry) return null;
+    const group: ClientGroup = {
+      company: companyEntry.name, clientId: companyEntry.clientId, clientType: companyEntry.clientType,
+      status: companyEntry.status, accountOwner: companyEntry.accountOwner, billingCurrency: companyEntry.billingCurrency,
+      geography: companyEntry.geography, industry: companyEntry.industry, anomalies: clientAnomalies,
+      criticalCount: clientAnomalies.filter(a => a.severity === 'critical').length,
+      warningCount: clientAnomalies.filter(a => a.severity === 'warning').length,
+      infoCount: clientAnomalies.filter(a => a.severity === 'info').length,
+    };
+    return group;
+  }, [selectedClient, clients, anomalies, allCompanies]);
 
   // Detail panel filtered anomalies
   const detailAnomalies = useMemo(() => {
@@ -350,13 +403,60 @@ export default function PricingAnomalyView() {
           {statuses.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
+        {/* Client lookup */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Lookup any client..."
+            value={clientSearch}
+            onChange={e => setClientSearch(e.target.value)}
+            onFocus={() => setClientSearchFocused(true)}
+            onBlur={() => setTimeout(() => setClientSearchFocused(false), 200)}
+            className="pl-9 pr-8 py-2 text-[12px] bg-stone-50 border border-stone-200 rounded-lg w-56 focus:outline-none focus:ring-1 focus:ring-amber-400 focus:bg-white transition-colors"
+          />
+          {clientSearch && <button onClick={() => setClientSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"><X size={12} /></button>}
+          {clientSearchFocused && clientSuggestions.length > 0 && (
+            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-stone-200 rounded-lg shadow-xl z-50 max-h-72 overflow-y-auto">
+              {clientSuggestions.map(c => (
+                <button
+                  key={c.clientId}
+                  onMouseDown={() => selectClientFromSearch(c.clientId)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-stone-50 border-b border-stone-50 last:border-b-0 cursor-pointer transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] font-semibold text-slate-800 truncate">{c.name}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase ${
+                        c.status === 'live' ? 'bg-emerald-50 text-emerald-600' : c.status === 'active' ? 'bg-teal-50 text-teal-600' : 'bg-slate-50 text-slate-500'
+                      }`}>{c.status}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 truncate">{c.accountOwner || c.clientId}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] text-slate-400">{c.pricingCount} slabs</span>
+                    {c.anomalyCount > 0 ? (
+                      <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-full">{c.anomalyCount}</span>
+                    ) : (
+                      <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">Clean</span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="w-px h-5 bg-stone-200 mx-0.5" />
+
+        {/* Filter within results */}
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             id="anomaly-search" type="text"
-            placeholder="Search company, unit, module..."
+            placeholder="Filter results..."
             value={search} onChange={e => setSearch(e.target.value)}
-            className="pl-9 pr-8 py-2 text-[12px] bg-stone-50 border border-stone-200 rounded-lg w-64 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:bg-white transition-colors"
+            className="pl-9 pr-8 py-2 text-[12px] bg-stone-50 border border-stone-200 rounded-lg w-44 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:bg-white transition-colors"
           />
           {search && <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"><X size={12} /></button>}
         </div>
@@ -504,6 +604,13 @@ export default function PricingAnomalyView() {
 
             {/* Anomaly cards */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {detailAnomalies.length === 0 && (
+                <div className="text-center py-12">
+                  <Shield size={28} className="mx-auto mb-2 text-emerald-400 opacity-60" />
+                  <p className="text-[13px] font-medium text-emerald-600">No anomalies found</p>
+                  <p className="text-[11px] text-slate-400 mt-1">This client&apos;s pricing looks clean</p>
+                </div>
+              )}
               {detailAnomalies.map((a, i) => {
                 const meta = TYPE_META[a.type];
                 const sev = SEV_STYLE[a.severity];
