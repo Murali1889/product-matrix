@@ -928,7 +928,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Floating nav actions — settings, save, logout */}
+      {/* Floating nav actions — save only, settings/logout commented out */}
       <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
         {pendingEdits.length > 0 && (
           <button
@@ -944,6 +944,7 @@ export default function Dashboard() {
             {pendingEdits.length} {saveStatus === 'saving' ? '...' : 'Save'}
           </button>
         )}
+        {/* Settings and logout commented out per user request
         <button
           onClick={() => setShowSettings(true)}
           className="p-1.5 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full shadow-lg text-slate-400 hover:text-slate-600 cursor-pointer transition-all"
@@ -958,6 +959,7 @@ export default function Dashboard() {
         >
           <LogOut size={13} />
         </button>
+        */}
       </div>
 
       {/* Main Content */}
@@ -1437,6 +1439,9 @@ function MatrixView({
 
   // API column search
   const [apiSearchTerm, setApiSearchTerm] = useState('');
+
+  // Consolidated filters dropdown
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
   // Chart panel
   const [showChart, setShowChart] = useState(false);
@@ -1995,7 +2000,8 @@ function MatrixView({
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-600 tabular-nums">
+            {/* Stats commented out per user request */}
+            {/* <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-600 tabular-nums">
               {stats.total} clients
             </span>
             <span className="text-[12px] text-slate-500 hidden sm:inline tracking-[-0.01em]">
@@ -2005,71 +2011,8 @@ function MatrixView({
               <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-amber-50 text-amber-600 hidden md:inline" title="Clients where Total ≠ Sum of APIs">
                 {stats.withDiscrepancy} review
               </span>
-            )}
-            <div className="hidden sm:flex items-center gap-1 ml-1 pl-2 border-l border-slate-200">
-              {/* Cross-sell toggle */}
-              <button
-                onClick={() => setCrossSellMode(!crossSellMode)}
-                className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
-                  crossSellMode
-                    ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
-                }`}
-                title={crossSellMode ? 'Hide cross-sell opportunities' : 'Show cross-sell opportunities (select a segment first)'}
-              >
-                <Target size={12} />
-                <span>Cross-Sell</span>
-              </button>
-              {/* Anomaly toggle */}
-              <button
-                onClick={() => setAnomalyMode(!anomalyMode)}
-                className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
-                  anomalyMode
-                    ? 'bg-rose-100 text-rose-700 border border-rose-300'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
-                }`}
-                title={anomalyMode ? 'Hide pricing anomalies' : 'Show only clients with pricing slab conflicts'}
-              >
-                <AlertCircle size={12} />
-                <span>Anomalies</span>
-                {anomalyMode && anomalyLoading && (
-                  <span className="w-3 h-3 border-[1.5px] border-rose-400 border-t-transparent rounded-full animate-spin" />
-                )}
-                {anomalyMode && anomalyStats && (
-                  <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.totalCompanies}</span>
-                )}
-              </button>
-              {/* Compact toggle */}
-              <button
-                onClick={() => setCompactMode(!compactMode)}
-                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                  compactMode ? 'bg-slate-200 text-slate-700' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                }`}
-                title={compactMode ? 'Comfortable view' : 'Compact view'}
-              >
-                {compactMode ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
-              </button>
-              {/* Chart toggle */}
-              <button
-                onClick={() => setShowChart(!showChart)}
-                className={`px-2 py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
-                  showChart
-                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
-                }`}
-                title="Toggle revenue chart"
-              >
-                <span className="flex items-center gap-1"><BarChart3 size={12} /> Chart</span>
-              </button>
-              {/* Export CSV */}
-              <button
-                onClick={exportCSV}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
-                title="Export to CSV"
-              >
-                <Download size={13} />
-              </button>
-            </div>
+            )} */}
+            {/* Export/download commented out per user request */}
           </div>
         </div>
 
@@ -2104,93 +2047,108 @@ function MatrixView({
 
               <div className="w-px h-5 bg-slate-200 shrink-0" />
 
-              <select
-                value={selectedMonth}
-                onChange={(e) => {
-                  const month = e.target.value;
-                  setSelectedMonth(month);
-                  // Switch to this month's data
-                  if (onLoadMonth) {
-                    onLoadMonth(month ? parseMonthToYYYYMM(month) : '');
-                  }
-                }}
-                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-colors duration-200 cursor-pointer ${
-                  selectedMonth ? 'border-amber-400 bg-amber-50 text-amber-700 font-medium' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <option value="">Latest</option>
-                {selectableMonths.map(month => (
-                  <option key={month} value={month}>{month}</option>
-                ))}
-              </select>
-              {isLoadingMonth && (
-                <div className="w-3 h-3 border-[1.5px] border-amber-400 border-t-transparent rounded-full animate-spin shrink-0" />
-              )}
-              <select
-                value={sortMode}
-                onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
-                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white shrink-0 text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-colors duration-200 hover:border-slate-300 cursor-pointer"
-              >
-                <option value="revenue">Revenue ↓</option>
-                <option value="status">Status</option>
-                <option value="name">Name A-Z</option>
-              </select>
-
-              <div className="w-px h-5 bg-slate-200 shrink-0" />
-
-              {/* Industry filter */}
-              <select
-                value={selectedSegment}
-                onChange={(e) => {
-                  setSelectedSegment(e.target.value);
-                  setNotUsingFilter(null);
-                  setCurrentPage(1);
-                }}
-                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-colors duration-200 cursor-pointer ${
-                  selectedSegment ? 'border-blue-400 bg-blue-50 text-blue-700 font-medium shadow-sm shadow-blue-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <option value="">All Industries</option>
-                {uniqueSegments.map(seg => {
-                  const count = clients.filter(c => c.profile?.segment === seg).length;
-                  return <option key={seg} value={seg}>{seg} ({count})</option>;
-                })}
-              </select>
-
-              {/* Country filter */}
-              <select
-                value={selectedCountry}
-                onChange={(e) => {
-                  setSelectedCountry(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition-colors duration-200 cursor-pointer ${
-                  selectedCountry ? 'border-emerald-400 bg-emerald-50 text-emerald-700 font-medium shadow-sm shadow-emerald-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <option value="">All Countries</option>
-                {uniqueCountries.map(c => (
-                  <option key={c.name} value={c.name}>{c.flag} {c.name} ({c.count})</option>
-                ))}
-              </select>
-
-              {/* Owner filter */}
-              <select
-                value={selectedOwner}
-                onChange={(e) => {
-                  setSelectedOwner(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`text-[12px] border rounded-lg px-2.5 py-1.5 shrink-0 focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition-colors duration-200 cursor-pointer ${
-                  selectedOwner ? 'border-purple-400 bg-purple-50 text-purple-700 font-medium shadow-sm shadow-purple-100' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <option value="">All Owners</option>
-                {uniqueOwners.map(owner => {
-                  const count = clients.filter(c => c.profile?.account_owner === owner).length;
-                  return <option key={owner} value={owner}>{owner} ({count})</option>;
-                })}
-              </select>
+              {/* Consolidated Filters button */}
+              {(() => {
+                const activeFilterCount = [selectedMonth, selectedSegment, selectedCountry, selectedOwner, sortMode !== 'revenue' ? sortMode : ''].filter(Boolean).length;
+                return (
+                  <div className="relative shrink-0">
+                    <button
+                      onClick={() => setShowFiltersPanel(p => !p)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium border rounded-lg cursor-pointer transition-colors ${
+                        showFiltersPanel || activeFilterCount > 0
+                          ? 'bg-amber-50 border-amber-300 text-amber-700'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                      }`}
+                    >
+                      <Filter size={12} />
+                      Filters
+                      {activeFilterCount > 0 && (
+                        <span className="text-[9px] bg-amber-200 text-amber-700 px-1.5 py-px rounded-full font-bold">{activeFilterCount}</span>
+                      )}
+                      {isLoadingMonth && (
+                        <span className="w-3 h-3 border-[1.5px] border-amber-400 border-t-transparent rounded-full animate-spin" />
+                      )}
+                    </button>
+                    {showFiltersPanel && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setShowFiltersPanel(false)} />
+                        <div className="absolute top-full left-0 mt-1 z-40 bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-64 space-y-2.5">
+                          <div>
+                            <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Month</label>
+                            <select
+                              value={selectedMonth}
+                              onChange={(e) => { setSelectedMonth(e.target.value); if (onLoadMonth) onLoadMonth(e.target.value ? parseMonthToYYYYMM(e.target.value) : ''); }}
+                              className="w-full text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                            >
+                              <option value="">Latest</option>
+                              {selectableMonths.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Sort</label>
+                            <select
+                              value={sortMode}
+                              onChange={(e) => setSortMode(e.target.value as 'revenue' | 'name' | 'status')}
+                              className="w-full text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                            >
+                              <option value="revenue">Revenue ↓</option>
+                              <option value="status">Status</option>
+                              <option value="name">Name A-Z</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Industry</label>
+                            <select
+                              value={selectedSegment}
+                              onChange={(e) => { setSelectedSegment(e.target.value); setNotUsingFilter(null); setCurrentPage(1); }}
+                              className="w-full text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                            >
+                              <option value="">All Industries</option>
+                              {uniqueSegments.map(seg => {
+                                const count = clients.filter(c => c.profile?.segment === seg).length;
+                                return <option key={seg} value={seg}>{seg} ({count})</option>;
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Country</label>
+                            <select
+                              value={selectedCountry}
+                              onChange={(e) => { setSelectedCountry(e.target.value); setCurrentPage(1); }}
+                              className="w-full text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                            >
+                              <option value="">All Countries</option>
+                              {uniqueCountries.map(c => <option key={c.name} value={c.name}>{c.flag} {c.name} ({c.count})</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Owner</label>
+                            <select
+                              value={selectedOwner}
+                              onChange={(e) => { setSelectedOwner(e.target.value); setCurrentPage(1); }}
+                              className="w-full text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                            >
+                              <option value="">All Owners</option>
+                              {uniqueOwners.map(owner => {
+                                const count = clients.filter(c => c.profile?.account_owner === owner).length;
+                                return <option key={owner} value={owner}>{owner} ({count})</option>;
+                              })}
+                            </select>
+                          </div>
+                          {activeFilterCount > 0 && (
+                            <button
+                              onClick={() => { setSelectedMonth(''); setSelectedSegment(''); setSelectedCountry(''); setSelectedOwner(''); setSortMode('revenue'); setNotUsingFilter(null); setCurrentPage(1); if (onLoadMonth) onLoadMonth(''); }}
+                              className="w-full text-[11px] text-amber-600 hover:text-amber-700 font-medium py-1 cursor-pointer"
+                            >
+                              Clear all filters
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="w-px h-5 bg-slate-200 shrink-0" />
 
@@ -2210,6 +2168,26 @@ function MatrixView({
                   </button>
                 )}
               </div>
+
+              {/* Anomaly toggle */}
+              <button
+                onClick={() => setAnomalyMode(!anomalyMode)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium border rounded-lg shrink-0 cursor-pointer transition-colors ${
+                  anomalyMode
+                    ? 'bg-rose-50 border-rose-300 text-rose-700'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+                title={anomalyMode ? 'Show all clients' : 'Show only clients with pricing slab conflicts'}
+              >
+                <AlertCircle size={12} />
+                Anomalies
+                {anomalyMode && anomalyLoading && (
+                  <span className="w-3 h-3 border-[1.5px] border-rose-400 border-t-transparent rounded-full animate-spin" />
+                )}
+                {anomalyMode && anomalyStats && (
+                  <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.totalCompanies}</span>
+                )}
+              </button>
 
               {/* Result count + pagination */}
               <div className="flex items-center gap-1.5 ml-auto shrink-0 pl-2 border-l border-slate-200">
@@ -3484,15 +3462,9 @@ function ClientDetailsPanel({
   const isIndustryUnknown = !client.profile?.segment || client.profile.segment === 'Unknown' || client.profile.segment === '-';
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop with blur */}
-      <div
-        className="absolute inset-0 bg-black/15 backdrop-blur-[2px] animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Panel */}
-      <div className="relative w-[700px] max-w-[85vw] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full" style={{ boxShadow: '-8px 0 30px rgba(0,0,0,0.08)' }}>
+    <div className="fixed top-0 right-0 z-50 h-full">
+      {/* Panel — no backdrop, stays open until close button */}
+      <div className="w-[700px] max-w-[85vw] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full" style={{ boxShadow: '-8px 0 30px rgba(0,0,0,0.12)' }}>
         {/* Header — compact: name + MRR inline, then tabs */}
         <div className="shrink-0 bg-white border-b border-slate-200 px-5 py-3">
           {/* Row 1: Status + Name + MRR + Month + Save + Close */}
@@ -3786,11 +3758,23 @@ function ClientDetailsPanel({
                           {(api.usage || 0) > 0 && (
                             <div className="text-[10px] text-slate-500">{(api.usage || 0).toLocaleString('en-US')} calls</div>
                           )}
-                          {hasAnomaly && apiAnomalies.map((conflict, ci) => (
-                            <div key={ci} className="text-[10px] mt-0.5 text-rose-600">
-                              Slab {conflict.slabStart.toLocaleString()}: {conflict.entries.map(e => `${e.moduleType} @ ${e.unitPrice}`).join(' vs ')}
+                          {hasAnomaly && (
+                            <div className="mt-1.5 space-y-1">
+                              {apiAnomalies.map((conflict, ci) => (
+                                <div key={ci} className="flex items-center gap-2 text-[10px]">
+                                  <span className="text-slate-400 shrink-0 w-14 text-right tabular-nums">{conflict.slabStart.toLocaleString()}+</span>
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    {conflict.entries.map((e, ei) => (
+                                      <span key={ei} className={`px-1.5 py-0.5 rounded font-mono ${ei === 0 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
+                                        {e.unitPrice}
+                                      </span>
+                                    ))}
+                                    <span className="text-rose-500 font-semibold">Δ {conflict.priceDiff.toFixed(2)}</span>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          )}
                         </div>
                         <div className="text-right ml-3">
                           {isEditing ? (

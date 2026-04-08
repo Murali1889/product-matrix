@@ -38,8 +38,10 @@ export async function GET() {
       groups[key].push(row);
     }
 
-    // Find conflicts: same group, different prices
+    // ── Type 1: Same slab start, different prices ──
     const anomalies: Anomaly[] = [];
+    const seenKeys = new Set<string>(); // track to avoid duplicates with type 2
+
     for (const entries of Object.values(groups)) {
       if (entries.length < 2) continue;
       const prices = new Set(entries.map(e => e['Unit Price']));
@@ -49,6 +51,8 @@ export async function GET() {
       const productName = makeProductName(first['Module Name'], first['Sub-Module']);
       const priceArr = entries.map(e => e['Unit Price']);
       const priceDiff = Math.max(...priceArr) - Math.min(...priceArr);
+      const key = `${first['Client ID']}|${productName}|${first['Slab Start']}`;
+      seenKeys.add(key);
 
       anomalies.push({
         clientId: first['Client ID'],
@@ -67,6 +71,54 @@ export async function GET() {
         })),
         priceDiff,
       });
+    }
+
+    // ── Type 2: Overlapping slabs with different prices ──
+    // Group by Client ID | Module Name | Sub-Module (no slab start)
+    const byProduct: Record<string, typeof rows> = {};
+    for (const row of rows) {
+      const key = `${row['Client ID']}|${row['Module Name']}|${row['Sub-Module']}`;
+      if (!byProduct[key]) byProduct[key] = [];
+      byProduct[key].push(row);
+    }
+
+    for (const productRows of Object.values(byProduct)) {
+      if (productRows.length < 2) continue;
+      const sorted = [...productRows].sort((a, b) => a['Slab Start'] - b['Slab Start']);
+
+      for (let i = 0; i < sorted.length; i++) {
+        for (let j = i + 1; j < sorted.length; j++) {
+          const a = sorted[i], b = sorted[j];
+          // Check overlap: a.start <= b.end AND b.start <= a.end
+          if (a['Slab Start'] <= b['Slab End'] && b['Slab Start'] <= a['Slab End']) {
+            // Same start is already caught by type 1
+            if (a['Slab Start'] === b['Slab Start']) continue;
+            // Only flag if different prices
+            if (a['Unit Price'] === b['Unit Price']) continue;
+
+            const productName = makeProductName(a['Module Name'], a['Sub-Module']);
+            const key = `${a['Client ID']}|${productName}|overlap-${a['Slab Start']}-${b['Slab Start']}`;
+            if (seenKeys.has(key)) continue;
+            seenKeys.add(key);
+
+            const priceDiff = Math.abs(a['Unit Price'] - b['Unit Price']);
+            anomalies.push({
+              clientId: a['Client ID'],
+              clientName: a['Client Name'],
+              status: a['Status'],
+              productName,
+              moduleName: a['Module Name'],
+              subModule: a['Sub-Module'],
+              slabStart: a['Slab Start'],
+              entries: [
+                { moduleType: a['Module Type'], unit: a['Unit'], slabStart: a['Slab Start'], slabEnd: a['Slab End'], unitPrice: a['Unit Price'] },
+                { moduleType: b['Module Type'], unit: b['Unit'], slabStart: b['Slab Start'], slabEnd: b['Slab End'], unitPrice: b['Unit Price'] },
+              ],
+              priceDiff,
+            });
+          }
+        }
+      }
     }
 
     // Group by product name for matrix
