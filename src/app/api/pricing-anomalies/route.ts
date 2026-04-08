@@ -29,7 +29,9 @@ export async function GET() {
       return NextResponse.json(cachedResult);
     }
 
-    const rows = await fetchPricing();
+    const allRows = await fetchPricing();
+    // Skip rows with empty Module Name — can't map to a product
+    const rows = allRows.filter(r => r['Module Name']);
 
     // Group by Client ID | Module Name | Sub-Module | Slab Start
     const groups: Record<string, typeof rows> = {};
