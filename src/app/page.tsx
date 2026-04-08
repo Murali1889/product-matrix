@@ -1426,12 +1426,14 @@ function MatrixView({
 
   // Pricing anomalies for matrix columns
   const [anomalyMode, setAnomalyMode] = useState(false);
-  const { data: anomalyData } = useSWR<{ matrixAnomalies: Record<string, { clientId: string; company: string; severity: string; description: string; priceDiff: number; entries: { moduleType: string; unit: string; start: number; end: number; unitPrice: number }[] }[]> }>(
+  interface PricingAnomaly { clientId: string; clientName: string; status: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number; }
+  const { data: anomalyData, isLoading: anomalyLoading } = useSWR<{ matrixAnomalies: Record<string, PricingAnomaly[]>; stats: { totalAnomalies: number; totalCompanies: number; productsAffected: number } }>(
     anomalyMode ? '/api/pricing-anomalies' : null,
     (url: string) => fetch(url).then(r => r.json()),
     { revalidateOnFocus: false }
   );
   const matrixAnomalies = anomalyData?.matrixAnomalies || {};
+  const anomalyStats = anomalyData?.stats;
 
   // API column search
   const [apiSearchTerm, setApiSearchTerm] = useState('');
@@ -2026,12 +2028,15 @@ function MatrixView({
                     ? 'bg-rose-100 text-rose-700 border border-rose-300'
                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
                 }`}
-                title={anomalyMode ? 'Hide pricing anomalies' : 'Highlight APIs with pricing conflicts'}
+                title={anomalyMode ? 'Hide pricing anomalies' : 'Show only clients with pricing slab conflicts'}
               >
                 <AlertCircle size={12} />
                 <span>Anomalies</span>
-                {anomalyMode && Object.keys(matrixAnomalies).length > 0 && (
-                  <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{Object.keys(matrixAnomalies).length}</span>
+                {anomalyMode && anomalyLoading && (
+                  <span className="w-3 h-3 border-[1.5px] border-rose-400 border-t-transparent rounded-full animate-spin" />
+                )}
+                {anomalyMode && anomalyStats && (
+                  <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.totalCompanies}</span>
                 )}
               </button>
               {/* Compact toggle */}
@@ -2606,16 +2611,16 @@ function MatrixView({
                     const adoption = currentSegmentAdoption?.apiAdoption[api];
                     const clientCount = apiClientCounts[api] || 0;
                     const apiAnomalies = anomalyMode ? (matrixAnomalies[api] || []) : [];
-                    const hasCritical = apiAnomalies.some(a => a.severity === 'critical');
                     const hasAnomaly = apiAnomalies.length > 0;
+                    const anomalyClients = hasAnomaly ? new Set(apiAnomalies.map(a => a.clientId)).size : 0;
                     return (
                       <th
                         key={api}
                         className={`text-center pl-4 pr-3 border-r border-slate-200 w-[140px] ${
                           isUnmatched ? 'bg-red-50/60' :
-                          hasAnomaly ? (hasCritical ? 'bg-rose-50/80' : 'bg-amber-50/60') : ''
+                          hasAnomaly ? 'bg-rose-50/80' : ''
                         } ${hasAnomaly ? 'shadow-[inset_0_-2px_0_#e11d48]' : 'shadow-[inset_0_-2px_0_#cbd5e1]'}`}
-                        title={hasAnomaly ? `${apiAnomalies.length} pricing anomalies across ${new Set(apiAnomalies.map(a => a.clientId)).size} clients` : isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
+                        title={hasAnomaly ? `Pricing conflict: ${anomalyClients} clients have different prices for same slab` : isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
                       >
                         <div className="flex flex-col items-center gap-0.5">
                           <div className={`col-label text-[11px] leading-snug text-center truncate max-w-[140px] ${isUnmatched ? 'text-red-600' : hasAnomaly ? 'text-rose-700 font-semibold' : 'text-slate-500'}`}>
@@ -2627,8 +2632,8 @@ function MatrixView({
                             </div>
                           )}
                           {hasAnomaly && (
-                            <div className={`text-[9px] px-1.5 py-px rounded-full font-bold ${hasCritical ? 'bg-rose-200 text-rose-700' : 'bg-amber-200 text-amber-700'}`}>
-                              {apiAnomalies.length} {apiAnomalies.length === 1 ? 'issue' : 'issues'}
+                            <div className="text-[9px] px-1.5 py-px rounded-full font-bold bg-rose-200 text-rose-700">
+                              {anomalyClients} {anomalyClients === 1 ? 'client' : 'clients'}
                             </div>
                           )}
                           {/* Client count badge: using / total — click to sort clients by this API */}
@@ -3221,7 +3226,7 @@ function ClientDetailsPanel({
   selectedMonth?: string;
   availableMonths?: string[];
   masterAPINames?: string[];
-  matrixAnomalies?: Record<string, { clientId: string; company: string; severity: string; description: string; priceDiff: number; entries: { moduleType: string; unit: string; start: number; end: number; unitPrice: number }[] }[]>;
+  matrixAnomalies?: Record<string, { clientId: string; clientName: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number }[]>;
 }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('overview');
   const [panelMonth, setPanelMonth] = useState<string>('');
@@ -3751,14 +3756,13 @@ function ClientDetailsPanel({
                     const isEditing = editingApiCost === api.name;
                     const apiAnomalies = (matrixAnomalies[api.name] || []).filter(a => a.clientId === client.client_id);
                     const hasAnomaly = apiAnomalies.length > 0;
-                    const hasCritical = apiAnomalies.some(a => a.severity === 'critical');
 
                     return (
                       <div
                         key={idx}
                         className={`flex items-center justify-between py-2 px-3 rounded-lg ${
                           hasAnomaly
-                            ? (hasCritical ? 'bg-rose-50 border border-rose-200' : 'bg-amber-50 border border-amber-200')
+                            ? 'bg-rose-50 border border-rose-200'
                             : api.environment === 'staging'
                             ? 'bg-purple-50 border border-purple-200'
                             : api.revenue_usd > 0 ? 'bg-emerald-50' : (api.usage || 0) > 0 ? 'bg-orange-50' : 'bg-slate-50'
@@ -3768,7 +3772,7 @@ function ClientDetailsPanel({
                           <div className="text-[12px] font-medium text-slate-800 truncate flex items-center gap-1.5">
                             {api.name}
                             {hasAnomaly && (
-                              <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded leading-none shrink-0 ${hasCritical ? 'bg-rose-200 text-rose-700' : 'bg-amber-200 text-amber-700'}`}>
+                              <span className="inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded leading-none shrink-0 bg-rose-200 text-rose-700">
                                 Pricing Conflict
                               </span>
                             )}
@@ -3782,11 +3786,11 @@ function ClientDetailsPanel({
                           {(api.usage || 0) > 0 && (
                             <div className="text-[10px] text-slate-500">{(api.usage || 0).toLocaleString('en-US')} calls</div>
                           )}
-                          {hasAnomaly && (
-                            <div className={`text-[10px] mt-0.5 ${hasCritical ? 'text-rose-600' : 'text-amber-600'}`}>
-                              {apiAnomalies[0].description}
+                          {hasAnomaly && apiAnomalies.map((conflict, ci) => (
+                            <div key={ci} className="text-[10px] mt-0.5 text-rose-600">
+                              Slab {conflict.slabStart.toLocaleString()}: {conflict.entries.map(e => `${e.moduleType} @ ${e.unitPrice}`).join(' vs ')}
                             </div>
-                          )}
+                          ))}
                         </div>
                         <div className="text-right ml-3">
                           {isEditing ? (
