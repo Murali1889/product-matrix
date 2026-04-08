@@ -11,7 +11,6 @@ import type { CellComment as CellCommentType, ClientComment as ClientCommentType
 import { getSlackSettings, saveSlackSettings, testSlackWebhook, notifyComment, notifyRevenueEdit } from '@/lib/slack';
 import type { SlackSettings } from '@/lib/slack';
 import RevenueIntelligenceView from '@/components/RevenueIntelligenceView';
-import PricingAnomalyView from '@/components/PricingAnomalyView';
 import LoginPage from '@/components/LoginPage';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
 import { showToast } from '@/components/ToastNotifications';
@@ -185,7 +184,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'revenue' | 'latest' | 'name'>('revenue');
-  const [view, setView] = useState<'revenue-intel' | 'matrix' | 'anomalies'>('revenue-intel');
+  const [view, setView] = useState<'revenue-intel' | 'matrix'>('revenue-intel');
   const [selectedCell, setSelectedCell] = useState<{ client: string; api: string } | null>(null);
 
   // Pagination state
@@ -927,17 +926,6 @@ export default function Dashboard() {
           <LayoutGrid size={14} />
           Matrix
         </button>
-        <button
-          onClick={() => setView('anomalies')}
-          className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium rounded-full transition-all cursor-pointer ${
-            view === 'anomalies'
-              ? 'bg-slate-800 text-white shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <AlertCircle size={14} />
-          Anomalies
-        </button>
       </div>
 
       {/* Floating nav actions — settings, save, logout */}
@@ -1081,11 +1069,6 @@ export default function Dashboard() {
             availableMonths={availableMonths}
             onMonthChange={(m) => setApiMonth(m)}
           />
-        )}
-
-        {/* Pricing Anomaly View */}
-        {view === 'anomalies' && (
-          <PricingAnomalyView />
         )}
 
         {/* Analytics View - REMOVED: replaced by Revenue Intelligence */}
@@ -1441,6 +1424,15 @@ function MatrixView({
   // New: Cross-sell mode
   const [crossSellMode, setCrossSellMode] = useState(false);
 
+  // Pricing anomalies for matrix columns
+  const [anomalyMode, setAnomalyMode] = useState(false);
+  const { data: anomalyData } = useSWR<{ matrixAnomalies: Record<string, { clientId: string; company: string; severity: string; description: string; priceDiff: number; entries: { moduleType: string; unit: string; start: number; end: number; unitPrice: number }[] }[]> }>(
+    anomalyMode ? '/api/pricing-anomalies' : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false }
+  );
+  const matrixAnomalies = anomalyData?.matrixAnomalies || {};
+
   // API column search
   const [apiSearchTerm, setApiSearchTerm] = useState('');
 
@@ -1762,6 +1754,15 @@ function MatrixView({
       });
     }
 
+    // Filter by anomaly mode — only show clients that have pricing anomalies
+    if (anomalyMode && Object.keys(matrixAnomalies).length > 0) {
+      const anomalyClientIds = new Set<string>();
+      for (const entries of Object.values(matrixAnomalies)) {
+        for (const e of entries) anomalyClientIds.add(e.clientId);
+      }
+      filtered = filtered.filter(c => anomalyClientIds.has(c.client_id || ''));
+    }
+
     // Then sort
     return [...filtered].sort((a, b) => {
       // When sorting by a specific API column, users of that API come first (by that API's revenue desc)
@@ -1797,7 +1798,7 @@ function MatrixView({
       // Default: sort by revenue within same category
       return b.totalRevenue - a.totalRevenue;
     });
-  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, selectedOwner, selectedCountry, notUsingFilter, getClientAPIData, sortByAPI]);
+  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, selectedOwner, selectedCountry, notUsingFilter, getClientAPIData, sortByAPI, anomalyMode, matrixAnomalies]);
 
   const totalPages = Math.ceil(sortedClients.length / pageSize);
 
@@ -2016,6 +2017,22 @@ function MatrixView({
               >
                 <Target size={12} />
                 <span>Cross-Sell</span>
+              </button>
+              {/* Anomaly toggle */}
+              <button
+                onClick={() => setAnomalyMode(!anomalyMode)}
+                className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer ${
+                  anomalyMode
+                    ? 'bg-rose-100 text-rose-700 border border-rose-300'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-transparent'
+                }`}
+                title={anomalyMode ? 'Hide pricing anomalies' : 'Highlight APIs with pricing conflicts'}
+              >
+                <AlertCircle size={12} />
+                <span>Anomalies</span>
+                {anomalyMode && Object.keys(matrixAnomalies).length > 0 && (
+                  <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{Object.keys(matrixAnomalies).length}</span>
+                )}
               </button>
               {/* Compact toggle */}
               <button
@@ -2588,21 +2605,30 @@ function MatrixView({
                     const isUnmatched = unmatchedAPIs.includes(api);
                     const adoption = currentSegmentAdoption?.apiAdoption[api];
                     const clientCount = apiClientCounts[api] || 0;
+                    const apiAnomalies = anomalyMode ? (matrixAnomalies[api] || []) : [];
+                    const hasCritical = apiAnomalies.some(a => a.severity === 'critical');
+                    const hasAnomaly = apiAnomalies.length > 0;
                     return (
                       <th
                         key={api}
-                        className={`text-center pl-4 pr-3 border-r border-slate-200 w-[140px] shadow-[inset_0_-2px_0_#cbd5e1] ${
-                          isUnmatched ? 'bg-red-50/60' : ''
-                        }`}
-                        title={isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
+                        className={`text-center pl-4 pr-3 border-r border-slate-200 w-[140px] ${
+                          isUnmatched ? 'bg-red-50/60' :
+                          hasAnomaly ? (hasCritical ? 'bg-rose-50/80' : 'bg-amber-50/60') : ''
+                        } ${hasAnomaly ? 'shadow-[inset_0_-2px_0_#e11d48]' : 'shadow-[inset_0_-2px_0_#cbd5e1]'}`}
+                        title={hasAnomaly ? `${apiAnomalies.length} pricing anomalies across ${new Set(apiAnomalies.map(a => a.clientId)).size} clients` : isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
                       >
                         <div className="flex flex-col items-center gap-0.5">
-                          <div className={`col-label text-[11px] leading-snug text-center truncate max-w-[140px] ${isUnmatched ? 'text-red-600' : 'text-slate-500'}`}>
+                          <div className={`col-label text-[11px] leading-snug text-center truncate max-w-[140px] ${isUnmatched ? 'text-red-600' : hasAnomaly ? 'text-rose-700 font-semibold' : 'text-slate-500'}`}>
                             {moduleName}
                           </div>
                           {subModule && (
-                            <div className={`text-[10px] font-normal leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-400' : 'text-slate-400'}`}>
+                            <div className={`text-[10px] font-normal leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-400' : hasAnomaly ? 'text-rose-500' : 'text-slate-400'}`}>
                               {subModule}
+                            </div>
+                          )}
+                          {hasAnomaly && (
+                            <div className={`text-[9px] px-1.5 py-px rounded-full font-bold ${hasCritical ? 'bg-rose-200 text-rose-700' : 'bg-amber-200 text-amber-700'}`}>
+                              {apiAnomalies.length} {apiAnomalies.length === 1 ? 'issue' : 'issues'}
                             </div>
                           )}
                           {/* Client count badge: using / total — click to sort clients by this API */}
@@ -2986,6 +3012,7 @@ function MatrixView({
         needsConversion={needsConversion}
         selectedMonth={selectedMonth}
         masterAPINames={masterAPIs}
+        matrixAnomalies={matrixAnomalies}
       />
     </div>
   );
@@ -3183,6 +3210,7 @@ function ClientDetailsPanel({
   selectedMonth: initialMonth,
   availableMonths,
   masterAPINames = [],
+  matrixAnomalies = {},
 }: {
   client: ProcessedClient | null;
   onClose: () => void;
@@ -3193,6 +3221,7 @@ function ClientDetailsPanel({
   selectedMonth?: string;
   availableMonths?: string[];
   masterAPINames?: string[];
+  matrixAnomalies?: Record<string, { clientId: string; company: string; severity: string; description: string; priceDiff: number; entries: { moduleType: string; unit: string; start: number; end: number; unitPrice: number }[] }[]>;
 }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('overview');
   const [panelMonth, setPanelMonth] = useState<string>('');
@@ -3720,12 +3749,17 @@ function ClientDetailsPanel({
                   .sort((a, b) => (b.revenue_usd || 0) - (a.revenue_usd || 0))
                   .map((api, idx) => {
                     const isEditing = editingApiCost === api.name;
+                    const apiAnomalies = (matrixAnomalies[api.name] || []).filter(a => a.clientId === client.client_id);
+                    const hasAnomaly = apiAnomalies.length > 0;
+                    const hasCritical = apiAnomalies.some(a => a.severity === 'critical');
 
                     return (
                       <div
                         key={idx}
                         className={`flex items-center justify-between py-2 px-3 rounded-lg ${
-                          api.environment === 'staging'
+                          hasAnomaly
+                            ? (hasCritical ? 'bg-rose-50 border border-rose-200' : 'bg-amber-50 border border-amber-200')
+                            : api.environment === 'staging'
                             ? 'bg-purple-50 border border-purple-200'
                             : api.revenue_usd > 0 ? 'bg-emerald-50' : (api.usage || 0) > 0 ? 'bg-orange-50' : 'bg-slate-50'
                         }`}
@@ -3733,6 +3767,11 @@ function ClientDetailsPanel({
                         <div className="flex-1 min-w-0">
                           <div className="text-[12px] font-medium text-slate-800 truncate flex items-center gap-1.5">
                             {api.name}
+                            {hasAnomaly && (
+                              <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded leading-none shrink-0 ${hasCritical ? 'bg-rose-200 text-rose-700' : 'bg-amber-200 text-amber-700'}`}>
+                                Pricing Conflict
+                              </span>
+                            )}
                             {api.environment === 'staging' && (
                               <span className="inline-flex px-1.5 py-0.5 text-[9px] font-semibold uppercase rounded bg-purple-100 text-purple-700 leading-none shrink-0">Staging</span>
                             )}
@@ -3742,6 +3781,11 @@ function ClientDetailsPanel({
                           </div>
                           {(api.usage || 0) > 0 && (
                             <div className="text-[10px] text-slate-500">{(api.usage || 0).toLocaleString('en-US')} calls</div>
+                          )}
+                          {hasAnomaly && (
+                            <div className={`text-[10px] mt-0.5 ${hasCritical ? 'text-rose-600' : 'text-amber-600'}`}>
+                              {apiAnomalies[0].description}
+                            </div>
                           )}
                         </div>
                         <div className="text-right ml-3">
