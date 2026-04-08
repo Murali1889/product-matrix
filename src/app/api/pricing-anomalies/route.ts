@@ -91,8 +91,8 @@ export async function GET() {
       for (let i = 0; i < sorted.length; i++) {
         for (let j = i + 1; j < sorted.length; j++) {
           const a = sorted[i], b = sorted[j];
-          // Check overlap: a.start <= b.end AND b.start <= a.end
-          if (a['Slab Start'] <= b['Slab End'] && b['Slab Start'] <= a['Slab End']) {
+          // Check true overlap: b starts BEFORE a ends (not just touching at boundary)
+          if (b['Slab Start'] < a['Slab End'] && a['Slab Start'] < b['Slab End']) {
             // Same start is already caught by type 1
             if (a['Slab Start'] === b['Slab Start']) continue;
             // Only flag if different prices
