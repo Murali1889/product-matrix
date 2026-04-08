@@ -2188,6 +2188,31 @@ function MatrixView({
                   <span className="text-[9px] bg-rose-200 text-rose-700 px-1.5 py-px rounded-full font-bold">{anomalyStats.totalCompanies}</span>
                 )}
               </button>
+              {anomalyMode && anomalyData && Object.keys(matrixAnomalies).length > 0 && (
+                <button
+                  onClick={() => {
+                    const csvRows = ['Client ID,Client Name,Status,Product,Module Type,Unit,Slab Start,Slab End,Unit Price,Price Diff'];
+                    for (const items of Object.values(matrixAnomalies)) {
+                      for (const a of items) {
+                        for (const e of a.entries) {
+                          csvRows.push(`"${a.clientId}","${a.clientName}","${a.status}","${a.productName}","${e.moduleType}","${e.unit}",${e.slabStart},${e.slabEnd},${e.unitPrice},${a.priceDiff.toFixed(2)}`);
+                        }
+                      }
+                    }
+                    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `pricing-anomalies-${new Date().toISOString().slice(0, 10)}.csv`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all cursor-pointer shrink-0"
+                  title="Download anomalies as CSV"
+                >
+                  <Download size={13} />
+                </button>
+              )}
 
               {/* Result count + pagination */}
               <div className="flex items-center gap-1.5 ml-auto shrink-0 pl-2 border-l border-slate-200">
