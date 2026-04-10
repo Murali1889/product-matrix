@@ -2002,7 +2002,7 @@ function MatrixView({
   }, [cellPopup, selectedClient]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col h-full">
       {/* Header Bar */}
       <div className="px-3 sm:px-4 py-2 border-b border-slate-200 bg-white shrink-0">
         {/* Top row: Title and Stats */}
@@ -2095,8 +2095,8 @@ function MatrixView({
                     </button>
                     {showFiltersPanel && (
                       <>
-                        <div className="fixed inset-0 z-30" onClick={() => setShowFiltersPanel(false)} />
-                        <div className="absolute top-full left-0 mt-1 z-40 bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-64 space-y-2.5">
+                        <div className="fixed inset-0 z-[999]" onClick={() => setShowFiltersPanel(false)} />
+                        <div className="absolute top-full left-0 mt-1 z-[1000] bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-64 space-y-2.5">
                           <div>
                             <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Month</label>
                             <select
