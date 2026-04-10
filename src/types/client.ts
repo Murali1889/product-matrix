@@ -4,6 +4,15 @@ export interface APIUsage {
   revenue_usd: number;
   usage?: number;
   environment?: 'production' | 'staging';
+  // Prod vs Staging breakdown
+  prodTotal?: number;
+  prodBillable?: number;
+  prodCostINR?: number;
+  prodCostUSD?: number;
+  stagingTotal?: number;
+  stagingBillable?: number;
+  stagingCostINR?: number;
+  stagingCostUSD?: number;
 }
 
 export interface MonthlyData {

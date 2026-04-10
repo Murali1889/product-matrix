@@ -71,6 +71,14 @@ export interface GSUsage {
   'Unit Price': number;
   'Computed Cost': number;
   'Effective Cost': number;
+  'Prod Total': number;
+  'Prod Billable': number;
+  'Prod Cost (INR)': number;
+  'Prod Cost (USD)': number;
+  'Staging Total': number;
+  'Staging Billable': number;
+  'Staging Cost (INR)': number;
+  'Staging Cost (USD)': number;
 }
 
 // ============== CACHING ==============

@@ -110,6 +110,15 @@ export interface APIUsage {
   success: number;
   currency: string;
   environment?: 'production' | 'staging';
+  // Prod vs Staging breakdown
+  prodTotal: number;
+  prodBillable: number;
+  prodCostINR: number;
+  prodCostUSD: number;
+  stagingTotal: number;
+  stagingBillable: number;
+  stagingCostINR: number;
+  stagingCostUSD: number;
 }
 
 export interface MonthlyData {
@@ -408,6 +417,14 @@ export async function loadMatrixData(month?: string): Promise<MatrixData> {
         unitPrice: number;
         moduleName: string;
         subModule: string;
+        prodTotal: number;
+        prodBillable: number;
+        prodCostINR: number;
+        prodCostUSD: number;
+        stagingTotal: number;
+        stagingBillable: number;
+        stagingCostINR: number;
+        stagingCostUSD: number;
       }>();
 
       rows.forEach(row => {
@@ -420,6 +437,14 @@ export async function loadMatrixData(month?: string): Promise<MatrixData> {
           existing.usage += row['Total Count'] || 0;
           existing.billable += row['Billable Count'] || 0;
           existing.cost += row['Effective Cost'] || 0;
+          existing.prodTotal += row['Prod Total'] || 0;
+          existing.prodBillable += row['Prod Billable'] || 0;
+          existing.prodCostINR += row['Prod Cost (INR)'] || 0;
+          existing.prodCostUSD += row['Prod Cost (USD)'] || 0;
+          existing.stagingTotal += row['Staging Total'] || 0;
+          existing.stagingBillable += row['Staging Billable'] || 0;
+          existing.stagingCostINR += row['Staging Cost (INR)'] || 0;
+          existing.stagingCostUSD += row['Staging Cost (USD)'] || 0;
         } else {
           consolidated.set(key, {
             usage: row['Total Count'] || 0,
@@ -428,6 +453,14 @@ export async function loadMatrixData(month?: string): Promise<MatrixData> {
             unitPrice: row['Unit Price'] || 0,
             moduleName: modName,
             subModule: subMod,
+            prodTotal: row['Prod Total'] || 0,
+            prodBillable: row['Prod Billable'] || 0,
+            prodCostINR: row['Prod Cost (INR)'] || 0,
+            prodCostUSD: row['Prod Cost (USD)'] || 0,
+            stagingTotal: row['Staging Total'] || 0,
+            stagingBillable: row['Staging Billable'] || 0,
+            stagingCostINR: row['Staging Cost (INR)'] || 0,
+            stagingCostUSD: row['Staging Cost (USD)'] || 0,
           });
         }
       });
@@ -449,6 +482,14 @@ export async function loadMatrixData(month?: string): Promise<MatrixData> {
           success: data.billable,
           currency,
           environment: 'production',
+          prodTotal: data.prodTotal,
+          prodBillable: data.prodBillable,
+          prodCostINR: data.prodCostINR,
+          prodCostUSD: data.prodCostUSD,
+          stagingTotal: data.stagingTotal,
+          stagingBillable: data.stagingBillable,
+          stagingCostINR: data.stagingCostINR,
+          stagingCostUSD: data.stagingCostUSD,
         });
 
         apiRevenues[apiName] = (apiRevenues[apiName] || 0) + data.cost;

@@ -200,6 +200,14 @@ export async function GET(request: Request) {
               usage: 0,
               success: 0,
               currency: client.profile.billing_currency || 'INR',
+              prodTotal: 0,
+              prodBillable: 0,
+              prodCostINR: 0,
+              prodCostUSD: 0,
+              stagingTotal: 0,
+              stagingBillable: 0,
+              stagingCostINR: 0,
+              stagingCostUSD: 0,
             });
           }
 

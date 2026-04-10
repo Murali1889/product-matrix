@@ -1503,6 +1503,14 @@ function MatrixView({
     usage: number;
     currency: string;
     position: { x: number; y: number };
+    prodTotal: number;
+    prodBillable: number;
+    prodCostINR: number;
+    prodCostUSD: number;
+    stagingTotal: number;
+    stagingBillable: number;
+    stagingCostINR: number;
+    stagingCostUSD: number;
   } | null>(null);
 
   // API Mapping modal state
@@ -1583,14 +1591,28 @@ function MatrixView({
 
   // Get API revenue for a client based on selected month
   // Returns native-currency values (caller must convert for display/aggregation)
-  const getClientAPIData = useCallback((client: ProcessedClient, apiName: string): { revenue: number; usage: number; hasUsageNoRevenue: boolean } => {
+  const getClientAPIData = useCallback((client: ProcessedClient, apiName: string): {
+    revenue: number; usage: number; hasUsageNoRevenue: boolean;
+    prodTotal: number; prodBillable: number; prodCostINR: number; prodCostUSD: number;
+    stagingTotal: number; stagingBillable: number; stagingCostINR: number; stagingCostUSD: number;
+  } => {
     const month = selectedMonth || allMonths[0] || '';
     const monthData = client.monthly_data?.find(m => m.month === month) || client.monthly_data?.[0];
-    if (!monthData) return { revenue: 0, usage: 0, hasUsageNoRevenue: false };
+    if (!monthData) return { revenue: 0, usage: 0, hasUsageNoRevenue: false, prodTotal: 0, prodBillable: 0, prodCostINR: 0, prodCostUSD: 0, stagingTotal: 0, stagingBillable: 0, stagingCostINR: 0, stagingCostUSD: 0 };
     const apiData = monthData.apis?.find(a => a.name === apiName);
     const usage = apiData?.usage || 0;
     const revenue = apiData?.revenue_usd || 0;
-    return { revenue, usage, hasUsageNoRevenue: usage > 0 && revenue === 0 };
+    return {
+      revenue, usage, hasUsageNoRevenue: usage > 0 && revenue === 0,
+      prodTotal: apiData?.prodTotal || 0,
+      prodBillable: apiData?.prodBillable || 0,
+      prodCostINR: apiData?.prodCostINR || 0,
+      prodCostUSD: apiData?.prodCostUSD || 0,
+      stagingTotal: apiData?.stagingTotal || 0,
+      stagingBillable: apiData?.stagingBillable || 0,
+      stagingCostINR: apiData?.stagingCostINR || 0,
+      stagingCostUSD: apiData?.stagingCostUSD || 0,
+    };
   }, [selectedMonth]);
 
   // Get previous month's API revenue for MoM cell indicators
@@ -2815,7 +2837,15 @@ function MatrixView({
                                   revenue: value,
                                   usage: usage,
                                   currency: client.profile?.billing_currency || 'USD',
-                                  position: { x: rect.left, y: rect.bottom + 4 }
+                                  position: { x: rect.left, y: rect.bottom + 4 },
+                                  prodTotal: apiData.prodTotal,
+                                  prodBillable: apiData.prodBillable,
+                                  prodCostINR: apiData.prodCostINR,
+                                  prodCostUSD: apiData.prodCostUSD,
+                                  stagingTotal: apiData.stagingTotal,
+                                  stagingBillable: apiData.stagingBillable,
+                                  stagingCostINR: apiData.stagingCostINR,
+                                  stagingCostUSD: apiData.stagingCostUSD,
                                 });
                               }
                             }}
@@ -3098,7 +3128,7 @@ function CellPopupWithComments({
   crossSellOpp,
   selectedSegment,
 }: {
-  cellPopup: { clientName: string; apiName: string; revenue: number; usage: number; currency: string; position: { x: number; y: number } };
+  cellPopup: { clientName: string; apiName: string; revenue: number; usage: number; currency: string; position: { x: number; y: number }; prodTotal: number; prodBillable: number; prodCostINR: number; prodCostUSD: number; stagingTotal: number; stagingBillable: number; stagingCostINR: number; stagingCostUSD: number };
   onClose: () => void;
   formatCurrency: (n: number, currency?: string) => string;
   onStartEdit: () => void;
@@ -3169,7 +3199,13 @@ function CellPopupWithComments({
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[12px] text-slate-400 tracking-wide">API Calls</span>
+          <span className="text-[12px] text-slate-400 tracking-wide">Billable Count</span>
+          <span className="text-[14px] font-semibold text-slate-700 tabular-nums">
+            {(cellPopup.prodBillable + cellPopup.stagingBillable) > 0 ? (cellPopup.prodBillable + cellPopup.stagingBillable).toLocaleString('en-US') : '\u2014'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[12px] text-slate-400 tracking-wide">Total Calls</span>
           <span className="text-[14px] font-semibold text-slate-700 tabular-nums">
             {cellPopup.usage > 0 ? cellPopup.usage.toLocaleString('en-US') : '\u2014'}
           </span>
@@ -3181,6 +3217,47 @@ function CellPopupWithComments({
           </span>
         </div>
       </div>
+
+      {/* Prod vs Staging Breakdown */}
+      {(cellPopup.prodTotal > 0 || cellPopup.stagingTotal > 0) && (
+        <div className="mt-3 pt-2.5 border-t border-slate-100 space-y-2">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Environment Breakdown</div>
+          {cellPopup.prodTotal > 0 && (
+            <div className="bg-emerald-50/60 rounded-lg px-2.5 py-1.5 space-y-1">
+              <div className="text-[11px] font-semibold text-emerald-700">Production</div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-500">Total</span>
+                <span className="text-slate-700 tabular-nums">{cellPopup.prodTotal.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-500">Billable</span>
+                <span className="text-slate-700 tabular-nums">{cellPopup.prodBillable.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-500">Cost</span>
+                <span className="text-slate-700 rev-num">{cellPopup.prodCostUSD > 0 ? `$${cellPopup.prodCostUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `\u20B9${cellPopup.prodCostINR.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
+              </div>
+            </div>
+          )}
+          {cellPopup.stagingTotal > 0 && (
+            <div className="bg-amber-50/60 rounded-lg px-2.5 py-1.5 space-y-1">
+              <div className="text-[11px] font-semibold text-amber-700">Staging</div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-500">Total</span>
+                <span className="text-slate-700 tabular-nums">{cellPopup.stagingTotal.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-500">Billable</span>
+                <span className="text-slate-700 tabular-nums">{cellPopup.stagingBillable.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-500">Cost</span>
+                <span className="text-slate-700 rev-num">{cellPopup.stagingCostUSD > 0 ? `$${cellPopup.stagingCostUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `\u20B9${cellPopup.stagingCostINR.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Cross-sell insight */}
       {crossSellOpp && (
