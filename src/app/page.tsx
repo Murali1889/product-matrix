@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import useSWR, { mutate } from 'swr';
 import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers } from 'lucide-react';
 import { useFeedback } from 'react-visual-feedback';
@@ -1466,6 +1467,7 @@ function MatrixView({
 
   // Consolidated filters dropdown
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const filtersBtnRef = useRef<HTMLButtonElement>(null);
 
   // Chart panel
   const [showChart, setShowChart] = useState(false);
@@ -2075,8 +2077,9 @@ function MatrixView({
               {(() => {
                 const activeFilterCount = [selectedMonth, selectedSegment, selectedCountry, selectedOwner, sortMode !== 'revenue' ? sortMode : ''].filter(Boolean).length;
                 return (
-                  <div className="relative shrink-0">
+                  <div className="shrink-0">
                     <button
+                      ref={filtersBtnRef}
                       onClick={() => setShowFiltersPanel(p => !p)}
                       className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium border rounded-lg cursor-pointer transition-colors ${
                         showFiltersPanel || activeFilterCount > 0
@@ -2093,10 +2096,16 @@ function MatrixView({
                         <span className="w-3 h-3 border-[1.5px] border-amber-400 border-t-transparent rounded-full animate-spin" />
                       )}
                     </button>
-                    {showFiltersPanel && (
+                    {showFiltersPanel && createPortal(
                       <>
                         <div className="fixed inset-0 z-[999]" onClick={() => setShowFiltersPanel(false)} />
-                        <div className="absolute top-full left-0 mt-1 z-[1000] bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-64 space-y-2.5">
+                        <div
+                          className="fixed z-[1000] bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-64 space-y-2.5"
+                          style={{
+                            top: (filtersBtnRef.current?.getBoundingClientRect().bottom ?? 0) + 4,
+                            left: filtersBtnRef.current?.getBoundingClientRect().left ?? 0,
+                          }}
+                        >
                           <div>
                             <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Month</label>
                             <select
@@ -2168,7 +2177,8 @@ function MatrixView({
                             </button>
                           )}
                         </div>
-                      </>
+                      </>,
+                      document.body
                     )}
                   </div>
                 );
