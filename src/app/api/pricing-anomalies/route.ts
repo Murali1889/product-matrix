@@ -29,14 +29,18 @@ export async function GET() {
       return NextResponse.json(cachedResult);
     }
 
-    const [allPricingRows, liveClients] = await Promise.all([
+    const [allPricingRows, liveClients, activeClients] = await Promise.all([
       fetchPricing(),
       fetchClients('live'),
+      fetchClients('active'),
     ]);
 
-    // Only include pricing rows for live clients
-    const liveClientIds = new Set(liveClients.map(c => c['Client ID']));
-    const livePricingRows = allPricingRows.filter(r => liveClientIds.has(r['Client ID']));
+    // Only include pricing rows for live or active clients
+    const validClientIds = new Set([
+      ...liveClients.map(c => c['Client ID']),
+      ...activeClients.map(c => c['Client ID']),
+    ]);
+    const livePricingRows = allPricingRows.filter(r => validClientIds.has(r['Client ID']));
 
     const rows = livePricingRows.filter(r => r['Module Name']);
     const unmappedRows = livePricingRows.filter(r => !r['Module Name']);
