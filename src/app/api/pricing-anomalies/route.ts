@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchPricing } from '@/lib/google-sheets-api';
+import { fetchPricing, fetchClients } from '@/lib/google-sheets-api';
 
 export interface Anomaly {
   type: 'pricing-conflict' | 'slab-overlap';
@@ -29,9 +29,17 @@ export async function GET() {
       return NextResponse.json(cachedResult);
     }
 
-    const allRows = await fetchPricing();
-    const rows = allRows.filter(r => r['Module Name']);
-    const unmappedRows = allRows.filter(r => !r['Module Name']);
+    const [allPricingRows, liveClients] = await Promise.all([
+      fetchPricing(),
+      fetchClients('live'),
+    ]);
+
+    // Only include pricing rows for live clients
+    const liveClientIds = new Set(liveClients.map(c => c['Client ID']));
+    const livePricingRows = allPricingRows.filter(r => liveClientIds.has(r['Client ID']));
+
+    const rows = livePricingRows.filter(r => r['Module Name']);
+    const unmappedRows = livePricingRows.filter(r => !r['Module Name']);
 
     // Group by Client ID | Module Name | Sub-Module | Slab Start
     const groups: Record<string, typeof rows> = {};
@@ -193,7 +201,7 @@ export async function GET() {
         overlapProducts: Object.keys(overlapsByProduct).length,
         unmappedCount: unmappedAnomalies.length,
         unmappedClients: new Set(unmappedAnomalies.map(a => a.clientId)).size,
-        totalRows: allRows.length,
+        totalRows: livePricingRows.length,
       },
     };
 
