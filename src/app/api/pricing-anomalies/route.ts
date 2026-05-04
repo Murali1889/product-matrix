@@ -29,11 +29,11 @@ export async function GET() {
       return NextResponse.json(cachedResult);
     }
 
-    const [allPricingRows, liveClients, activeClients] = await Promise.all([
-      fetchPricing(),
-      fetchClients('live'),
-      fetchClients('active'),
-    ]);
+    // Sequential, not Promise.all — Metabase is the bottleneck and we've
+    // serialized requests at the client level anyway.
+    const allPricingRows = await fetchPricing();
+    const liveClients = await fetchClients('live');
+    const activeClients = await fetchClients('active');
 
     // Only include pricing rows for live or active clients
     const validClientIds = new Set([

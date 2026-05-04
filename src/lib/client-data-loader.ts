@@ -324,12 +324,12 @@ export async function loadMatrixData(month?: string): Promise<MatrixData> {
 
   console.log(`[ClientDataLoader] Loading data for months: ${months.join(', ')}`);
 
-  // Fetch clients and usage in parallel
-  // Live clients = "master list", usage data may include non-live clients
-  const [liveClients, ...usageByMonth] = await Promise.all([
-    fetchClients('live'),
-    ...months.map(m => fetchUsage(m)),
-  ]);
+  // Sequential — Metabase is serialized at the client layer anyway.
+  const liveClients = await fetchClients('live');
+  const usageByMonth: Awaited<ReturnType<typeof fetchUsage>>[] = [];
+  for (const m of months) {
+    usageByMonth.push(await fetchUsage(m));
+  }
 
   // Build client lookup from live clients (deduplicate, exclude internal)
   const clientMap = new Map<string, GSClient>();
