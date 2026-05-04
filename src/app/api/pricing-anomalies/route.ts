@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchPricing, fetchClients } from '@/lib/google-sheets-api';
+import { fetchPricing, fetchClients } from '@/lib/metabase';
 
 export interface Anomaly {
   type: 'pricing-conflict' | 'slab-overlap';

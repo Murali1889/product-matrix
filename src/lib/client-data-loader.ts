@@ -17,7 +17,7 @@ import {
   type GSClient,
   type GSUsage,
   type GSProduct,
-} from './google-sheets-api';
+} from './metabase';
 
 // ============== TYPES ==============
 
