@@ -6,19 +6,19 @@ import { createClient } from '@supabase/supabase-js';
 // ============================================
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 
 // Only create client if configured (prevents build errors)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabase = supabaseUrl && supabaseUrl.startsWith('https://')
-  ? createClient(supabaseUrl, supabaseAnonKey) as any
+  ? createClient(supabaseUrl, supabasePublishableKey) as any
   : null;
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = (): boolean => {
   return (
     supabaseUrl !== 'YOUR_SUPABASE_URL' &&
-    supabaseAnonKey !== 'YOUR_SUPABASE_ANON_KEY' &&
+    supabasePublishableKey.length > 0 &&
     supabaseUrl.startsWith('https://')
   );
 };

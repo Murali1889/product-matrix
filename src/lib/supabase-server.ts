@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
  */
 export async function createServerSupabaseClient() {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
     return null;
@@ -42,7 +42,7 @@ export async function createServerSupabaseClient() {
 export async function requireServerSupabaseClient() {
   const client = await createServerSupabaseClient();
   if (!client) {
-    throw new Error('Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.');
+    throw new Error('Supabase is not configured. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.');
   }
   return client;
 }

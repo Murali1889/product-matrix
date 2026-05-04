@@ -4,14 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 // Server-side Supabase client
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
+  process.env.SUPABASE_SECRET_KEY || ''
 );
 
 // Check if Supabase is configured
 const isConfigured = () => {
   return (
     process.env.SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_KEY &&
+    process.env.SUPABASE_SECRET_KEY &&
     process.env.SUPABASE_URL.startsWith('https://')
   );
 };

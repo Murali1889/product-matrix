@@ -6,7 +6,7 @@ import type { AnalyticsResponse } from '@/types/client';
 // Server-side Supabase client for fetching overrides
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
+  process.env.SUPABASE_SECRET_KEY || ''
 );
 
 // Types for database overrides
