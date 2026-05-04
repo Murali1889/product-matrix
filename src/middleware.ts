@@ -50,6 +50,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Gate every API route behind auth — except the auth endpoints themselves.
+  // Without this, any visitor could hit /api/analytics, /api/matrix, etc.
+  const path = request.nextUrl.pathname;
+  if (path.startsWith('/api/') && !path.startsWith('/api/auth/')) {
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
   return supabaseResponse;
 }
 
