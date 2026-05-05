@@ -453,11 +453,19 @@ export async function fetchUsage(month: string, noCache: boolean = false): Promi
     const clientMap = new Map<string, Record<string, unknown>>();
     clients.forEach(c => clientMap.set(str(c['Client ID']), c));
 
+    // Synthetic label for rows whose module isn't mapped in
+    // standard_module_mapping (e.g. unit=`platform`). Surfacing them lets
+    // the UI show platform/infra usage as a separate, dimmed entry instead
+    // of silently dropping them like the HyperVerge billing JSON does.
+    const PLATFORM_MODULE = 'Platform & Other';
+    let unmappedCount = 0;
     const out: GSUsage[] = (res.data?.rows ?? []).map(row => {
       const clientId = str(row[iClient]);
-      const moduleName = str(row[iModule]);
+      const rawModule = str(row[iModule]);
       const unitName = str(row[iUnitName]);
       const unit = str(row[iUnit]);
+      let moduleName = rawModule;
+      if (!moduleName) { moduleName = PLATFORM_MODULE; unmappedCount++; }
       const totalCount = num(row[iTotal]);
       const billable = num(row[iBillable]);
       const cost = num(row[iCost]);
@@ -498,7 +506,8 @@ export async function fetchUsage(month: string, noCache: boolean = false): Promi
       return c !== 0 ? c : b['Actual Cost (INR)'] - a['Actual Cost (INR)'];
     });
 
-    console.log(`[Metabase] Loaded ${out.length} usage rows for ${month} in ${Date.now() - start}ms`);
+    const tail = unmappedCount > 0 ? ` (${unmappedCount} as Platform & Other)` : '';
+    console.log(`[Metabase] Loaded ${out.length} usage rows for ${month}${tail} in ${Date.now() - start}ms`);
     setCache(cacheKey, out);
     return out;
   });

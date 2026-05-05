@@ -2694,6 +2694,7 @@ function MatrixView({
                     const moduleName = parts[0] || api;
                     const subModule = parts[1] || '';
                     const isUnmatched = unmatchedAPIs.includes(api);
+                    const isPlatform = moduleName === 'Platform & Other';
                     const adoption = currentSegmentAdoption?.apiAdoption[api];
                     const clientCount = apiClientCounts[api] || 0;
                     const apiAnomalies = anomalyMode ? (matrixAnomalies[api] || []) : [];
@@ -2703,17 +2704,18 @@ function MatrixView({
                       <th
                         key={api}
                         className={`text-center pl-4 pr-3 border-r border-slate-200 w-[140px] ${
+                          isPlatform ? 'bg-stone-100/70' :
                           isUnmatched ? 'bg-red-50/60' :
                           hasAnomaly ? 'bg-rose-50/80' : ''
                         } ${hasAnomaly ? 'shadow-[inset_0_-2px_0_#e11d48]' : 'shadow-[inset_0_-2px_0_#cbd5e1]'}`}
-                        title={hasAnomaly ? `Pricing conflict: ${anomalyClients} clients have different prices for same slab` : isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
+                        title={isPlatform ? 'Infrastructure / unmapped calls (not a billable product)' : hasAnomaly ? `Pricing conflict: ${anomalyClients} clients have different prices for same slab` : isUnmatched ? `Not in api.json: ${api}` : `${api} (${clientCount} clients)`}
                       >
                         <div className="flex flex-col items-center gap-0.5">
-                          <div className={`col-label text-[11px] leading-snug text-center truncate max-w-[140px] ${isUnmatched ? 'text-red-600' : hasAnomaly ? 'text-rose-700 font-semibold' : 'text-slate-500'}`}>
+                          <div className={`col-label text-[11px] leading-snug text-center truncate max-w-[140px] ${isPlatform ? 'text-stone-500 italic' : isUnmatched ? 'text-red-600' : hasAnomaly ? 'text-rose-700 font-semibold' : 'text-slate-500'}`}>
                             {moduleName}
                           </div>
                           {subModule && (
-                            <div className={`text-[10px] font-normal leading-tight text-center truncate max-w-[130px] ${isUnmatched ? 'text-red-400' : hasAnomaly ? 'text-rose-500' : 'text-slate-400'}`}>
+                            <div className={`text-[10px] font-normal leading-tight text-center truncate max-w-[130px] ${isPlatform ? 'text-stone-400 italic' : isUnmatched ? 'text-red-400' : hasAnomaly ? 'text-rose-500' : 'text-slate-400'}`}>
                               {subModule}
                             </div>
                           )}
