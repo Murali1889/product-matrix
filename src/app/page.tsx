@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import useSWR, { mutate } from 'swr';
-import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers, Calendar, PanelLeftClose, PanelLeftOpen, Bell, BadgeDollarSign } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useFeedback } from 'react-visual-feedback';
 import { computeSegmentAdoption, findCrossSellOpportunities, buildCrossSellLookup } from '@/lib/adoption-analytics';
 import type { CrossSellOpportunity } from '@/lib/adoption-analytics';
@@ -16,6 +17,12 @@ import LoginPage from '@/components/LoginPage';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
 import { showToast } from '@/components/ToastNotifications';
 import { supabase } from '@/lib/supabase';
+import {
+  createDashboardCacheKey,
+  createDashboardInputSignature,
+  readDashboardCache,
+  writeDashboardCache,
+} from '@/lib/dashboard-cache';
 
 // Data source type
 type DataSource = 'offline' | 'online';
@@ -52,6 +59,54 @@ interface APIStats {
   avgPerClient: number;
 }
 
+type DashboardView = 'dashboard' | 'revenue-intel' | 'matrix';
+
+interface SummaryStats {
+  totalRevenue: number;
+  activeClients: number;
+  masterListClients: number;
+  avgRevenue: number;
+  segments: Record<string, { count: number; revenue: number }>;
+}
+
+interface RevenueHealthClient {
+  name: string;
+  segment?: string | null;
+  latest: number;
+  previous: number;
+  growth: number;
+  totalRevenue: number;
+  months: number;
+  topAPIs: string[];
+  prevAPIs: string[];
+}
+
+interface DashboardAnalytics {
+  geography: [string, { count: number; revenue: number }][];
+  topGrowing: RevenueHealthClient[];
+  declining: RevenueHealthClient[];
+  zeroRevenue: RevenueHealthClient[];
+  newClients: RevenueHealthClient[];
+  top10: ProcessedClient[];
+  top10Percent: number;
+  monthlyTrend: { month: string; revenue: number }[];
+  latestMonthData?: { month: string; revenue: number; momGrowth: number };
+  momGrowthCalc: number;
+}
+
+interface APIInsightsSummary {
+  usedAPIs: APIStats[];
+  totalActiveClients: number;
+  masterAPICount: number;
+}
+
+interface DashboardModel {
+  summary: SummaryStats;
+  analytics: DashboardAnalytics;
+  apiInsights: APIInsightsSummary;
+  opportunityRows: ProcessedClient[];
+}
+
 // Conversion rates to USD (module-level so usable everywhere)
 const CONVERSION_TO_USD: Record<string, number> = {
   'USD': 1,
@@ -72,6 +127,16 @@ function fmtUSD(num: number): string {
   if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
   if (num >= 1) return `$${Math.round(num).toLocaleString('en-US')}`;
   return `$${num.toFixed(2)}`;
+}
+
+const MONTH_SHORT_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatYYYYMMLabel(yyyyMM?: string): string {
+  if (!yyyyMM) return 'Latest complete month';
+  const [year, month] = yyyyMM.split('-');
+  const monthIndex = Number(month) - 1;
+  const monthName = MONTH_SHORT_NAMES[monthIndex];
+  return monthName && year ? `${monthName} ${year}` : yyyyMM;
 }
 
 // Country code to display name + flag
@@ -115,6 +180,169 @@ const SEGMENT_COLORS = [
   'bg-slate-400',
 ];
 
+function buildDashboardModel(clients: ProcessedClient[], masterAPIs: MasterAPI[]): DashboardModel {
+  const summary: SummaryStats = {
+    totalRevenue: clients.reduce((sum, c) => sum + c.totalRevenue, 0),
+    activeClients: clients.filter(c => c.totalRevenue > 0).length,
+    masterListClients: clients.length,
+    avgRevenue: 0,
+    segments: {},
+  };
+  summary.avgRevenue = summary.activeClients > 0 ? summary.totalRevenue / summary.activeClients : 0;
+
+  clients.forEach(c => {
+    const seg = c.profile?.segment || 'Other';
+    if (!summary.segments[seg]) summary.segments[seg] = { count: 0, revenue: 0 };
+    summary.segments[seg].count++;
+    summary.segments[seg].revenue += c.totalRevenue;
+  });
+
+  const clientAPIStats: Record<string, { revenue: number; clients: Set<string> }> = {};
+  clients.forEach(client => {
+    client.monthly_data?.[0]?.apis?.forEach(api => {
+      if (api.name && api.revenue_usd) {
+        if (!clientAPIStats[api.name]) {
+          clientAPIStats[api.name] = { revenue: 0, clients: new Set() };
+        }
+        clientAPIStats[api.name].revenue += convertToUSD(api.revenue_usd, client.profile?.billing_currency);
+        clientAPIStats[api.name].clients.add(client.client_name);
+      }
+    });
+  });
+
+  const usedAPIs = Object.entries(clientAPIStats)
+    .map(([name, stats]) => ({
+      name,
+      totalRevenue: stats.revenue,
+      clientCount: stats.clients.size,
+      avgPerClient: stats.clients.size > 0 ? stats.revenue / stats.clients.size : 0,
+    }))
+    .sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+  const apiInsights: APIInsightsSummary = {
+    usedAPIs,
+    totalActiveClients: new Set(
+      clients
+        .filter(c => c.monthly_data?.[0]?.apis?.some(a => a.revenue_usd && a.revenue_usd > 0))
+        .map(c => c.client_name)
+    ).size,
+    masterAPICount: masterAPIs.length,
+  };
+
+  const geography: Record<string, { count: number; revenue: number }> = {};
+  clients.forEach(c => {
+    const geo = c.profile?.geography || 'Unknown';
+    if (!geography[geo]) geography[geo] = { count: 0, revenue: 0 };
+    geography[geo].count++;
+    geography[geo].revenue += c.totalRevenue;
+  });
+
+  const clientHealth = clients.map(c => {
+    const monthlyData = c.monthly_data || [];
+    const curr = c.profile?.billing_currency;
+    const latest = convertToUSD(monthlyData[0]?.total_revenue_usd || 0, curr);
+    const previous = convertToUSD(monthlyData[1]?.total_revenue_usd || 0, curr);
+    const growth = previous > 0 ? ((latest - previous) / previous) * 100 : (latest > 0 ? 100 : 0);
+    const topAPIs = (monthlyData[0]?.apis || [])
+      .filter((a: { revenue_usd?: number }) => a.revenue_usd && a.revenue_usd > 0)
+      .sort((a: { revenue_usd: number }, b: { revenue_usd: number }) => b.revenue_usd - a.revenue_usd)
+      .slice(0, 3)
+      .map((a: { name: string }) => a.name);
+    const prevAPIs = (monthlyData[1]?.apis || [])
+      .filter((a: { revenue_usd?: number }) => a.revenue_usd && a.revenue_usd > 0)
+      .sort((a: { revenue_usd: number }, b: { revenue_usd: number }) => b.revenue_usd - a.revenue_usd)
+      .slice(0, 3)
+      .map((a: { name: string }) => a.name);
+
+    return {
+      name: c.client_name,
+      segment: c.profile?.segment,
+      latest,
+      previous,
+      growth,
+      totalRevenue: c.totalRevenue,
+      months: c.months,
+      topAPIs,
+      prevAPIs,
+    };
+  });
+
+  const topGrowing = clientHealth
+    .filter(c => c.growth > 0 && c.previous > 100)
+    .sort((a, b) => b.growth - a.growth)
+    .slice(0, 8);
+  const declining = clientHealth
+    .filter(c => c.growth < -10 && c.previous > 100)
+    .sort((a, b) => a.growth - b.growth)
+    .slice(0, 8);
+  const zeroRevenue = clientHealth.filter(c => c.latest === 0 && c.previous > 0);
+  const newClients = clientHealth.filter(c => c.months <= 3 && (c.latest > 0 || c.previous > 0));
+
+  const sortedByRevenue = [...clients].sort((a, b) => b.totalRevenue - a.totalRevenue);
+  const top10Revenue = sortedByRevenue.slice(0, 10).reduce((s, c) => s + c.totalRevenue, 0);
+  const top10Percent = summary.totalRevenue > 0 ? (top10Revenue / summary.totalRevenue) * 100 : 0;
+
+  const monthlyTrend: Record<string, number> = {};
+  clients.forEach(c => {
+    const curr = c.profile?.billing_currency;
+    c.monthly_data?.forEach(m => {
+      if (!monthlyTrend[m.month]) monthlyTrend[m.month] = 0;
+      monthlyTrend[m.month] += convertToUSD(m.total_revenue_usd || 0, curr);
+    });
+  });
+
+  const sortedMonths = Object.entries(monthlyTrend)
+    .map(([month, revenue]) => ({ month, revenue }))
+    .sort((a, b) => {
+      const [aMonth, aYear] = a.month.split(' ');
+      const [bMonth, bYear] = b.month.split(' ');
+      if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
+      return MONTH_SHORT_NAMES.indexOf(aMonth) - MONTH_SHORT_NAMES.indexOf(bMonth);
+    });
+
+  const monthlyStats = sortedMonths.map((m, i) => {
+    const prev = sortedMonths[i - 1];
+    const momGrowth = prev && prev.revenue > 0 ? ((m.revenue - prev.revenue) / prev.revenue) * 100 : 0;
+    return { ...m, momGrowth };
+  });
+
+  const nowDate = new Date();
+  const currentMonthStr = `${nowDate.toLocaleString('en-US', { month: 'short' })} ${nowDate.getFullYear()}`;
+  const latestInData = monthlyStats[monthlyStats.length - 1];
+  const avgMonthlyRevenue = sortedMonths.length > 1
+    ? sortedMonths.slice(0, -1).reduce((s, m) => s + m.revenue, 0) / (sortedMonths.length - 1)
+    : sortedMonths[0]?.revenue || 0;
+  const latestIsIncomplete = latestInData?.month === currentMonthStr ||
+    (monthlyStats.length > 0 && monthlyStats[monthlyStats.length - 1].revenue < avgMonthlyRevenue * 0.3);
+  const latestMonthData = latestIsIncomplete && monthlyStats.length > 1
+    ? monthlyStats[monthlyStats.length - 2]
+    : monthlyStats[monthlyStats.length - 1];
+  const prevMonthData = latestIsIncomplete && monthlyStats.length > 2
+    ? monthlyStats[monthlyStats.length - 3]
+    : monthlyStats[monthlyStats.length - 2];
+  const momGrowthCalc = prevMonthData && prevMonthData.revenue > 0 && latestMonthData
+    ? ((latestMonthData.revenue - prevMonthData.revenue) / prevMonthData.revenue) * 100
+    : 0;
+
+  return {
+    summary,
+    analytics: {
+      geography: Object.entries(geography).sort((a, b) => b[1].revenue - a[1].revenue),
+      topGrowing,
+      declining,
+      zeroRevenue,
+      newClients,
+      top10: sortedByRevenue.slice(0, 10),
+      top10Percent,
+      monthlyTrend: sortedMonths,
+      latestMonthData,
+      momGrowthCalc,
+    },
+    apiInsights,
+    opportunityRows: sortedByRevenue.slice(0, 8),
+  };
+}
+
 export default function Dashboard() {
   // Authentication state
   const [authUser, setAuthUser] = useState<{ id: string; email: string; name: string } | null>(null);
@@ -139,10 +367,10 @@ export default function Dashboard() {
 
   // Selected month (YYYY-MM). Empty = server default (last completed month).
   const [apiMonth, setApiMonth] = useState<string>('');
-  const cacheKey = `pm_data_${apiMonth || 'default'}`;
+  const dataCacheKey = `pm_data_v2_${apiMonth || 'default'}`;
 
   // State: data shown on screen (hydrated from cache immediately)
-  const [data, setData] = useState<AnalyticsResponse>(() => readCache(cacheKey) || readCache('pm_data_default') || emptyData);
+  const [data, setData] = useState<AnalyticsResponse>(() => readCache(dataCacheKey) || readCache('pm_data_v2_default') || emptyData);
   const [masterAPIs, setMasterAPIs] = useState<MasterAPI[]>(() => readCache('pm_apis') || []);
   const [availableMonths, setAvailableMonths] = useState<string[]>(() => readCache('pm_available_months') || []);
 
@@ -152,24 +380,42 @@ export default function Dashboard() {
 
   // When month changes, instantly load from local cache
   useEffect(() => {
-    const cached = readCache(cacheKey);
+    const cached = readCache(dataCacheKey);
     if (cached) setData(cached);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheKey]);
+  }, [dataCacheKey]);
 
   // Build SWR URL
   const analyticsUrl = useMemo(() => {
-    const base = '/api/analytics?all=true';
+    if (!isAuthenticated) return null;
+    const base = '/api/analytics?all=true&history=10';
     return apiMonth ? `${base}&month=${apiMonth}` : base;
-  }, [apiMonth]);
+  }, [apiMonth, isAuthenticated]);
 
   // SWR — background fetch, keepPreviousData set globally
   const { data: analyticsData, isLoading: loadingAnalytics, isValidating: isRevalidating, error: analyticsError } = useSWR<AnalyticsResponse & { availableMonths?: string[] }>(analyticsUrl);
-  const { data: apisData, isLoading: loadingApis } = useSWR<{ masterAPIs?: MasterAPI[]; apis?: MasterAPI[]; unmatchedAPIs?: { name: string }[] }>('/api/apis');
+  const { data: apisData, isLoading: loadingApis, error: apisError } = useSWR<{ masterAPIs?: MasterAPI[]; apis?: MasterAPI[]; unmatchedAPIs?: { name: string }[] }>(isAuthenticated ? '/api/apis' : null);
+
+  // A 401 from a protected API means the session is invalid — not a connection
+  // failure. The global SWR fetcher throws `Error("API error: 401")`, so detect
+  // the status in the message.
+  const isUnauthorizedError = (e: unknown): boolean =>
+    e instanceof Error && /\b401\b/.test(e.message);
+  const sessionInvalid = isUnauthorizedError(analyticsError) || isUnauthorizedError(apisError);
+
+  // When the session is invalid, clear auth so the login page renders instead
+  // of the generic "Unable to connect" screen. Re-authenticating issues fresh
+  // cookies, which also recovers from a stale/expired session token.
+  useEffect(() => {
+    if (isAuthenticated && sessionInvalid) {
+      setAuthUser(null);
+    }
+  }, [isAuthenticated, sessionInvalid]);
 
   // Only show loading if zero data (very first visit, no cache at all)
-  const loading = !hasCachedData && (loadingAnalytics || loadingApis);
-  const error = analyticsError && !hasCachedData ? 'Failed to load data' : null;
+  const loading = isAuthenticated && !hasCachedData && (loadingAnalytics || loadingApis);
+  // Don't surface auth failures as a connection error — those route to login.
+  const error = isAuthenticated && analyticsError && !hasCachedData && !sessionInvalid ? 'Failed to load data' : null;
 
   // Sync indicator (thin bar at top, never blocks content)
   useEffect(() => {
@@ -185,7 +431,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'revenue' | 'latest' | 'name'>('revenue');
-  const [view, setView] = useState<'revenue-intel' | 'matrix'>('revenue-intel');
+  const [view, setView] = useState<DashboardView>('dashboard');
   const [selectedCell, setSelectedCell] = useState<{ client: string; api: string } | null>(null);
 
   // Pagination state
@@ -201,22 +447,55 @@ export default function Dashboard() {
   const [editValue, setEditValue] = useState<string>('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  // Check authentication on mount via server API
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then((res) => res.json())
-      .then((data) => {
-        setAuthUser(data.user || null);
-        setAuthLoading(false);
-      })
-      .catch(() => {
-        setAuthLoading(false);
+  const clearServerSession = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
       });
+    } catch {
+      // Login fallback should still render even if the cleanup request fails.
+    }
   }, []);
+
+  const verifyAuthSession = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error(`Auth check failed: ${res.status}`);
+      const authData = await res.json();
+      if (!authData.user) {
+        await clearServerSession();
+        return null;
+      }
+      return authData.user as { id: string; email: string; name: string };
+    } catch {
+      await clearServerSession();
+      return null;
+    }
+  }, [clearServerSession]);
+
+  // Check authentication before protected data requests are allowed to run.
+  useEffect(() => {
+    let mounted = true;
+    setAuthLoading(true);
+    verifyAuthSession()
+      .then((user) => {
+        if (!mounted) return;
+        setAuthUser(user);
+      })
+      .finally(() => {
+        if (mounted) setAuthLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [verifyAuthSession]);
 
   // Handle logout via server API
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await clearServerSession();
     setAuthUser(null);
   };
 
@@ -224,14 +503,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (!authUser) return;
     const interval = setInterval(() => {
-      fetch('/api/auth/me')
-        .then((res) => res.json())
-        .then((data) => {
-          if (!data.user) setAuthUser(null);
-        });
+      verifyAuthSession().then((user) => {
+        setAuthUser(user);
+      });
     }, 50 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [authUser]);
+  }, [authUser, verifyAuthSession]);
 
   // Load any pending edits from localStorage on mount and auto-sync them
   useEffect(() => {
@@ -354,18 +631,21 @@ export default function Dashboard() {
 
   // Settings modal state
   const [showSettings, setShowSettings] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(true);
   const [slackSettings, setSlackSettings] = useState<SlackSettings>({ webhookUrl: '', notifyOnComment: true, notifyOnEdit: true, notifyOnCrossSell: true });
   const [testingSlack, setTestingSlack] = useState(false);
 
-  // Keyboard shortcuts: Option+1 = Dashboard, Option+2 = Matrix, Option+N = Nav toggle
+  // Keyboard shortcuts: Option+1 = Dashboard, Option+2 = Revenue Intel, Option+3 = Matrix, Option+N = Nav toggle
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.altKey && !e.metaKey && !e.ctrlKey) {
         if (e.key === '1') {
           e.preventDefault();
-          setView('revenue-intel');
+          setView('dashboard');
         } else if (e.key === '2') {
+          e.preventDefault();
+          setView('revenue-intel');
+        } else if (e.key === '3') {
           e.preventDefault();
           setView('matrix');
         } else if (e.key === 'n' || e.key === 'N') {
@@ -422,7 +702,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (analyticsData && Array.isArray(analyticsData.clients)) {
       setData(analyticsData);
-      writeCache(cacheKey, analyticsData);
+      writeCache(dataCacheKey, analyticsData);
       if (analyticsData.availableMonths) {
         setAvailableMonths(analyticsData.availableMonths);
         writeCache('pm_available_months', analyticsData.availableMonths);
@@ -500,43 +780,7 @@ export default function Dashboard() {
       .sort((a, b) => b.totalRevenue - a.totalRevenue);
   }, [data.clients, masterAPIs]);
 
-  // API insights - aggregated from actual client data (HV API / 3P API)
-  const apiInsights = useMemo(() => {
-    // Get unique API names from client data (master list only)
-    const clientAPIStats: Record<string, { revenue: number; clients: Set<string> }> = {};
-    const clients = (data.clients || []).filter(c => c.isInMasterList);
-
-    clients.forEach(client => {
-      client.monthly_data?.[0]?.apis?.forEach(api => {
-        if (api.name && api.revenue_usd) {
-          if (!clientAPIStats[api.name]) {
-            clientAPIStats[api.name] = { revenue: 0, clients: new Set() };
-          }
-          clientAPIStats[api.name].revenue += convertToUSD(api.revenue_usd, client.profile?.billing_currency);
-          clientAPIStats[api.name].clients.add(client.client_name);
-        }
-      });
-    });
-
-    const usedAPIs = Object.entries(clientAPIStats)
-      .map(([name, stats]) => ({
-        name,
-        totalRevenue: stats.revenue,
-        clientCount: stats.clients.size,
-        avgPerClient: stats.clients.size > 0 ? stats.revenue / stats.clients.size : 0
-      }))
-      .sort((a, b) => b.totalRevenue - a.totalRevenue);
-
-    // Total clients with any API usage
-    const totalActiveClients = new Set(
-      clients.filter(c => c.monthly_data?.[0]?.apis?.some(a => a.revenue_usd && a.revenue_usd > 0))
-        .map(c => c.client_name)
-    ).size;
-
-    return { usedAPIs, totalActiveClients, masterAPICount: masterAPIs.length };
-  }, [data.clients, masterAPIs]);
-
-  const processedClients = useMemo<ProcessedClient[]>(() => {
+  const dashboardClients = useMemo<ProcessedClient[]>(() => {
     return (data.clients || [])
       // Only include clients from clients.json (master list) — single source of truth
       .filter(c => c.isInMasterList)
@@ -565,7 +809,11 @@ export default function Dashboard() {
           latestMonth: latestMonth?.month || '-',
           apiRevenues
         };
-      })
+      });
+  }, [data.clients]);
+
+  const processedClients = useMemo<ProcessedClient[]>(() => {
+    return dashboardClients
       .filter(c => c.client_name?.toLowerCase().includes(searchTerm.toLowerCase()))
       .sort((a, b) => {
         if (sortBy === 'revenue') return b.totalRevenue - a.totalRevenue;
@@ -573,24 +821,35 @@ export default function Dashboard() {
         if (sortBy === 'latest') return b.latestRevenue - a.latestRevenue;
         return 0;
       });
-  }, [data.clients, searchTerm, sortBy]);
+  }, [dashboardClients, searchTerm, sortBy]);
 
-  const summary = useMemo(() => {
-    const totalRevenue = processedClients.reduce((sum, c) => sum + c.totalRevenue, 0);
-    const masterListClients = processedClients.length;
-    const activeClients = processedClients.filter(c => c.totalRevenue > 0).length;
-    const avgRevenue = activeClients > 0 ? totalRevenue / activeClients : 0;
-
-    const segments: Record<string, { count: number; revenue: number }> = {};
-    processedClients.forEach(c => {
-      const seg = c.profile?.segment || 'Other';
-      if (!segments[seg]) segments[seg] = { count: 0, revenue: 0 };
-      segments[seg].count++;
-      segments[seg].revenue += c.totalRevenue;
+  const dashboardSignature = useMemo(() => {
+    return createDashboardInputSignature({
+      month: apiMonth,
+      masterAPICount: masterAPIs.length,
+      clients: dashboardClients,
     });
+  }, [apiMonth, dashboardClients, masterAPIs.length]);
 
-    return { totalRevenue, activeClients, masterListClients, avgRevenue, segments };
-  }, [processedClients]);
+  const dashboardCacheKey = useMemo(() => createDashboardCacheKey(apiMonth), [apiMonth]);
+
+  const cachedDashboardModel = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return readDashboardCache<DashboardModel>(window.localStorage, dashboardCacheKey, dashboardSignature);
+  }, [dashboardCacheKey, dashboardSignature]);
+
+  const dashboardModel = useMemo(() => {
+    return cachedDashboardModel ?? buildDashboardModel(dashboardClients, masterAPIs);
+  }, [cachedDashboardModel, dashboardClients, masterAPIs]);
+
+  useEffect(() => {
+    if (!dashboardModel || cachedDashboardModel || typeof window === 'undefined') return;
+    writeDashboardCache(window.localStorage, dashboardCacheKey, dashboardSignature, dashboardModel);
+  }, [cachedDashboardModel, dashboardCacheKey, dashboardModel, dashboardSignature]);
+
+  const summary = dashboardModel.summary;
+  const apiInsights = dashboardModel.apiInsights;
+  const comprehensiveAnalytics = dashboardModel.analytics;
 
   // Paginated clients for the list view
   const paginatedClients = useMemo(() => {
@@ -605,236 +864,6 @@ export default function Dashboard() {
     setCurrentPage(1);
   }, [searchTerm, sortBy]);
 
-  // Comprehensive Analytics Calculations
-  const comprehensiveAnalytics = useMemo(() => {
-    // Geography distribution
-    const geography: Record<string, { count: number; revenue: number }> = {};
-    processedClients.forEach(c => {
-      const geo = c.profile?.geography || 'Unknown';
-      if (!geography[geo]) geography[geo] = { count: 0, revenue: 0 };
-      geography[geo].count++;
-      geography[geo].revenue += c.totalRevenue;
-    });
-
-    // Payment model distribution
-    const paymentModels: Record<string, { count: number; revenue: number }> = {};
-    processedClients.forEach(c => {
-      const model = c.profile?.payment_model || 'Unknown';
-      if (!paymentModels[model]) paymentModels[model] = { count: 0, revenue: 0 };
-      paymentModels[model].count++;
-      paymentModels[model].revenue += c.totalRevenue;
-    });
-
-    // Billing entity distribution
-    const billingEntities: Record<string, { count: number; revenue: number }> = {};
-    processedClients.forEach(c => {
-      const entity = c.profile?.billing_entity || 'Unknown';
-      if (!billingEntities[entity]) billingEntities[entity] = { count: 0, revenue: 0 };
-      billingEntities[entity].count++;
-      billingEntities[entity].revenue += c.totalRevenue;
-    });
-
-    // Client health metrics
-    const clientHealth = processedClients.map(c => {
-      const monthlyData = c.monthly_data || [];
-      const curr = c.profile?.billing_currency;
-      const latest = convertToUSD(monthlyData[0]?.total_revenue_usd || 0, curr);
-      const previous = convertToUSD(monthlyData[1]?.total_revenue_usd || 0, curr);
-      const growth = previous > 0 ? ((latest - previous) / previous) * 100 : (latest > 0 ? 100 : 0);
-      // Top APIs this client uses (from latest month)
-      const topAPIs = (monthlyData[0]?.apis || [])
-        .filter((a: { revenue_usd?: number }) => a.revenue_usd && a.revenue_usd > 0)
-        .sort((a: { revenue_usd: number }, b: { revenue_usd: number }) => b.revenue_usd - a.revenue_usd)
-        .slice(0, 3)
-        .map((a: { name: string }) => a.name);
-      // Previous month APIs (for churned clients)
-      const prevAPIs = (monthlyData[1]?.apis || [])
-        .filter((a: { revenue_usd?: number }) => a.revenue_usd && a.revenue_usd > 0)
-        .sort((a: { revenue_usd: number }, b: { revenue_usd: number }) => b.revenue_usd - a.revenue_usd)
-        .slice(0, 3)
-        .map((a: { name: string }) => a.name);
-      return {
-        name: c.client_name,
-        segment: c.profile?.segment,
-        latest,
-        previous,
-        growth,
-        totalRevenue: c.totalRevenue,
-        months: c.months,
-        topAPIs,
-        prevAPIs,
-      };
-    });
-
-    const topGrowing = clientHealth
-      .filter(c => c.growth > 0 && c.previous > 100)
-      .sort((a, b) => b.growth - a.growth)
-      .slice(0, 8);
-
-    const declining = clientHealth
-      .filter(c => c.growth < -10 && c.previous > 100)
-      .sort((a, b) => a.growth - b.growth)
-      .slice(0, 8);
-
-    // At risk: clients who had revenue before but have zero in latest complete month
-    // Use previous month if latest is incomplete (< 30% of average)
-    const zeroRevenue = clientHealth.filter(c => {
-      // If latest is very low but previous was high, they might just have incomplete data
-      // Check if they have BOTH zero latest AND zero previous - truly at risk
-      return c.latest === 0 && c.previous > 0;
-    });
-    const newClients = clientHealth.filter(c => c.months <= 3 && (c.latest > 0 || c.previous > 0));
-
-    // Revenue concentration - top 10 clients
-    const sortedByRevenue = [...processedClients].sort((a, b) => b.totalRevenue - a.totalRevenue);
-    const top10Revenue = sortedByRevenue.slice(0, 10).reduce((s, c) => s + c.totalRevenue, 0);
-    const top10Percent = summary.totalRevenue > 0 ? (top10Revenue / summary.totalRevenue) * 100 : 0;
-
-    // Monthly revenue trend (aggregated across all clients, converted to USD)
-    const monthlyTrend: Record<string, number> = {};
-    processedClients.forEach(c => {
-      const curr = c.profile?.billing_currency;
-      c.monthly_data?.forEach(m => {
-        if (!monthlyTrend[m.month]) monthlyTrend[m.month] = 0;
-        monthlyTrend[m.month] += convertToUSD(m.total_revenue_usd || 0, curr);
-      });
-    });
-
-    // Sort months chronologically
-    const sortedMonths = Object.entries(monthlyTrend)
-      .map(([month, revenue]) => ({ month, revenue }))
-      .sort((a, b) => {
-        const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const [aMonth, aYear] = a.month.split(' ');
-        const [bMonth, bYear] = b.month.split(' ');
-        if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
-        return monthOrder.indexOf(aMonth) - monthOrder.indexOf(bMonth);
-      });
-
-    // Status distribution
-    const statusDist: Record<string, number> = {};
-    processedClients.forEach(c => {
-      const status = c.profile?.status || 'Unknown';
-      statusDist[status] = (statusDist[status] || 0) + 1;
-    });
-
-    // Yearly revenue breakdown - only include proper 4-digit years (converted to USD)
-    const yearlyRevenue: Record<string, number> = {};
-    processedClients.forEach(c => {
-      const curr = c.profile?.billing_currency;
-      c.monthly_data?.forEach(m => {
-        const parts = m.month?.split(' ') || [];
-        const year = parts[1];
-        // Only accept 4-digit years (2023, 2024, 2025, 2026)
-        if (year && year.length === 4 && /^\d{4}$/.test(year)) {
-          yearlyRevenue[year] = (yearlyRevenue[year] || 0) + convertToUSD(m.total_revenue_usd || 0, curr);
-        }
-      });
-    });
-
-    // Calculate YoY growth - compare last full year to previous
-    const sortedYears = Object.keys(yearlyRevenue).sort();
-    // Exclude current year (likely incomplete) for YoY calculation
-    const currentYear = new Date().getFullYear().toString();
-    const fullYears = sortedYears.filter(y => y !== currentYear);
-    const latestFullYear = fullYears[fullYears.length - 1];
-    const previousFullYear = fullYears[fullYears.length - 2];
-    const yoyGrowth = previousFullYear && latestFullYear && yearlyRevenue[previousFullYear] > 0
-      ? ((yearlyRevenue[latestFullYear] - yearlyRevenue[previousFullYear]) / yearlyRevenue[previousFullYear]) * 100
-      : 0;
-
-    // Monthly stats for display
-    const monthlyStats = sortedMonths.map((m, i) => {
-      const prev = sortedMonths[i - 1];
-      const mom = prev && prev.revenue > 0 ? ((m.revenue - prev.revenue) / prev.revenue) * 100 : 0;
-      return { ...m, momGrowth: mom };
-    });
-
-    // Get current month name to exclude it
-    const nowDate = new Date();
-    const nowMonthName = nowDate.toLocaleString('en-US', { month: 'short' });
-    const nowYear = nowDate.getFullYear().toString();
-    const currentMonthStr = `${nowMonthName} ${nowYear}`;
-
-    // Find if current month exists in data and exclude it
-    const latestInData = monthlyStats[monthlyStats.length - 1];
-    const isCurrentMonthInData = latestInData?.month === currentMonthStr ||
-      (latestInData?.month?.includes(nowMonthName) && latestInData?.month?.includes(nowYear));
-
-    // Also check if latest month has very low revenue compared to average (likely incomplete)
-    const avgMonthlyRevenue = sortedMonths.length > 1
-      ? sortedMonths.slice(0, -1).reduce((s, m) => s + m.revenue, 0) / (sortedMonths.length - 1)
-      : sortedMonths[0]?.revenue || 0;
-
-    const latestIsIncomplete = isCurrentMonthInData ||
-      (monthlyStats.length > 0 && monthlyStats[monthlyStats.length - 1].revenue < avgMonthlyRevenue * 0.3);
-
-    // Latest complete month vs previous month
-    const latestMonthData = latestIsIncomplete && monthlyStats.length > 1
-      ? monthlyStats[monthlyStats.length - 2]
-      : monthlyStats[monthlyStats.length - 1];
-    const prevMonthData = latestIsIncomplete && monthlyStats.length > 2
-      ? monthlyStats[monthlyStats.length - 3]
-      : monthlyStats[monthlyStats.length - 2];
-
-    // Recalculate MoM for the selected months
-    const momGrowthCalc = prevMonthData && prevMonthData.revenue > 0 && latestMonthData
-      ? ((latestMonthData.revenue - prevMonthData.revenue) / prevMonthData.revenue) * 100
-      : 0;
-
-    // Client tenure distribution
-    const tenureDistribution = {
-      new: processedClients.filter(c => c.months <= 3).length,
-      growing: processedClients.filter(c => c.months > 3 && c.months <= 6).length,
-      established: processedClients.filter(c => c.months > 6 && c.months <= 12).length,
-      longTerm: processedClients.filter(c => c.months > 12).length
-    };
-
-    // Average metrics
-    const avgMetrics = {
-      avgRevenuePerClient: processedClients.length > 0
-        ? summary.totalRevenue / processedClients.length : 0,
-      avgMonthsPerClient: processedClients.length > 0
-        ? processedClients.reduce((s, c) => s + c.months, 0) / processedClients.length : 0,
-      medianRevenue: (() => {
-        const sorted = [...processedClients].sort((a, b) => a.totalRevenue - b.totalRevenue);
-        const mid = Math.floor(sorted.length / 2);
-        return sorted.length > 0
-          ? (sorted.length % 2 ? sorted[mid].totalRevenue : (sorted[mid - 1].totalRevenue + sorted[mid].totalRevenue) / 2)
-          : 0;
-      })(),
-      totalAPIRevenue: apiInsights.usedAPIs.reduce((s, a) => s + a.totalRevenue, 0),
-      hvApiPercent: (() => {
-        const hvApi = apiInsights.usedAPIs.find(a => a.name === 'HV API');
-        const total = apiInsights.usedAPIs.reduce((s, a) => s + a.totalRevenue, 0);
-        return total > 0 && hvApi ? (hvApi.totalRevenue / total) * 100 : 0;
-      })()
-    };
-
-    return {
-      geography: Object.entries(geography).sort((a, b) => b[1].revenue - a[1].revenue),
-      paymentModels: Object.entries(paymentModels).sort((a, b) => b[1].revenue - a[1].revenue),
-      billingEntities: Object.entries(billingEntities).sort((a, b) => b[1].revenue - a[1].revenue),
-      topGrowing,
-      declining,
-      zeroRevenue,
-      newClients,
-      top10: sortedByRevenue.slice(0, 10),
-      top10Percent,
-      monthlyTrend: sortedMonths,
-      monthlyStats,
-      statusDist: Object.entries(statusDist).sort((a, b) => b[1] - a[1]),
-      yearlyRevenue: Object.entries(yearlyRevenue).sort((a, b) => a[0].localeCompare(b[0])),
-      yoyGrowth,
-      latestMonthData,
-      prevMonthData,
-      momGrowthCalc,
-      tenureDistribution,
-      avgMetrics,
-      latestIsIncomplete
-    };
-  }, [processedClients, summary.totalRevenue, apiInsights.usedAPIs]);
-
   // Format native-currency amount as USD (converts then formats)
   const formatCurrency = (num: number, currency: string = 'USD'): string => {
     return fmtUSD(convertToUSD(num, currency));
@@ -848,6 +877,30 @@ export default function Dashboard() {
 
   // No longer needed - everything is in USD now
   const needsConversion = (): boolean => false;
+
+  const dashboardMonthLabel = useMemo(() => {
+    return apiMonth ? formatYYYYMMLabel(apiMonth) : (comprehensiveAnalytics.latestMonthData?.month || 'Latest complete month');
+  }, [apiMonth, comprehensiveAnalytics.latestMonthData?.month]);
+
+  const downloadDashboardSnapshot = useCallback(() => {
+    const headers = ['Client', 'Segment', 'Geography', 'Account Owner', 'Latest MRR', 'Months Active'];
+    const rows = dashboardClients.map(client => [
+      client.client_name || '',
+      client.profile?.segment || '',
+      client.profile?.geography || '',
+      client.profile?.account_owner || '',
+      client.totalRevenue.toFixed(2),
+      client.months.toString(),
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `product-matrix-dashboard-${apiMonth || 'latest'}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [apiMonth, dashboardClients]);
 
   if (loading) {
     // Minimal progress indicator — not a skeleton, just a centered loading bar
@@ -895,7 +948,20 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-screen bg-stone-50 flex flex-col overflow-hidden">
+    <DashboardFrame
+      view={view}
+      onViewChange={setView}
+      navOpen={navOpen}
+      onToggleNav={() => setNavOpen(o => !o)}
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      currentUser={currentUser}
+      pendingEdits={pendingEdits.length}
+      saveStatus={saveStatus}
+      onSavePending={savePendingEdits}
+      onOpenSettings={() => setShowSettings(true)}
+      onLogout={handleLogout}
+    >
       {/* Sync status bar — thin progress line at very top */}
       {syncState === 'syncing' && (
         <div className="fixed top-0 left-0 right-0 z-[60] h-0.5 bg-stone-200 overflow-hidden">
@@ -904,7 +970,7 @@ export default function Dashboard() {
       )}
 
       {/* Floating view switcher — no layout space */}
-      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full px-1.5 py-1 shadow-lg">
+      <div className="hidden">
         <button
           onClick={() => setView('revenue-intel')}
           className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium rounded-full transition-all cursor-pointer ${
@@ -930,7 +996,7 @@ export default function Dashboard() {
       </div>
 
       {/* Floating nav actions — save only, settings/logout commented out */}
-      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
+      <div className="hidden">
         {pendingEdits.length > 0 && (
           <button
             onClick={savePendingEdits}
@@ -964,7 +1030,25 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 min-h-0 ${view === 'matrix' ? 'px-2 sm:px-4 py-2 sm:py-3' : 'overflow-hidden'}`}>
+      <div className={`${view === 'matrix' ? 'h-full px-2 py-2 sm:px-4 sm:py-3' : view === 'dashboard' ? 'h-full overflow-y-auto px-4 py-4 sm:px-6 sm:py-5' : 'h-full overflow-hidden'}`}>
+
+        {/* Dashboard View */}
+        {view === 'dashboard' && (
+          <SalesDashboardOverview
+            summary={summary}
+            analytics={comprehensiveAnalytics}
+            apiInsights={apiInsights}
+            opportunityRows={dashboardModel.opportunityRows}
+            formatCurrency={formatUSD}
+            monthLabel={dashboardMonthLabel}
+            selectedMonth={apiMonth}
+            availableMonths={availableMonths}
+            onMonthChange={setApiMonth}
+            onDownload={downloadDashboardSnapshot}
+            onOpenMatrix={() => setView('matrix')}
+            onOpenRevenueIntel={() => setView('revenue-intel')}
+          />
+        )}
 
         {/* Matrix View */}
         {view === 'matrix' && (
@@ -1071,6 +1155,7 @@ export default function Dashboard() {
             month={apiMonth || undefined}
             availableMonths={availableMonths}
             onMonthChange={(m) => setApiMonth(m)}
+            embedded
           />
         )}
 
@@ -1313,6 +1398,677 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+    </DashboardFrame>
+  );
+}
+
+function DashboardFrame({
+  children,
+  view,
+  onViewChange,
+  navOpen,
+  onToggleNav,
+  searchTerm,
+  onSearchChange,
+  currentUser,
+  pendingEdits,
+  saveStatus,
+  onSavePending,
+  onOpenSettings,
+  onLogout,
+}: {
+  children: React.ReactNode;
+  view: DashboardView;
+  onViewChange: (view: DashboardView) => void;
+  navOpen: boolean;
+  onToggleNav: () => void;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  currentUser: string;
+  pendingEdits: number;
+  saveStatus: 'idle' | 'saving' | 'saved';
+  onSavePending: () => void;
+  onOpenSettings: () => void;
+  onLogout: () => void;
+}) {
+  const navItems: Array<{ id: DashboardView; label: string; icon: LucideIcon; description: string }> = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, description: 'Executive overview' },
+    { id: 'revenue-intel', label: 'Revenue Intel', icon: Target, description: 'Upsell pipeline' },
+    { id: 'matrix', label: 'Matrix', icon: LayoutGrid, description: 'Client x API grid' },
+  ];
+  const initials = currentUser
+    .split(/[.\s_-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('') || 'HV';
+
+  return (
+    <div className="h-dvh bg-stone-100 text-slate-900 flex overflow-hidden">
+      <aside className={`${navOpen ? 'w-64' : 'w-[72px]'} hidden md:flex shrink-0 flex-col border-r border-stone-200 bg-stone-50 transition-[width] duration-200`}>
+        <div className="flex h-16 items-center gap-3 border-b border-stone-200 px-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">
+            HV
+          </div>
+          {navOpen && (
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-slate-900">Product Matrix</div>
+              <div className="truncate text-xs text-slate-500">Sales intelligence</div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-2 py-3">
+          {navOpen && <div className="px-2 pb-2 text-xs font-medium text-slate-400">Dashboards</div>}
+          <nav className="space-y-1">
+            {navItems.map(item => {
+              const Icon = item.icon;
+              const active = view === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onViewChange(item.id)}
+                  aria-label={item.label}
+                  className={`flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors ${
+                    active
+                      ? 'bg-white text-slate-900 shadow-sm ring-1 ring-stone-200'
+                      : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon size={18} className={active ? 'text-amber-600' : 'text-slate-400'} />
+                  {navOpen && (
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{item.label}</span>
+                      <span className="block truncate text-xs text-slate-400">{item.description}</span>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="my-4 h-px bg-stone-200" />
+          {navOpen && <div className="px-2 pb-2 text-xs font-medium text-slate-400">Tools</div>}
+          <div className="space-y-1">
+            {[
+              { label: 'Client Notes', icon: StickyNote },
+              { label: 'API Catalog', icon: Database },
+              { label: 'Risk Signals', icon: AlertCircle },
+            ].map(item => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  aria-label={item.label}
+                  className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-white/70 hover:text-slate-900"
+                >
+                  <Icon size={17} className="text-slate-400" />
+                  {navOpen && <span className="truncate">{item.label}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="border-t border-stone-200 p-2">
+          {navOpen && (
+            <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="text-sm font-semibold text-slate-900">Revenue desk</div>
+              <p className="mt-1 text-xs text-slate-600 text-pretty">Use Matrix for raw account truth and Revenue Intel for next-best action.</p>
+            </div>
+          )}
+          <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-slate-700">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-xs font-semibold text-slate-700">
+              {initials}
+            </div>
+            {navOpen && (
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium">{currentUser || 'HyperVerge'}</div>
+                <div className="truncate text-xs text-slate-400">Authenticated</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b border-stone-200 bg-white/90 px-3 backdrop-blur sm:px-4">
+          <button
+            type="button"
+            onClick={onToggleNav}
+            aria-label={navOpen ? 'Collapse navigation' : 'Expand navigation'}
+            className="inline-flex size-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-stone-100 hover:text-slate-900"
+          >
+            {navOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+          </button>
+          <div className="hidden h-4 w-px bg-stone-200 sm:block" />
+          <div className="relative min-w-0 flex-1 sm:max-w-sm">
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search clients..."
+              className="h-9 w-full rounded-md border border-stone-200 bg-stone-50 pl-9 pr-3 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-200"
+            />
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            {pendingEdits > 0 && (
+              <button
+                type="button"
+                onClick={onSavePending}
+                disabled={saveStatus === 'saving'}
+                className={`inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-white transition-colors disabled:opacity-60 ${
+                  saveStatus === 'saved' ? 'bg-emerald-600' : 'bg-amber-600 hover:bg-amber-700'
+                }`}
+              >
+                <Save size={15} />
+                <span className="hidden sm:inline">{pendingEdits} Save</span>
+              </button>
+            )}
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="relative inline-flex size-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-stone-100 hover:text-slate-900"
+            >
+              <Bell size={17} />
+              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-rose-500" />
+            </button>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              aria-label="Settings"
+              className="inline-flex size-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-stone-100 hover:text-slate-900"
+            >
+              <Settings size={17} />
+            </button>
+            <button
+              type="button"
+              onClick={onLogout}
+              aria-label="Log out"
+              className="inline-flex size-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-stone-100 hover:text-slate-900"
+            >
+              <LogOut size={17} />
+            </button>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1 overflow-hidden bg-stone-100">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function SalesDashboardOverview({
+  summary,
+  analytics,
+  apiInsights,
+  opportunityRows,
+  formatCurrency,
+  monthLabel,
+  selectedMonth,
+  availableMonths,
+  onMonthChange,
+  onDownload,
+  onOpenMatrix,
+  onOpenRevenueIntel,
+}: {
+  summary: SummaryStats;
+  analytics: DashboardAnalytics;
+  apiInsights: APIInsightsSummary;
+  opportunityRows: ProcessedClient[];
+  formatCurrency: (value: number) => string;
+  monthLabel: string;
+  selectedMonth: string;
+  availableMonths: string[];
+  onMonthChange: (month: string) => void;
+  onDownload: () => void;
+  onOpenMatrix: () => void;
+  onOpenRevenueIntel: () => void;
+}) {
+  const trendData = analytics.monthlyTrend.slice(-10);
+  const maxTrend = Math.max(...trendData.map(item => item.revenue), 1);
+  const segmentEntries = Object.entries(summary.segments)
+    .sort((a, b) => b[1].revenue - a[1].revenue)
+    .slice(0, 6);
+  const motionRows = [
+    ...analytics.topGrowing.map(client => ({ ...client, status: 'Growing' as const })),
+    ...analytics.declining.map(client => ({ ...client, status: 'Declining' as const })),
+    ...analytics.zeroRevenue.map(client => ({ ...client, status: 'At risk' as const })),
+    ...analytics.newClients.map(client => ({ ...client, status: 'New' as const })),
+  ].slice(0, 8);
+  const healthTotal = Math.max(summary.masterListClients, 1);
+
+  return (
+    <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className="text-balance text-xl font-semibold text-slate-900 lg:text-2xl">Sales Dashboard</h1>
+          <p className="mt-1 text-sm text-slate-500 text-pretty">Revenue, adoption, and expansion signals across HyperVerge accounts.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex h-9 items-center gap-2 rounded-md border border-stone-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
+            <Calendar size={15} className="text-slate-400" />
+            <select
+              value={selectedMonth}
+              onChange={(event) => onMonthChange(event.target.value)}
+              className="bg-transparent text-sm font-medium text-slate-700 outline-none"
+              aria-label="Dashboard month"
+            >
+              <option value="">{monthLabel}</option>
+              {availableMonths.map(month => (
+                <option key={month} value={month}>{formatYYYYMMLabel(month)}</option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={onDownload}
+            className="inline-flex h-9 items-center gap-2 rounded-md bg-slate-900 px-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+          >
+            <Download size={15} />
+            <span className="hidden sm:inline">Download</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <DashboardStatCard
+          label="Current MRR"
+          value={formatCurrency(summary.totalRevenue)}
+          note={`${summary.activeClients} active of ${summary.masterListClients} clients`}
+          icon={BadgeDollarSign}
+          tone="dark"
+        />
+        <DashboardStatCard
+          label="Average per Active Client"
+          value={formatCurrency(summary.avgRevenue)}
+          note={`${analytics.momGrowthCalc >= 0 ? '+' : ''}${analytics.momGrowthCalc.toFixed(1)}% MoM`}
+          icon={TrendingUp}
+          tone={analytics.momGrowthCalc >= 0 ? 'green' : 'red'}
+        />
+        <DashboardStatCard
+          label="Top 10 Concentration"
+          value={`${analytics.top10Percent.toFixed(0)}%`}
+          note="Revenue share from largest accounts"
+          icon={PieChart}
+          tone="amber"
+        />
+        <DashboardStatCard
+          label="At-Risk Accounts"
+          value={`${analytics.zeroRevenue.length + analytics.declining.length}`}
+          note={`${analytics.newClients.length} newer accounts this period`}
+          icon={AlertCircle}
+          tone={analytics.zeroRevenue.length + analytics.declining.length > 0 ? 'red' : 'green'}
+        />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-8">
+        <section className="rounded-lg border border-stone-200 bg-white py-5 shadow-sm xl:col-span-5">
+          <div className="flex flex-col gap-3 px-5 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Revenue Chart</h2>
+              <p className="mt-1 text-sm text-slate-500">Last {trendData.length || 0} reported months</p>
+            </div>
+            <div className="flex divide-x divide-stone-200 overflow-hidden rounded-md border border-stone-200">
+              <div className="px-4 py-2">
+                <div className="text-xs text-slate-500">Latest</div>
+                <div className="tabular-nums text-lg font-semibold text-slate-900">{analytics.latestMonthData ? formatCurrency(analytics.latestMonthData.revenue) : '$0'}</div>
+              </div>
+              <div className="px-4 py-2">
+                <div className="text-xs text-slate-500">MoM</div>
+                <div className={`tabular-nums text-lg font-semibold ${analytics.momGrowthCalc >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {analytics.momGrowthCalc >= 0 ? '+' : ''}{analytics.momGrowthCalc.toFixed(1)}%
+                </div>
+              </div>
+            </div>
+          </div>
+          <MiniRevenueChart data={trendData} maxValue={maxTrend} formatCurrency={formatCurrency} />
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:col-span-3">
+          <HealthMetric label="New Accounts" value={analytics.newClients.length} total={healthTotal} color="bg-blue-500" />
+          <HealthMetric label="Growing" value={analytics.topGrowing.length} total={healthTotal} color="bg-emerald-500" />
+          <HealthMetric label="Declining" value={analytics.declining.length} total={healthTotal} color="bg-amber-500" />
+          <HealthMetric label="At Risk" value={analytics.zeroRevenue.length} total={healthTotal} color="bg-rose-500" />
+        </section>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <section className="rounded-lg border border-stone-200 bg-white py-5 shadow-sm">
+          <div className="flex items-start justify-between gap-3 px-5">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Top Revenue APIs</h2>
+              <p className="mt-1 text-sm text-slate-500">Product lines driving current MRR</p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenMatrix}
+              aria-label="Open matrix"
+              className="inline-flex size-9 items-center justify-center rounded-md border border-stone-200 text-slate-500 transition-colors hover:bg-stone-50 hover:text-slate-900"
+            >
+              <ChevronRight size={17} />
+            </button>
+          </div>
+          <TopApisList apis={apiInsights.usedAPIs.slice(0, 6)} formatCurrency={formatCurrency} />
+        </section>
+
+        <section className="rounded-lg border border-stone-200 bg-white py-5 shadow-sm">
+          <div className="px-5">
+            <h2 className="text-sm font-semibold text-slate-900">Segment Mix</h2>
+            <p className="mt-1 text-sm text-slate-500">Revenue concentration by client segment</p>
+          </div>
+          <SegmentBars segments={segmentEntries} totalRevenue={summary.totalRevenue} formatCurrency={formatCurrency} />
+        </section>
+
+        <section className="rounded-lg border border-stone-200 bg-white py-5 shadow-sm">
+          <div className="flex items-start justify-between gap-3 px-5">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Client Motion</h2>
+              <p className="mt-1 text-sm text-slate-500">Accounts with movement worth a look</p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenRevenueIntel}
+              aria-label="Open revenue intelligence"
+              className="inline-flex size-9 items-center justify-center rounded-md border border-stone-200 text-slate-500 transition-colors hover:bg-stone-50 hover:text-slate-900"
+            >
+              <ArrowUpRight size={16} />
+            </button>
+          </div>
+          <ClientMotionList clients={motionRows} formatCurrency={formatCurrency} />
+        </section>
+      </div>
+
+      <section className="rounded-lg border border-stone-200 bg-white py-5 shadow-sm">
+        <div className="flex flex-col gap-3 px-5 pb-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Account Workbench</h2>
+            <p className="mt-1 text-sm text-slate-500">High-value accounts, ownership, and latest revenue state</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onOpenRevenueIntel}
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-stone-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-stone-50"
+            >
+              <Sparkles size={15} className="text-amber-600" />
+              Revenue Intel
+            </button>
+            <button
+              type="button"
+              onClick={onOpenMatrix}
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-stone-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-stone-50"
+            >
+              <LayoutGrid size={15} />
+              Matrix
+            </button>
+          </div>
+        </div>
+        <AccountWorkbench rows={opportunityRows} formatCurrency={formatCurrency} />
+      </section>
+    </div>
+  );
+}
+
+function DashboardStatCard({
+  label,
+  value,
+  note,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  note: string;
+  icon: LucideIcon;
+  tone: 'dark' | 'green' | 'red' | 'amber';
+}) {
+  const toneClass = {
+    dark: 'bg-slate-900 text-white border-slate-900',
+    green: 'bg-white text-slate-900 border-stone-200',
+    red: 'bg-white text-slate-900 border-stone-200',
+    amber: 'bg-white text-slate-900 border-stone-200',
+  }[tone];
+  const iconClass = {
+    dark: 'bg-amber-400/15 text-amber-300',
+    green: 'bg-emerald-50 text-emerald-600',
+    red: 'bg-rose-50 text-rose-600',
+    amber: 'bg-amber-50 text-amber-600',
+  }[tone];
+  const noteClass = tone === 'dark' ? 'text-slate-400' : 'text-slate-500';
+
+  return (
+    <div className={`rounded-lg border p-4 shadow-sm ${toneClass}`}>
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex size-8 items-center justify-center rounded-md ${iconClass}`}>
+          <Icon size={16} />
+        </span>
+        <span className={`text-sm ${tone === 'dark' ? 'text-slate-300' : 'text-slate-500'}`}>{label}</span>
+      </div>
+      <div className="mt-3 tabular-nums text-2xl font-semibold">{value}</div>
+      <div className={`mt-1 text-sm ${noteClass}`}>{note}</div>
+    </div>
+  );
+}
+
+function MiniRevenueChart({
+  data,
+  maxValue,
+  formatCurrency,
+}: {
+  data: { month: string; revenue: number }[];
+  maxValue: number;
+  formatCurrency: (value: number) => string;
+}) {
+  if (data.length === 0) {
+    return <div className="mx-5 mt-5 flex h-56 items-center justify-center rounded-lg bg-stone-50 text-sm text-slate-400">No revenue trend available</div>;
+  }
+
+  return (
+    <div className="mt-5 px-5">
+      <div className="flex h-60 items-end gap-2 rounded-lg bg-stone-50 px-3 pb-3 pt-4">
+        {data.map((item, index) => {
+          const height = Math.max((item.revenue / maxValue) * 100, 4);
+          const previous = data[index - 1];
+          const isUp = !previous || item.revenue >= previous.revenue;
+          return (
+            <div key={item.month} className="group flex h-full min-w-0 flex-1 flex-col justify-end">
+              <div className="mb-2 hidden text-center text-xs tabular-nums text-slate-500 group-hover:block">
+                {formatCurrency(item.revenue)}
+              </div>
+              <div className="flex min-h-0 items-end">
+                <div
+                  className={`w-full rounded-t-md ${isUp ? 'bg-slate-800' : 'bg-slate-400'}`}
+                  style={{ height: `${height}%` }}
+                />
+              </div>
+              <div className="mt-2 truncate text-center text-xs text-slate-400">{item.month.split(' ')[0]}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HealthMetric({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+  const pct = Math.min(100, Math.round((value / total) * 100));
+  return (
+    <div className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="tabular-nums text-2xl font-semibold text-slate-900">{value}</div>
+      <div className="mt-1 flex items-center gap-2">
+        <span className="text-sm text-slate-500">{label}</span>
+        <span className={`text-xs ${label === 'At Risk' || label === 'Declining' ? 'text-rose-600' : 'text-emerald-600'}`}>
+          {pct}%
+        </span>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-stone-100">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function TopApisList({ apis, formatCurrency }: { apis: APIStats[]; formatCurrency: (value: number) => string }) {
+  const maxRevenue = Math.max(...apis.map(api => api.totalRevenue), 1);
+
+  return (
+    <div className="mt-4 space-y-3 px-5">
+      {apis.length === 0 ? (
+        <div className="rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-slate-400">No API revenue available</div>
+      ) : apis.map(api => {
+        const pct = Math.max((api.totalRevenue / maxRevenue) * 100, 3);
+        return (
+          <div key={api.name} className="rounded-md border border-stone-200 px-3 py-3 transition-colors hover:bg-stone-50">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium text-slate-800">{api.name}</div>
+                <div className="mt-1 text-xs text-slate-500">{api.clientCount} clients</div>
+              </div>
+              <div className="shrink-0 text-right tabular-nums text-sm font-semibold text-emerald-600">{formatCurrency(api.totalRevenue)}</div>
+            </div>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-100">
+              <div className="h-full rounded-full bg-amber-500" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SegmentBars({
+  segments,
+  totalRevenue,
+  formatCurrency,
+}: {
+  segments: [string, { count: number; revenue: number }][];
+  totalRevenue: number;
+  formatCurrency: (value: number) => string;
+}) {
+  return (
+    <div className="mt-4 space-y-3 px-5">
+      {segments.length === 0 ? (
+        <div className="rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-slate-400">No segment data available</div>
+      ) : segments.map(([name, data], index) => {
+        const pct = totalRevenue > 0 ? Math.max((data.revenue / totalRevenue) * 100, 3) : 0;
+        const color = SEGMENT_COLORS[index % SEGMENT_COLORS.length];
+        return (
+          <div key={name}>
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <div className="min-w-0 truncate text-sm font-medium text-slate-700">{name}</div>
+              <div className="shrink-0 text-xs text-slate-500">
+                <span className="tabular-nums font-semibold text-slate-800">{formatCurrency(data.revenue)}</span> · {data.count} clients
+              </div>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-stone-100">
+              <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ClientMotionList({
+  clients,
+  formatCurrency,
+}: {
+  clients: Array<RevenueHealthClient & { status: 'Growing' | 'Declining' | 'At risk' | 'New' }>;
+  formatCurrency: (value: number) => string;
+}) {
+  const statusClass = {
+    Growing: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    Declining: 'bg-amber-50 text-amber-700 border-amber-200',
+    'At risk': 'bg-rose-50 text-rose-700 border-rose-200',
+    New: 'bg-blue-50 text-blue-700 border-blue-200',
+  };
+
+  return (
+    <div className="mt-4 space-y-2 px-5">
+      {clients.length === 0 ? (
+        <div className="rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-slate-400">No client movement to show</div>
+      ) : clients.map(client => (
+        <div key={`${client.status}-${client.name}`} className="rounded-md border border-stone-200 px-3 py-2.5 transition-colors hover:bg-stone-50">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium text-slate-800">{client.name}</div>
+              <div className="mt-1 truncate text-xs text-slate-500">{client.segment || 'Unsegmented'}</div>
+            </div>
+            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${statusClass[client.status]}`}>
+              {client.status}
+            </span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+            <span className="tabular-nums text-slate-500">{formatCurrency(client.previous)} → {formatCurrency(client.latest)}</span>
+            <span className={`tabular-nums font-semibold ${client.growth >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+              {client.growth >= 0 ? '+' : ''}{client.growth.toFixed(0)}%
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AccountWorkbench({ rows, formatCurrency }: { rows: ProcessedClient[]; formatCurrency: (value: number) => string }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="border-y border-stone-200 bg-stone-50 text-left text-xs font-medium text-slate-500">
+          <tr>
+            <th className="px-5 py-3">Client</th>
+            <th className="px-3 py-3">Segment</th>
+            <th className="px-3 py-3">Owner</th>
+            <th className="px-3 py-3 text-right">MRR</th>
+            <th className="px-3 py-3 text-center">Months</th>
+            <th className="px-5 py-3">Signal</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-stone-100">
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="px-5 py-8 text-center text-sm text-slate-400">No accounts available</td>
+            </tr>
+          ) : rows.map(row => {
+            const latest = row.monthly_data?.[0]?.total_revenue_usd || 0;
+            const previous = row.monthly_data?.[1]?.total_revenue_usd || 0;
+            const growth = previous > 0 ? ((latest - previous) / previous) * 100 : 0;
+            return (
+              <tr key={row.client_id || row.client_name} className="hover:bg-stone-50">
+                <td className="max-w-[280px] px-5 py-3">
+                  <div className="truncate font-medium text-slate-900">{row.client_name}</div>
+                  <div className="truncate text-xs text-slate-500">{normalizeCountry(row.profile?.geography).name}</div>
+                </td>
+                <td className="px-3 py-3">
+                  <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{row.profile?.segment || 'Other'}</span>
+                </td>
+                <td className="px-3 py-3 text-slate-600">{row.profile?.account_owner || '-'}</td>
+                <td className="px-3 py-3 text-right tabular-nums font-semibold text-slate-900">{formatCurrency(row.totalRevenue)}</td>
+                <td className="px-3 py-3 text-center tabular-nums text-slate-600">{row.months}</td>
+                <td className="px-5 py-3">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                    growth >= 10
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : growth <= -10
+                        ? 'bg-rose-50 text-rose-700'
+                        : 'bg-stone-100 text-slate-600'
+                  }`}>
+                    {growth >= 10 ? <TrendingUp size={12} /> : growth <= -10 ? <TrendingDown size={12} /> : <Activity size={12} />}
+                    {growth >= 10 ? 'Growing' : growth <= -10 ? 'Review' : 'Stable'}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
