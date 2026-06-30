@@ -13,16 +13,24 @@ const swrFetcher = (url: string) =>
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState('Anonymous');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data.user?.name) {
           setUserName(data.user.name);
+          setIsAuthenticated(true);
+        } else {
+          setUserName('Anonymous');
+          setIsAuthenticated(false);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setUserName('Anonymous');
+        setIsAuthenticated(false);
+      });
   }, []);
 
   return (
@@ -35,7 +43,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         keepPreviousData: true,
       }}
     >
-      <FeedbackWrapper userName={userName}>
+      <FeedbackWrapper userName={userName} enabled={isAuthenticated}>
         {children}
       </FeedbackWrapper>
       <ToastNotifications />

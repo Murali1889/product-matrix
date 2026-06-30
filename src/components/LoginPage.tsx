@@ -11,12 +11,16 @@ export default function LoginPage() {
     typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('error')
       : null;
+  const errorReason =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('reason')
+      : null;
 
   const displayError =
     urlError === 'unauthorized_domain'
       ? 'Access restricted to @hyperverge.co accounts only.'
       : urlError === 'auth_callback_error'
-        ? 'Authentication failed. Please try again.'
+        ? `Authentication failed${errorReason ? `: ${errorReason}` : '. Please try again.'}`
         : urlError === 'oauth_failed'
           ? 'Could not start Google sign-in. Please try again.'
           : '';

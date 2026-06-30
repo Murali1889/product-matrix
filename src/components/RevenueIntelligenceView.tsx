@@ -144,10 +144,11 @@ function useAnimatedNumber(target: number, duration = 800): number {
 
 // ─── Main Component ───
 
-export default function RevenueIntelligenceView({ month, availableMonths, onMonthChange }: {
+export default function RevenueIntelligenceView({ month, availableMonths, onMonthChange, embedded = false }: {
   month?: string;
   availableMonths?: string[];
   onMonthChange?: (yyyyMM: string) => void;
+  embedded?: boolean;
 }) {
   const monthParam = month ? `&month=${month}` : '';
   const { data: crossSellResp, isLoading: csLoading } = useSWR<CrossSellResponse>(
@@ -324,7 +325,7 @@ export default function RevenueIntelligenceView({ month, availableMonths, onMont
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col pt-14 px-6 pb-4 gap-4">
+      <div className={`h-full flex flex-col ${embedded ? 'p-4 sm:p-6' : 'pt-14 px-6 pb-4'} gap-4`}>
         <div className="grid grid-cols-4 gap-4 shrink-0">
           {[...Array(4)].map((_, i) => <div key={i} className="h-[88px] bg-stone-200 animate-pulse rounded-xl" />)}
         </div>
@@ -354,7 +355,7 @@ export default function RevenueIntelligenceView({ month, availableMonths, onMont
     }`;
 
   return (
-    <div className="h-full flex flex-col pt-14 px-6 pb-4 gap-4 overflow-hidden">
+    <div className={`h-full flex flex-col ${embedded ? 'p-4 sm:p-6' : 'pt-14 px-6 pb-4'} gap-4 overflow-hidden`}>
 
       {/* ─── KPI Strip ─── */}
       <div className="grid grid-cols-4 gap-4 shrink-0">

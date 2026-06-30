@@ -65,7 +65,8 @@ export async function GET(request: Request) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
     const returnAll = searchParams.get('all') === 'true';
     const month = searchParams.get('month') || undefined;
-    const cacheKey = month || 'default';
+    const historyMonths = Math.max(1, Math.min(parseInt(searchParams.get('history') || '1', 10) || 1, 24));
+    const cacheKey = `${month || 'default'}_${historyMonths}`;
 
     // Check cache
     const cached = responseCache.get(cacheKey);
@@ -97,7 +98,7 @@ export async function GET(request: Request) {
     }
 
     // Load base data from Google Sheets API
-    const matrixData = await loadMatrixData(month);
+    const matrixData = await loadMatrixData(month, { historyMonths });
 
     // Fetch overrides from Supabase (parallel)
     let clientOverrides: ClientOverride[] = [];
