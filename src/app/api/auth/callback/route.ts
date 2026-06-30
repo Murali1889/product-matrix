@@ -1,6 +1,29 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+function describeAuthError(error: unknown): string {
+  if (error instanceof Error) {
+    const cause = error.cause;
+    if (cause && typeof cause === 'object' && 'code' in cause && typeof cause.code === 'string') {
+      return `${error.message}: ${cause.code}`;
+    }
+    return error.message;
+  }
+  return 'unknown_error';
+}
+
+async function diagnoseSupabaseConnectivity(): Promise<string | null> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  if (!supabaseUrl) return 'missing_supabase_url';
+
+  try {
+    await fetch(`${supabaseUrl}/auth/v1/health`, { cache: 'no-store' });
+    return null;
+  } catch (error) {
+    return describeAuthError(error);
+  }
+}
+
 /**
  * OAuth callback. Exchanges the `code` query param for a Supabase session.
  *
@@ -46,12 +69,21 @@ export async function GET(request: NextRequest) {
     }
   );
 
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  let exchangeError: Error | null = null;
+  try {
+    const result = await supabase.auth.exchangeCodeForSession(code);
+    exchangeError = result.error;
+  } catch (error) {
+    exchangeError = error instanceof Error ? error : new Error('unknown_exchange_error');
+  }
+
   if (exchangeError) {
-    console.error('[auth/callback] exchange failed:', exchangeError.message);
+    const diagnosticReason = await diagnoseSupabaseConnectivity();
+    const reason = diagnosticReason ?? describeAuthError(exchangeError);
+    console.error('[auth/callback] exchange failed:', reason);
     const u = new URL(`${origin}/`);
     u.searchParams.set('error', 'auth_callback_error');
-    u.searchParams.set('reason', exchangeError.message);
+    u.searchParams.set('reason', reason);
     return NextResponse.redirect(u);
   }
 

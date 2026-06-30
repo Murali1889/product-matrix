@@ -18,6 +18,7 @@ import {
   type GSUsage,
   type GSProduct,
 } from './metabase';
+import { getHistoryMonths } from './month-history';
 
 // ============== TYPES ==============
 
@@ -307,13 +308,15 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 /**
  * Load and transform all client data for the matrix view
  *
- * @param month Single month in YYYY-MM format (e.g., '2026-02').
+ * @param month Anchor month in YYYY-MM format (e.g., '2026-02').
  *   Defaults to last completed month.
+ * @param options.historyMonths Number of trailing months to load, newest first.
  */
-export async function loadMatrixData(month?: string): Promise<MatrixData> {
+export async function loadMatrixData(month?: string, options: { historyMonths?: number } = {}): Promise<MatrixData> {
   const selectedMonth = month || getLastCompletedMonth();
-  const months = [selectedMonth];
-  const cacheKey = selectedMonth;
+  const historyMonths = Math.max(1, Math.min(Math.floor(options.historyMonths || 1), 24));
+  const months = getHistoryMonths(selectedMonth, historyMonths);
+  const cacheKey = `${selectedMonth}_${historyMonths}`;
 
   // Check cache
   const cached = matrixCache.get(cacheKey);
@@ -324,12 +327,12 @@ export async function loadMatrixData(month?: string): Promise<MatrixData> {
 
   console.log(`[ClientDataLoader] Loading data for months: ${months.join(', ')}`);
 
-  // Sequential — Metabase is serialized at the client layer anyway.
-  const liveClients = await fetchClients('live');
-  const usageByMonth: Awaited<ReturnType<typeof fetchUsage>>[] = [];
-  for (const m of months) {
-    usageByMonth.push(await fetchUsage(m));
-  }
+  // Fetch clients and month usage together; the Metabase client still
+  // serializes low-level calls to avoid malformed large responses.
+  const [liveClients, usageByMonth] = await Promise.all([
+    fetchClients('live'),
+    Promise.all(months.map(m => fetchUsage(m))),
+  ]);
 
   // Build client lookup from live clients (deduplicate, exclude internal)
   const clientMap = new Map<string, GSClient>();

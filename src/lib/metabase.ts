@@ -338,16 +338,16 @@ export async function fetchClients(status: string = 'live'): Promise<GSClient[]>
 export async function fetchPricing(): Promise<GSPricing[]> {
   return singleFlight('pricing', async () => {
     const start = Date.now();
-    const [pricingRows, clientRows, productRows] = [
-      await fetchAllRows(TB.PRICING),
-      await fetchAllRows(TB.CLIENTS),
-      await fetchAllRows(TB.PRODUCTS),
-    ];
+    const [pricingRows, clientRows, productRows] = await Promise.all([
+      fetchAllRows(TB.PRICING),
+      fetchClients('all'),
+      fetchProducts(),
+    ]);
 
-    const clientMap = new Map<string, Record<string, unknown>>();
+    const clientMap = new Map<string, GSClient>();
     clientRows.forEach(c => clientMap.set(str(c['Client ID']), c));
-    const productMap = new Map<string, Record<string, unknown>>();
-    productRows.forEach(p => productMap.set(str(p['Unit']), p));
+    const productMap = new Map<string, GSProduct>();
+    productRows.forEach(p => productMap.set(str(p['Unit (Billing Key)']), p));
 
     pricingRows.sort((a, b) => {
       const c = str(a['Client ID']).localeCompare(str(b['Client ID']));
@@ -365,11 +365,11 @@ export async function fetchPricing(): Promise<GSPricing[]> {
       return {
         'Client ID': cid,
         'Client Name': client ? str(client['Client Name']) : '',
-        'Status': client ? str(client['Operational Status']) : '',
+        'Status': client ? str(client['Status']) : '',
         'Unit': unit,
         'Module Type': str(r['Module Type']),
         'Module Name': product ? str(product['Module Name']) : '',
-        'Sub-Module': product ? str(product['Unit Name']) : '',
+        'Sub-Module': product ? str(product['Sub-Module']) : '',
         'Slab Start': num(r['Slab Start']),
         'Slab End': num(r['Slab End']),
         'Unit Price': num(r['Unit Price']),
@@ -442,15 +442,17 @@ export async function fetchUsage(month: string, noCache: boolean = false): Promi
     const sumCols = cols.filter(c => c === 'sum' || /^sum_\d+$/.test(c));
     const [iTotal, iBillable, iCost, iCostUsd] = sumCols.map(n => cols.indexOf(n));
 
-    const pricing = await fetchPricing();
-    const clients = await fetchAllRows(TB.CLIENTS);
+    const [pricing, clients] = await Promise.all([
+      fetchPricing(),
+      fetchClients('all'),
+    ]);
 
     const priceMap = new Map<string, number>();
     for (const p of pricing) {
       const k = `${p['Client ID']}|${p['Unit']}`;
       if (!priceMap.has(k)) priceMap.set(k, p['Unit Price']);
     }
-    const clientMap = new Map<string, Record<string, unknown>>();
+    const clientMap = new Map<string, GSClient>();
     clients.forEach(c => clientMap.set(str(c['Client ID']), c));
 
     // Synthetic label for rows whose module isn't mapped in
@@ -479,7 +481,7 @@ export async function fetchUsage(month: string, noCache: boolean = false): Promi
       return {
         'Client ID': clientId,
         'Client Name': client ? str(client['Client Name']) : '',
-        'Status': client ? str(client['Operational Status']) : '',
+        'Status': client ? str(client['Status']) : '',
         'Account Owner': client ? str(client['Account Owner']) : '',
         'BUID': '', 'App ID': '', 'Workflow ID': '',
         'Module Name': moduleName,

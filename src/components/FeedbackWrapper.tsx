@@ -32,25 +32,31 @@ interface FeedbackWrapperProps {
   children: React.ReactNode;
   userName?: string;
   userEmail?: string;
+  enabled?: boolean;
 }
 
 export default function FeedbackWrapper({
   children,
   userName = 'Anonymous',
-  userEmail
+  userEmail,
+  enabled = false,
 }: FeedbackWrapperProps) {
   const [feedbackData, setFeedbackData] = useState<ProductFeedback[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Load existing feedback on mount
   useEffect(() => {
-    loadFeedback();
-  }, []);
+    if (enabled) loadFeedback();
+  }, [enabled]);
 
   const loadFeedback = async () => {
     try {
       setIsLoading(true);
       const res = await fetch('/api/feedback');
+      if (res.status === 401) {
+        setFeedbackData([]);
+        return;
+      }
       const json = await res.json();
       setFeedbackData(json.data || []);
     } catch (error) {
