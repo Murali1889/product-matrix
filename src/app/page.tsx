@@ -1877,11 +1877,13 @@ function MiniRevenueChart({
           const previous = data[index - 1];
           const isUp = !previous || item.revenue >= previous.revenue;
           return (
-            <div key={item.month} className="group flex h-full min-w-0 flex-1 flex-col justify-end">
-              <div className="mb-2 hidden text-center text-xs tabular-nums text-slate-500 group-hover:block">
-                {formatCurrency(item.revenue)}
-              </div>
-              <div className="flex min-h-0 items-end">
+            <div key={item.month} className="group flex h-full min-w-0 flex-1 flex-col">
+              {/* Bar area fills the column's remaining height, giving the
+                  percentage-height bar a definite parent to resolve against. */}
+              <div className="flex min-h-0 flex-1 flex-col justify-end">
+                <div className="mb-2 hidden text-center text-xs tabular-nums text-slate-500 group-hover:block">
+                  {formatCurrency(item.revenue)}
+                </div>
                 <div
                   className={`w-full rounded-t-md ${isUp ? 'bg-slate-800' : 'bg-slate-400'}`}
                   style={{ height: `${height}%` }}
