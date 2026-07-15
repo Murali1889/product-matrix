@@ -81,6 +81,27 @@ interface RevenueHealthClient {
   prevAPIs: string[];
 }
 
+// An account leaking revenue this month — the "defend" side of growth.
+interface RiskAccount {
+  name: string;
+  segment?: string | null;
+  atRisk: number;   // monthly USD in danger (full amount if churned, the drop if declining)
+  kind: 'churned' | 'declining';
+  latest: number;
+  previous: number;
+  topAPI?: string;  // the product that stopped / their biggest product
+}
+
+// A cross-sell opening — a segment peer pattern this account is missing (the "grow" side).
+interface ExpansionPlay {
+  clientName: string;
+  segment: string;
+  apiName: string;
+  estRevenue: number;    // USD/month, the average that API earns from peers who use it
+  adoptionRate: number;  // 0-1, share of the segment already using it
+  priority: 'high' | 'medium' | 'low';
+}
+
 interface DashboardAnalytics {
   geography: [string, { count: number; revenue: number }][];
   topGrowing: RevenueHealthClient[];
@@ -92,6 +113,12 @@ interface DashboardAnalytics {
   monthlyTrend: { month: string; revenue: number }[];
   latestMonthData?: { month: string; revenue: number; momGrowth: number };
   momGrowthCalc: number;
+  // Growth levers — the "where to focus next" signals.
+  revenueAtRisk: number;          // total monthly USD across declining + churned accounts
+  atRiskAccounts: RiskAccount[];  // sorted by $ at risk, biggest first
+  expansionPipeline: number;      // total monthly USD of high-confidence cross-sell gaps
+  expansionCount: number;
+  expansionPlays: ExpansionPlay[]; // sorted by estimated revenue, biggest first
 }
 
 interface APIInsightsSummary {
@@ -179,6 +206,82 @@ const SEGMENT_COLORS = [
   'bg-amber-500',
   'bg-slate-400',
 ];
+
+/**
+ * Turn raw client health into the two revenue levers the dashboard acts on:
+ *   1. Defend — revenue slipping away (churned or declining accounts).
+ *   2. Grow  — cross-sell gaps where segment peers already buy an API this
+ *              account doesn't. Estimated at the peer average, in USD.
+ * All figures are per-month USD, converted from each account's billing currency.
+ */
+function computeGrowthLevers(clients: ProcessedClient[], clientHealth: RevenueHealthClient[]): {
+  revenueAtRisk: number;
+  atRiskAccounts: RiskAccount[];
+  expansionPipeline: number;
+  expansionCount: number;
+  expansionPlays: ExpansionPlay[];
+} {
+  // ---- Defend: churned (was paying, now $0) + declining (down >10%) ----
+  const atRiskAccounts: RiskAccount[] = [];
+  clientHealth.forEach(c => {
+    if (c.latest === 0 && c.previous > 0) {
+      atRiskAccounts.push({ name: c.name, segment: c.segment, atRisk: c.previous, kind: 'churned', latest: c.latest, previous: c.previous, topAPI: c.prevAPIs[0] });
+    } else if (c.growth < -10 && c.previous > 100 && c.latest < c.previous) {
+      atRiskAccounts.push({ name: c.name, segment: c.segment, atRisk: c.previous - c.latest, kind: 'declining', latest: c.latest, previous: c.previous, topAPI: c.topAPIs[0] });
+    }
+  });
+  atRiskAccounts.sort((a, b) => b.atRisk - a.atRisk);
+  const revenueAtRisk = atRiskAccounts.reduce((sum, a) => sum + a.atRisk, 0);
+
+  // ---- Grow: cross-sell gaps by segment ----
+  // Latest-month revenue per API for one client, in USD.
+  const latestApiUSD = (c: ProcessedClient): Record<string, number> => {
+    const curr = c.profile?.billing_currency;
+    const map: Record<string, number> = {};
+    c.monthly_data?.[0]?.apis?.forEach(a => {
+      if (a.name && a.revenue_usd) map[a.name] = (map[a.name] || 0) + convertToUSD(a.revenue_usd, curr);
+    });
+    return map;
+  };
+
+  const bySegment: Record<string, ProcessedClient[]> = {};
+  clients.forEach(c => {
+    const seg = c.profile?.segment || 'Other';
+    (bySegment[seg] ||= []).push(c);
+  });
+
+  const THRESHOLD = 0.4;   // an API must be used by ≥40% of the segment to count as "expected"
+  const MIN_SEGMENT = 3;   // need enough peers for adoption to mean anything
+  const plays: ExpansionPlay[] = [];
+
+  Object.entries(bySegment).forEach(([segment, segClients]) => {
+    if (segClients.length < MIN_SEGMENT) return;
+    const usdMaps = segClients.map(latestApiUSD);
+    const apiNames = new Set<string>();
+    usdMaps.forEach(m => Object.keys(m).forEach(n => apiNames.add(n)));
+
+    apiNames.forEach(api => {
+      let using = 0;
+      let total = 0;
+      usdMaps.forEach(m => { if ((m[api] || 0) > 0) { using += 1; total += m[api]; } });
+      const adoptionRate = using / segClients.length;
+      if (using === 0 || adoptionRate < THRESHOLD) return;
+      const avg = total / using;
+      const priority: 'high' | 'medium' | 'low' = adoptionRate >= 0.7 ? 'high' : adoptionRate >= 0.5 ? 'medium' : 'low';
+      segClients.forEach((c, i) => {
+        if ((usdMaps[i][api] || 0) === 0) {
+          plays.push({ clientName: c.client_name, segment, apiName: api, estRevenue: avg, adoptionRate, priority });
+        }
+      });
+    });
+  });
+
+  // Headline pipeline counts only high-confidence gaps (adoption ≥ 50%).
+  const confident = plays.filter(p => p.priority !== 'low').sort((a, b) => b.estRevenue - a.estRevenue);
+  const expansionPipeline = confident.reduce((sum, p) => sum + p.estRevenue, 0);
+
+  return { revenueAtRisk, atRiskAccounts, expansionPipeline, expansionCount: confident.length, expansionPlays: confident };
+}
 
 function buildDashboardModel(clients: ProcessedClient[], masterAPIs: MasterAPI[]): DashboardModel {
   const summary: SummaryStats = {
@@ -324,6 +427,8 @@ function buildDashboardModel(clients: ProcessedClient[], masterAPIs: MasterAPI[]
     ? ((latestMonthData.revenue - prevMonthData.revenue) / prevMonthData.revenue) * 100
     : 0;
 
+  const levers = computeGrowthLevers(clients, clientHealth);
+
   return {
     summary,
     analytics: {
@@ -337,6 +442,11 @@ function buildDashboardModel(clients: ProcessedClient[], masterAPIs: MasterAPI[]
       monthlyTrend: sortedMonths,
       latestMonthData,
       momGrowthCalc,
+      revenueAtRisk: levers.revenueAtRisk,
+      atRiskAccounts: levers.atRiskAccounts,
+      expansionPipeline: levers.expansionPipeline,
+      expansionCount: levers.expansionCount,
+      expansionPlays: levers.expansionPlays,
     },
     apiInsights,
     opportunityRows: sortedByRevenue.slice(0, 8),
@@ -1680,16 +1790,23 @@ function SalesDashboardOverview({
         <DashboardStatCard
           label="Current MRR"
           value={formatCurrency(summary.totalRevenue)}
-          note={`${summary.activeClients} active of ${summary.masterListClients} clients`}
+          note={`${analytics.momGrowthCalc >= 0 ? '+' : ''}${analytics.momGrowthCalc.toFixed(1)}% MoM · ${summary.activeClients} active`}
           icon={BadgeDollarSign}
           tone="dark"
         />
         <DashboardStatCard
-          label="Average per Active Client"
-          value={formatCurrency(summary.avgRevenue)}
-          note={`${analytics.momGrowthCalc >= 0 ? '+' : ''}${analytics.momGrowthCalc.toFixed(1)}% MoM`}
-          icon={TrendingUp}
-          tone={analytics.momGrowthCalc >= 0 ? 'green' : 'red'}
+          label="Revenue at Risk"
+          value={`${formatCurrency(analytics.revenueAtRisk)}/mo`}
+          note={`${analytics.atRiskAccounts.length} accounts declining or churned`}
+          icon={AlertCircle}
+          tone={analytics.revenueAtRisk > 0 ? 'red' : 'green'}
+        />
+        <DashboardStatCard
+          label="Expansion Pipeline"
+          value={`${formatCurrency(analytics.expansionPipeline)}/mo`}
+          note={`${analytics.expansionCount} high-confidence cross-sell plays`}
+          icon={Sparkles}
+          tone="amber"
         />
         <DashboardStatCard
           label="Top 10 Concentration"
@@ -1698,14 +1815,9 @@ function SalesDashboardOverview({
           icon={PieChart}
           tone="amber"
         />
-        <DashboardStatCard
-          label="At-Risk Accounts"
-          value={`${analytics.zeroRevenue.length + analytics.declining.length}`}
-          note={`${analytics.newClients.length} newer accounts this period`}
-          icon={AlertCircle}
-          tone={analytics.zeroRevenue.length + analytics.declining.length > 0 ? 'red' : 'green'}
-        />
       </div>
+
+      <FocusNextSection analytics={analytics} formatCurrency={formatCurrency} onOpenMatrix={onOpenMatrix} onOpenRevenueIntel={onOpenRevenueIntel} />
 
       <div className="grid gap-4 xl:grid-cols-8">
         <section className="rounded-lg border border-stone-200 bg-white py-5 shadow-sm xl:col-span-5">
@@ -1812,6 +1924,123 @@ function SalesDashboardOverview({
         <AccountWorkbench rows={opportunityRows} formatCurrency={formatCurrency} />
       </section>
     </div>
+  );
+}
+
+/**
+ * The "what do I do next" panel: two prioritized action lists side by side —
+ * accounts to defend (revenue slipping) and cross-sell plays to win.
+ */
+function FocusNextSection({
+  analytics,
+  formatCurrency,
+  onOpenMatrix,
+  onOpenRevenueIntel,
+}: {
+  analytics: DashboardAnalytics;
+  formatCurrency: (value: number) => string;
+  onOpenMatrix: () => void;
+  onOpenRevenueIntel: () => void;
+}) {
+  const defend = analytics.atRiskAccounts.slice(0, 5);
+  const grow = analytics.expansionPlays.slice(0, 5);
+  const inPlay = analytics.revenueAtRisk + analytics.expansionPipeline;
+
+  return (
+    <section className="rounded-lg border border-stone-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-1 border-b border-stone-100 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <Target size={16} className="text-amber-600" />
+          <h2 className="text-sm font-semibold text-slate-900">Where to focus next</h2>
+        </div>
+        <p className="text-sm text-slate-500 text-pretty">
+          Two moves grow MRR: <span className="font-medium text-rose-600">defend</span> revenue that&apos;s slipping, and{' '}
+          <span className="font-medium text-emerald-600">cross-sell</span> products a client&apos;s segment peers already buy but they don&apos;t.
+        </p>
+      </div>
+
+      <div className="grid gap-0 sm:grid-cols-2 sm:divide-x sm:divide-stone-100">
+        {/* Defend */}
+        <div className="p-5">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <TrendingDown size={15} className="text-rose-500" />
+              <span className="text-sm font-semibold text-slate-800">Defend — Revenue at Risk</span>
+            </div>
+            <span className="shrink-0 tabular-nums text-sm font-semibold text-rose-600">{formatCurrency(analytics.revenueAtRisk)}/mo</span>
+          </div>
+          {defend.length === 0 ? (
+            <div className="rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-slate-400">No accounts are losing revenue right now.</div>
+          ) : (
+            <ul className="space-y-2">
+              {defend.map(a => (
+                <li key={a.name} className="flex items-center justify-between gap-3 rounded-md border border-stone-200 px-3 py-2.5 transition-colors hover:bg-stone-50">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-sm font-medium text-slate-800">{a.name}</span>
+                      <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${a.kind === 'churned' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>{a.kind}</span>
+                    </div>
+                    <div className="mt-0.5 truncate text-xs text-slate-500">
+                      {a.kind === 'churned'
+                        ? `Stopped ${a.topAPI || 'all usage'} · was ${formatCurrency(a.previous)}`
+                        : `${formatCurrency(a.previous)} → ${formatCurrency(a.latest)}${a.topAPI ? ` · ${a.topAPI}` : ''}`}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="tabular-nums text-sm font-semibold text-rose-600">-{formatCurrency(a.atRisk)}</div>
+                    <div className="text-[10px] text-slate-400">at risk/mo</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button type="button" onClick={onOpenRevenueIntel} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-900">
+            Work the at-risk list <ArrowUpRight size={13} />
+          </button>
+        </div>
+
+        {/* Grow */}
+        <div className="p-5">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} className="text-emerald-500" />
+              <span className="text-sm font-semibold text-slate-800">Grow — Cross-sell Plays</span>
+            </div>
+            <span className="shrink-0 tabular-nums text-sm font-semibold text-emerald-600">{formatCurrency(analytics.expansionPipeline)}/mo</span>
+          </div>
+          {grow.length === 0 ? (
+            <div className="rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-slate-400">No high-confidence cross-sell gaps found.</div>
+          ) : (
+            <ul className="space-y-2">
+              {grow.map((p, i) => (
+                <li key={`${p.clientName}:${p.apiName}:${i}`} className="flex items-center justify-between gap-3 rounded-md border border-stone-200 px-3 py-2.5 transition-colors hover:bg-stone-50">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-slate-800">{p.clientName}</div>
+                    <div className="mt-0.5 truncate text-xs text-slate-500">
+                      Add <span className="font-medium text-slate-700">{p.apiName}</span> · {Math.round(p.adoptionRate * 100)}% of {p.segment} use it
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="tabular-nums text-sm font-semibold text-emerald-600">+{formatCurrency(p.estRevenue)}</div>
+                    <div className="text-[10px] text-slate-400">est/mo</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button type="button" onClick={onOpenMatrix} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-900">
+            Explore gaps in the matrix <ArrowUpRight size={13} />
+          </button>
+        </div>
+      </div>
+
+      {inPlay > 0 && (
+        <div className="border-t border-stone-100 bg-stone-50/60 px-5 py-3 text-sm text-slate-600 text-pretty">
+          <span className="font-semibold text-slate-900">{formatCurrency(inPlay)}/mo</span> of MRR is in play —{' '}
+          {formatCurrency(analytics.revenueAtRisk)} to defend and {formatCurrency(analytics.expansionPipeline)} to win through cross-sell.
+        </div>
+      )}
+    </section>
   );
 }
 
