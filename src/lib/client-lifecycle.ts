@@ -38,7 +38,8 @@ export interface LifecycleRow {
   // Enrichment (best-effort from our data — see caveats):
   geography: string;                      // region (India / ASEAN / …) derived from country code
   country: string;                        // raw country code
-  kam: string;                            // KAM/CSM — from account_owner (may be stale vs Zoho)
+  kam: string;                            // KAM/CSM display name, derived from account_owner email
+  account_owner: string;                  // raw account_owner email (same source the matrix page shows)
   zoho_id: string;                        // from business_units (blank for many clients)
   mrr_usd: number;                        // last completed month PRODUCTION cost (USD) — usage-based
   mrr_bucket: string;                     // 'More than 50K' | '10K to 50K' | 'Under 10K' | ''
@@ -63,7 +64,7 @@ export interface LifecycleResult {
 
 // Bump whenever LifecycleRow / LifecycleSummary shape changes, so a stale
 // disk cache written by an older build is discarded instead of served.
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 
 // Country code → sales region. Fallback: the raw country value.
 const REGION_BY_COUNTRY: Record<string, string> = {
@@ -243,6 +244,7 @@ async function compute(): Promise<LifecycleResult> {
       geography: toRegion(country),
       country,
       kam: ownerToName(info?.owner || ''),
+      account_owner: info?.owner || '',
       zoho_id: zohoByClient.get(cid) || '',
       mrr_usd: Math.round(mrr),
       mrr_bucket: mrrBucket(mrr),

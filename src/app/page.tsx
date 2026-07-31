@@ -79,6 +79,7 @@ interface LifecycleRow {
   geography: string;
   country: string;
   kam: string;
+  account_owner: string;
   zoho_id: string;
   mrr_usd: number;
   mrr_bucket: string;
@@ -1639,7 +1640,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   );
 
   const downloadCsv = () => {
-    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'geography', 'country', 'kam_csm', 'mrr_bucket', 'mrr_usd_est', 'zoho_id', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
+    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'geography', 'country', 'kam_csm', 'account_owner_email', 'mrr_bucket', 'mrr_usd_est', 'zoho_id', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
     const esc = (v: unknown) => {
       const s = v == null ? '' : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -1648,7 +1649,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
     for (const r of filtered) {
       lines.push([
         r.client_id, r.client_name, r.operational_status, r.stage,
-        r.geography, r.country, r.kam, r.mrr_bucket, r.mrr_usd, r.zoho_id,
+        r.geography, r.country, r.kam, r.account_owner, r.mrr_bucket, r.mrr_usd, r.zoho_id,
         r.currently_in_production ? 'yes' : 'no',
         r.first_staging_date ?? '', r.went_to_production_date ?? '',
         r.go_live_approximate ? 'yes' : 'no',
@@ -1780,7 +1781,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
                     {r.currently_in_production && <span className="ml-1 w-1.5 h-1.5 inline-block rounded-full bg-emerald-500 align-middle" title="Currently active in production" />}
                   </td>
                   <td className="px-3 py-2 text-slate-600" title={r.country}>{r.geography || '—'}</td>
-                  <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{r.kam || '—'}</td>
+                  <td className="px-3 py-2 text-slate-600 whitespace-nowrap" title={r.account_owner || undefined}>{r.kam || r.account_owner || '—'}</td>
                   <td className="px-3 py-2 whitespace-nowrap" title={r.mrr_usd ? `~$${r.mrr_usd.toLocaleString()} last month (usage-based)` : 'No production usage last month'}>
                     {r.mrr_bucket
                       ? <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${r.mrr_bucket === 'More than 50K' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : r.mrr_bucket === '10K to 50K' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{r.mrr_bucket}</span>
