@@ -1646,16 +1646,16 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
           <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold">
-            {data.summary.currentlyInProduction.toLocaleString()} currently in production
+            {(data.summary?.currentlyInProduction ?? 0).toLocaleString()} currently in production
           </span>
           <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
-            {data.summary.production.toLocaleString()} ever went live
+            {(data.summary?.production ?? 0).toLocaleString()} ever went live
           </span>
           <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium">
-            {data.summary.testingOnly.toLocaleString()} testing only
+            {(data.summary?.testingOnly ?? 0).toLocaleString()} testing only
           </span>
           <span className="text-slate-400">·</span>
-          <span>{data.summary.total.toLocaleString()} clients</span>
+          <span>{(data.summary?.total ?? 0).toLocaleString()} clients</span>
           {data.dataAsOf && <><span className="text-slate-400">·</span><span>data as of {data.dataAsOf}</span></>}
         </div>
       </div>

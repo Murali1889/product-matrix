@@ -44,11 +44,16 @@ export interface LifecycleSummary {
 }
 
 export interface LifecycleResult {
+  version: number;     // schema version — disk caches with a different version are ignored
   clients: LifecycleRow[];
   summary: LifecycleSummary;
   dataAsOf: string;    // max createdDate in the CSV (YYYY-MM-DD)
   computedAt: string;  // ISO timestamp of last compute
 }
+
+// Bump whenever LifecycleRow / LifecycleSummary shape changes, so a stale
+// disk cache written by an older build is discarded instead of served.
+const CACHE_VERSION = 2;
 
 const CSV_PATH = path.join(process.cwd(), 'data', 'credentials-report.csv');
 const CACHE_DIR = path.join(process.cwd(), '.cache');
@@ -170,7 +175,7 @@ async function compute(): Promise<LifecycleResult> {
     testingOnly: rows.filter(r => r.stage === 'testing-only').length,
   };
 
-  return { clients: rows, summary, dataAsOf, computedAt: new Date().toISOString() };
+  return { version: CACHE_VERSION, clients: rows, summary, dataAsOf, computedAt: new Date().toISOString() };
 }
 
 // ---------- disk cache ----------
@@ -178,7 +183,10 @@ async function compute(): Promise<LifecycleResult> {
 function readDisk(): LifecycleResult | null {
   try {
     if (!existsSync(CACHE_FILE)) return null;
-    return JSON.parse(readFileSync(CACHE_FILE, 'utf-8')) as LifecycleResult;
+    const parsed = JSON.parse(readFileSync(CACHE_FILE, 'utf-8')) as LifecycleResult;
+    // Ignore caches written by an older schema version.
+    if (parsed?.version !== CACHE_VERSION) return null;
+    return parsed;
   } catch { return null; }
 }
 
