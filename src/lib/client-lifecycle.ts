@@ -53,7 +53,7 @@ export interface LifecycleResult {
 
 // Bump whenever LifecycleRow / LifecycleSummary shape changes, so a stale
 // disk cache written by an older build is discarded instead of served.
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 
 const CSV_PATH = path.join(process.cwd(), 'data', 'credentials-report.csv');
 const CACHE_DIR = path.join(process.cwd(), '.cache');
@@ -134,10 +134,13 @@ async function compute(): Promise<LifecycleResult> {
     const wentToProd = p.length ? p[0] : null;
     const firstStaging = s.length ? s[0] : null;
 
+    // Time from first testing credential to first production credential — only
+    // meaningful when testing genuinely PRECEDES go-live. Many clients created a
+    // staging cred AFTER already being in production (to test new features); for
+    // those the metric is nonsensical, so leave it null rather than show 0.
     let days: number | null = null;
-    if (wentToProd && firstStaging) {
-      const diff = (Date.parse(wentToProd) - Date.parse(firstStaging)) / 86_400_000;
-      days = Math.max(0, Math.round(diff));
+    if (wentToProd && firstStaging && firstStaging < wentToProd) {
+      days = Math.round((Date.parse(wentToProd) - Date.parse(firstStaging)) / 86_400_000);
     }
 
     const info = cinfo.get(cid);

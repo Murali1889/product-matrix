@@ -1612,9 +1612,10 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
     else { setSortKey(k); setSortDir(k === 'client_name' || k === 'operational_status' ? 'asc' : 'asc'); }
   };
 
-  const SortTh = ({ k, label, className = '' }: { k: LifecycleSortKey; label: string; className?: string }) => (
+  const SortTh = ({ k, label, className = '', title }: { k: LifecycleSortKey; label: string; className?: string; title?: string }) => (
     <th
       onClick={() => toggleSort(k)}
+      title={title}
       className={`px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] cursor-pointer select-none hover:text-slate-700 whitespace-nowrap ${className}`}
     >
       <span className="inline-flex items-center gap-1">
@@ -1734,7 +1735,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
               <SortTh k="stage" label="Stage" />
               <SortTh k="first_staging_date" label="Testing since" />
               <SortTh k="went_to_production_date" label="Live since" />
-              <SortTh k="days_to_go_live" label="Days to go-live" />
+              <SortTh k="days_to_go_live" label="Testing → Live" title="Days from the client's first testing/staging credential to their first production credential. Shown only when testing happened before go-live; blank otherwise." />
               <SortTh k="prod_app_count" label="Prod apps" />
             </tr>
           </thead>
@@ -1756,7 +1757,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
                   </td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums">{r.first_staging_date ?? '—'}</td>
                   <td className="px-3 py-2 tabular-nums font-medium text-slate-800">{r.went_to_production_date ?? '—'}</td>
-                  <td className="px-3 py-2 text-slate-600 tabular-nums">{r.days_to_go_live != null ? `${r.days_to_go_live}d` : '—'}</td>
+                  <td className="px-3 py-2 text-slate-600 tabular-nums" title={r.days_to_go_live != null ? `Took ${r.days_to_go_live} days from first testing to going live` : 'No testing recorded before go-live'}>{r.days_to_go_live != null ? `${r.days_to_go_live}d` : '—'}</td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums" title="active / total prod credentials">
                     {r.prod_app_count ? `${r.active_prod_app_count}/${r.prod_app_count}` : '—'}
                   </td>
