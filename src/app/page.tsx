@@ -14,6 +14,9 @@ import { getSlackSettings, saveSlackSettings, testSlackWebhook, notifyComment, n
 import type { SlackSettings } from '@/lib/slack';
 import RevenueIntelligenceView from '@/components/RevenueIntelligenceView';
 import LoginPage from '@/components/LoginPage';
+import AccountBrief from '@/components/AccountBrief';
+import { RecommendationEngine } from '@/lib/recommendation-engine';
+import type { APIRecommendation } from '@/types/recommendation';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
 import { showToast } from '@/components/ToastNotifications';
 import { supabase } from '@/lib/supabase';
@@ -2726,6 +2729,14 @@ function MatrixView({
   // Selected client for details panel
   const [selectedClient, setSelectedClient] = useState<ProcessedClient | null>(null);
 
+  // Recommendation engine for the Account Brief — built once over the current
+  // client set, then queried lazily for whichever client is open.
+  const briefEngine = useMemo(() => new RecommendationEngine(clients, masterAPIs), [clients, masterAPIs]);
+  const briefRecommendation = useMemo<APIRecommendation | null>(
+    () => (selectedClient ? (briefEngine.getClientRecommendations(selectedClient.client_name)?.recommendations?.[0] ?? null) : null),
+    [briefEngine, selectedClient],
+  );
+
   // Geography filter removed per user request
 
   // New: API column filter
@@ -4452,6 +4463,7 @@ function MatrixView({
         masterAPINames={masterAPIs}
         matrixAnomalies={matrixAnomalies}
         lifecycle={selectedClient?.client_id ? (lifecycleMap?.get(selectedClient.client_id) ?? null) : null}
+        topRecommendation={briefRecommendation}
       />
     </div>
   );
@@ -4698,6 +4710,7 @@ function ClientDetailsPanel({
   masterAPINames = [],
   matrixAnomalies = {},
   lifecycle = null,
+  topRecommendation = null,
 }: {
   client: ProcessedClient | null;
   onClose: () => void;
@@ -4710,8 +4723,9 @@ function ClientDetailsPanel({
   masterAPINames?: string[];
   matrixAnomalies?: Record<string, { type: string; clientId: string; clientName: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number }[]>;
   lifecycle?: LifecycleRow | null;
+  topRecommendation?: APIRecommendation | null;
 }) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('overview');
+  const [activeTab, setActiveTab] = useState<'brief' | 'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('brief');
   const [panelMonth, setPanelMonth] = useState<string>('');
 
   // Edit state
@@ -4729,6 +4743,8 @@ function ClientDetailsPanel({
       setHasChanges(false);
       // Set initial month from prop or use first available month
       setPanelMonth(initialMonth || client.monthly_data?.[0]?.month || '');
+      // Open on the Brief tab each time a new client is selected.
+      setActiveTab('brief');
     }
   }, [client, initialMonth]);
 
@@ -4851,6 +4867,7 @@ function ClientDetailsPanel({
   };
 
   const tabs = [
+    { id: 'brief' as const, label: 'Brief', icon: Rocket },
     { id: 'overview' as const, label: 'Overview', icon: Building2 },
     { id: 'apis' as const, label: 'APIs', icon: Activity },
     { id: 'filters' as const, label: 'Filters', icon: Filter },
@@ -5049,6 +5066,16 @@ function ClientDetailsPanel({
 
         {/* Content - scrollable */}
         <div className="flex-1 overflow-y-auto p-5">
+          {/* Brief Tab — at-a-glance summary for pre-call prep */}
+          {activeTab === 'brief' && (
+            <AccountBrief
+              client={client}
+              lifecycle={lifecycle}
+              topRecommendation={topRecommendation}
+              formatUSD={formatUSD}
+            />
+          )}
+
           {/* Overview Tab */}
           {activeTab === 'overview' && (() => {
             const country = normalizeCountry(client.profile?.geography);
