@@ -1624,6 +1624,32 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
     </th>
   );
 
+  const downloadCsv = () => {
+    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
+    const esc = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [headers.join(',')];
+    for (const r of filtered) {
+      lines.push([
+        r.client_id, r.client_name, r.operational_status, r.stage,
+        r.currently_in_production ? 'yes' : 'no',
+        r.first_staging_date ?? '', r.went_to_production_date ?? '',
+        r.days_to_go_live ?? '', r.active_prod_app_count, r.prod_app_count,
+      ].map(esc).join(','));
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `client-lifecycle-${data?.dataAsOf || 'export'}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   if (!data) {
     return (
       <div className="h-full flex items-center justify-center text-slate-400 text-sm">
@@ -1643,6 +1669,13 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
         <div className="flex items-center gap-2 mb-1">
           <Rocket size={18} className="text-amber-500" />
           <h2 className="text-lg font-bold text-slate-800">Client Lifecycle</h2>
+          <button
+            onClick={downloadCsv}
+            title="Download current view as CSV"
+            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-800 cursor-pointer transition-colors"
+          >
+            <Download size={13} /> Download CSV
+          </button>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
           <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold">
