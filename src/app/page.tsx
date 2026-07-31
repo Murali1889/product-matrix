@@ -70,6 +70,7 @@ interface LifecycleRow {
   stage: 'production' | 'testing-only' | 'none';
   first_staging_date: string | null;
   went_to_production_date: string | null;
+  go_live_approximate: boolean;
   days_to_go_live: number | null;
   prod_app_count: number;
   active_prod_app_count: number;
@@ -79,7 +80,8 @@ interface LifecycleRow {
 
 interface LifecycleResponse {
   clients: LifecycleRow[];
-  summary: { total: number; production: number; currentlyInProduction: number; testingOnly: number };
+  summary: { total: number; production: number; currentlyInProduction: number; testingOnly: number; approxGoLive: number };
+  migrationDates: string[];
   dataAsOf: string;
   computedAt: string;
 }
@@ -1626,7 +1628,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   );
 
   const downloadCsv = () => {
-    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
+    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
     const esc = (v: unknown) => {
       const s = v == null ? '' : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -1637,6 +1639,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
         r.client_id, r.client_name, r.operational_status, r.stage,
         r.currently_in_production ? 'yes' : 'no',
         r.first_staging_date ?? '', r.went_to_production_date ?? '',
+        r.go_live_approximate ? 'yes' : 'no',
         r.days_to_go_live ?? '', r.active_prod_app_count, r.prod_app_count,
       ].map(esc).join(','));
     }
@@ -1691,6 +1694,11 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
           <span className="text-slate-400">·</span>
           <span>{(data.summary?.total ?? 0).toLocaleString()} clients</span>
           {data.dataAsOf && <><span className="text-slate-400">·</span><span>data as of {data.dataAsOf}</span></>}
+          {(data.summary?.approxGoLive ?? 0) > 0 && (
+            <span className="text-slate-400" title={`${data.summary.approxGoLive} clients' go-live dates fall on bulk-migration dates (${(data.migrationDates || []).join(', ')}), so their real go-live is on or before that date and shown as "≤ date".`}>
+              · ⚠ {data.summary.approxGoLive.toLocaleString()} approximate go-live (≤)
+            </span>
+          )}
         </div>
       </div>
 
@@ -1756,7 +1764,13 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
                     {r.currently_in_production && <span className="ml-1 w-1.5 h-1.5 inline-block rounded-full bg-emerald-500 align-middle" title="Currently active in production" />}
                   </td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums">{r.first_staging_date ?? '—'}</td>
-                  <td className="px-3 py-2 tabular-nums font-medium text-slate-800">{r.went_to_production_date ?? '—'}</td>
+                  <td className="px-3 py-2 tabular-nums font-medium text-slate-800">
+                    {r.went_to_production_date
+                      ? (r.go_live_approximate
+                          ? <span className="text-slate-500" title={`Bulk-migration stamp — client was live on or before ${r.went_to_production_date}, exact date unknown`}>≤ {r.went_to_production_date}</span>
+                          : r.went_to_production_date)
+                      : '—'}
+                  </td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums" title={r.days_to_go_live != null ? `Took ${r.days_to_go_live} days from first testing to going live` : 'No testing recorded before go-live'}>{r.days_to_go_live != null ? `${r.days_to_go_live}d` : '—'}</td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums" title="active / total prod credentials">
                     {r.prod_app_count ? `${r.active_prod_app_count}/${r.prod_app_count}` : '—'}
@@ -4089,7 +4103,7 @@ function MatrixView({
                                 <div className="text-[11px] text-slate-400 truncate leading-tight mt-0.5 tracking-wide">
                                   {client.profile?.segment || '-'}
                                   {lc?.went_to_production_date
-                                    ? <span className="text-emerald-600" title="Live in production since"> · live {lc.went_to_production_date}</span>
+                                    ? <span className="text-emerald-600" title={lc.go_live_approximate ? 'Live on or before this date (migration stamp)' : 'Live in production since'}> · live {lc.go_live_approximate ? '≤' : ''}{lc.went_to_production_date}</span>
                                     : lc?.stage === 'testing-only'
                                       ? <span className="text-amber-500" title="Testing only — not in production"> · testing</span>
                                       : null}
@@ -5021,8 +5035,10 @@ function ClientDetailsPanel({
                   <div className="text-[10px] text-emerald-600/80 uppercase tracking-wider flex items-center gap-1">
                     <Rocket size={10} /> Live in production since
                   </div>
-                  <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.went_to_production_date ? 'text-emerald-700' : 'text-slate-400'}`}>
-                    {lifecycle?.went_to_production_date || (lifecycle?.stage === 'testing-only' ? 'Testing only' : '—')}
+                  <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.went_to_production_date ? 'text-emerald-700' : 'text-slate-400'}`} title={lifecycle?.go_live_approximate ? 'Bulk-migration stamp — live on or before this date, exact date unknown' : undefined}>
+                    {lifecycle?.went_to_production_date
+                      ? (lifecycle.go_live_approximate ? `≤ ${lifecycle.went_to_production_date}` : lifecycle.went_to_production_date)
+                      : (lifecycle?.stage === 'testing-only' ? 'Testing only' : '—')}
                   </div>
                   {lifecycle?.went_to_production_date && (
                     <div className={`text-[9px] mt-0.5 font-medium ${lifecycle.currently_in_production ? 'text-emerald-600' : 'text-slate-400'}`}>
