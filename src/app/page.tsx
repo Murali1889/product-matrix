@@ -1568,7 +1568,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<LifecycleSortKey>('went_to_production_date');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc'); // latest go-live first — current info matters most
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
 
@@ -1613,8 +1613,10 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
   const toggleSort = (k: LifecycleSortKey) => {
-    if (sortKey === k) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-    else { setSortKey(k); setSortDir(k === 'client_name' || k === 'operational_status' ? 'asc' : 'asc'); }
+    if (sortKey === k) { setSortDir(d => (d === 'asc' ? 'desc' : 'asc')); return; }
+    setSortKey(k);
+    // Text columns open ascending (A→Z); dates/numbers open descending (latest/highest first).
+    setSortDir(k === 'client_name' || k === 'operational_status' || k === 'stage' ? 'asc' : 'desc');
   };
 
   const SortTh = ({ k, label, className = '', title }: { k: LifecycleSortKey; label: string; className?: string; title?: string }) => (
