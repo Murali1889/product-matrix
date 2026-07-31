@@ -76,6 +76,12 @@ interface LifecycleRow {
   active_prod_app_count: number;
   currently_in_production: boolean;
   staging_app_count: number;
+  geography: string;
+  country: string;
+  kam: string;
+  zoho_id: string;
+  mrr_usd: number;
+  mrr_bucket: string;
 }
 
 interface LifecycleResponse {
@@ -1560,7 +1566,7 @@ const STAGE_META: Record<string, { label: string; cls: string }> = {
   none:           { label: 'No creds',     cls: 'bg-slate-100 text-slate-500 border-slate-200' },
 };
 
-type LifecycleSortKey = 'client_name' | 'operational_status' | 'stage' | 'first_staging_date' | 'went_to_production_date' | 'days_to_go_live' | 'prod_app_count';
+type LifecycleSortKey = 'client_name' | 'operational_status' | 'stage' | 'geography' | 'kam' | 'mrr_usd' | 'zoho_id' | 'first_staging_date' | 'went_to_production_date' | 'days_to_go_live' | 'prod_app_count';
 
 function LifecycleView({ data }: { data?: LifecycleResponse }) {
   const [search, setSearch] = useState('');
@@ -1633,7 +1639,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   );
 
   const downloadCsv = () => {
-    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
+    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'geography', 'country', 'kam_csm', 'mrr_bucket', 'mrr_usd_est', 'zoho_id', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
     const esc = (v: unknown) => {
       const s = v == null ? '' : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -1642,6 +1648,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
     for (const r of filtered) {
       lines.push([
         r.client_id, r.client_name, r.operational_status, r.stage,
+        r.geography, r.country, r.kam, r.mrr_bucket, r.mrr_usd, r.zoho_id,
         r.currently_in_production ? 'yes' : 'no',
         r.first_staging_date ?? '', r.went_to_production_date ?? '',
         r.go_live_approximate ? 'yes' : 'no',
@@ -1746,6 +1753,10 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
               <SortTh k="client_name" label="Client" className="min-w-[180px]" />
               <SortTh k="operational_status" label="Status" />
               <SortTh k="stage" label="Stage" />
+              <SortTh k="geography" label="Geography" />
+              <SortTh k="kam" label="KAM/CSM" title="From account_owner in our data — may differ from the Zoho KAM/CSM" />
+              <SortTh k="mrr_usd" label="MRR (est.)" title="Estimated from last completed month's PRODUCTION usage cost (USD). This is usage-based, NOT contracted MRR." />
+              <SortTh k="zoho_id" label="ZOHO ID" title="From business_units.zoho_id — blank for clients where it isn't populated" />
               <SortTh k="first_staging_date" label="Testing since" />
               <SortTh k="went_to_production_date" label="Live since" />
               <SortTh k="days_to_go_live" label="Testing → Live" title="Days from the client's first testing/staging credential to their first production credential. Shown only when testing happened before go-live; blank otherwise." />
@@ -1768,6 +1779,14 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
                       : <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${sm.cls}`}>{sm.label}</span>}
                     {r.currently_in_production && <span className="ml-1 w-1.5 h-1.5 inline-block rounded-full bg-emerald-500 align-middle" title="Currently active in production" />}
                   </td>
+                  <td className="px-3 py-2 text-slate-600" title={r.country}>{r.geography || '—'}</td>
+                  <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{r.kam || '—'}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" title={r.mrr_usd ? `~$${r.mrr_usd.toLocaleString()} last month (usage-based)` : 'No production usage last month'}>
+                    {r.mrr_bucket
+                      ? <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${r.mrr_bucket === 'More than 50K' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : r.mrr_bucket === '10K to 50K' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{r.mrr_bucket}</span>
+                      : <span className="text-slate-400">—</span>}
+                  </td>
+                  <td className="px-3 py-2 text-slate-500 tabular-nums text-[10px]" title={r.zoho_id}>{r.zoho_id || '—'}</td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums">{r.first_staging_date ?? '—'}</td>
                   <td className="px-3 py-2 tabular-nums font-medium text-slate-800">
                     {r.went_to_production_date
@@ -1784,7 +1803,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
               );
             })}
             {pageRows.length === 0 && (
-              <tr><td colSpan={7} className="px-3 py-10 text-center text-slate-400">No clients match these filters.</td></tr>
+              <tr><td colSpan={11} className="px-3 py-10 text-center text-slate-400">No clients match these filters.</td></tr>
             )}
           </tbody>
         </table>

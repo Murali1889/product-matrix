@@ -18,7 +18,7 @@
 import 'server-only';
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import path from 'path';
-import { fetchCredentials, fetchClients } from './metabase';
+import { fetchCredentials, fetchClients, fetchBusinessUnits, fetchClientRevenue, getLastCompletedMonth } from './metabase';
 
 export type LifecycleStage = 'production' | 'testing-only' | 'none';
 
@@ -35,6 +35,13 @@ export interface LifecycleRow {
   active_prod_app_count: number;          // prod credentials NOT disabled
   currently_in_production: boolean;        // has >=1 enabled prod credential
   staging_app_count: number;
+  // Enrichment (best-effort from our data — see caveats):
+  geography: string;                      // region (India / ASEAN / …) derived from country code
+  country: string;                        // raw country code
+  kam: string;                            // KAM/CSM — from account_owner (may be stale vs Zoho)
+  zoho_id: string;                        // from business_units (blank for many clients)
+  mrr_usd: number;                        // last completed month PRODUCTION cost (USD) — usage-based
+  mrr_bucket: string;                     // 'More than 50K' | '10K to 50K' | 'Under 10K' | ''
 }
 
 export interface LifecycleSummary {
@@ -56,7 +63,39 @@ export interface LifecycleResult {
 
 // Bump whenever LifecycleRow / LifecycleSummary shape changes, so a stale
 // disk cache written by an older build is discarded instead of served.
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
+
+// Country code → sales region. Fallback: the raw country value.
+const REGION_BY_COUNTRY: Record<string, string> = {
+  IND: 'India',
+  VNM: 'ASEAN', IDN: 'ASEAN', SGP: 'ASEAN', THA: 'ASEAN', PHL: 'ASEAN', MYS: 'ASEAN', KHM: 'ASEAN', LAO: 'ASEAN', MMR: 'ASEAN', BRN: 'ASEAN',
+  NGA: 'Africa', KEN: 'Africa', ZAF: 'Africa', GHA: 'Africa', EGY: 'Africa', TZA: 'Africa', UGA: 'Africa', RWA: 'Africa',
+  USA: 'North America', CAN: 'North America', MEX: 'North America',
+  GBR: 'Europe', DEU: 'Europe', FRA: 'Europe', NLD: 'Europe', ESP: 'Europe',
+  ARE: 'Middle East', SAU: 'Middle East', QAT: 'Middle East', KWT: 'Middle East', BHR: 'Middle East',
+  AUS: 'ANZ', NZL: 'ANZ',
+  BRA: 'LATAM', ARG: 'LATAM', COL: 'LATAM',
+};
+
+function toRegion(country: string): string {
+  const c = (country || '').trim().toUpperCase();
+  if (!c) return '';
+  return REGION_BY_COUNTRY[c] || country;
+}
+
+// account_owner is an email like "sai.prasaanth@hyperverge.co" → "Sai Prasaanth".
+function ownerToName(email: string): string {
+  const local = (email || '').split('@')[0];
+  if (!local) return '';
+  return local.split(/[._]/).filter(Boolean).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+}
+
+function mrrBucket(usd: number): string {
+  if (usd > 50_000) return 'More than 50K';
+  if (usd >= 10_000) return '10K to 50K';
+  if (usd > 0) return 'Under 10K';
+  return '';
+}
 
 // Any single day with at least this many credential createdDates is treated as a
 // bulk data-migration batch, not organic creation. In this export 2023-08-02 has
@@ -100,17 +139,31 @@ function parseCsv(): CsvCred[] {
 // ---------- compute ----------
 
 async function compute(): Promise<LifecycleResult> {
-  const [creds, clients] = await Promise.all([
+  const mrrMonth = getLastCompletedMonth();
+  const [creds, clients, businessUnits, revenue] = await Promise.all([
     fetchCredentials(),
     fetchClients('all'),
+    fetchBusinessUnits().catch(() => []),
+    fetchClientRevenue(mrrMonth).catch(() => new Map<string, number>()),
   ]);
 
   const app2client = new Map<string, string>();
   for (const c of creds) if (c.appId) app2client.set(c.appId, c.clientId);
 
-  const cinfo = new Map<string, { name: string; status: string }>();
+  // client_id → first non-empty zoho_id
+  const zohoByClient = new Map<string, string>();
+  for (const b of businessUnits) {
+    if (b.zohoId && !zohoByClient.has(b.clientId)) zohoByClient.set(b.clientId, b.zohoId);
+  }
+
+  const cinfo = new Map<string, { name: string; status: string; country: string; owner: string }>();
   for (const c of clients) {
-    cinfo.set(String(c['Client ID']), { name: String(c['Client Name'] || ''), status: String(c['Status'] || '') });
+    cinfo.set(String(c['Client ID']), {
+      name: String(c['Client Name'] || ''),
+      status: String(c['Status'] || ''),
+      country: String(c['Country'] || ''),
+      owner: String(c['Account Owner'] || ''),
+    });
   }
 
   const allRows = parseCsv();
@@ -171,6 +224,8 @@ async function compute(): Promise<LifecycleResult> {
     const info = cinfo.get(cid);
     const stage: LifecycleStage = p.length ? 'production' : (s.length ? 'testing-only' : 'none');
     const activeCount = activeProd.get(cid) ?? 0;
+    const country = info?.country || '';
+    const mrr = revenue.get(cid) ?? 0;
 
     rows.push({
       client_id: cid,
@@ -185,6 +240,12 @@ async function compute(): Promise<LifecycleResult> {
       active_prod_app_count: activeCount,
       currently_in_production: activeCount > 0,
       staging_app_count: s.length,
+      geography: toRegion(country),
+      country,
+      kam: ownerToName(info?.owner || ''),
+      zoho_id: zohoByClient.get(cid) || '',
+      mrr_usd: Math.round(mrr),
+      mrr_bucket: mrrBucket(mrr),
     });
   }
 

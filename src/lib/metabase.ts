@@ -36,6 +36,7 @@ const TB = {
   PRICING:  20377,
   COSTS:    20370,
   CREDENTIALS: 20365,
+  BUSINESS_UNITS: 20364,
 } as const;
 
 const FLD = {
@@ -361,6 +362,70 @@ export async function fetchCredentials(): Promise<GSCredential[]> {
     console.log(`[Metabase] Loaded ${out.length} credentials in ${Date.now() - start}ms`);
     setCache('credentials', out);
     return out;
+  });
+}
+
+// ============== PUBLIC: BUSINESS UNITS (zoho_id) ==============
+
+export interface GSBusinessUnit {
+  clientId: string;
+  zohoId: string;
+}
+
+/** Business units → client_id + zoho_id (table 20364). One client may have
+ *  several BUIDs; consumers pick the first non-empty zoho_id per client. */
+export async function fetchBusinessUnits(): Promise<GSBusinessUnit[]> {
+  return singleFlight('business_units', async () => {
+    const start = Date.now();
+    const rows = await fetchAllRows(TB.BUSINESS_UNITS);
+    const out: GSBusinessUnit[] = rows.map(r => ({
+      clientId: str(r['Client ID']),
+      zohoId: str(r['Zoho ID']).trim(),
+    }));
+    console.log(`[Metabase] Loaded ${out.length} business units in ${Date.now() - start}ms`);
+    setCache('business_units', out);
+    return out;
+  });
+}
+
+// ============== PUBLIC: CLIENT REVENUE (for MRR estimate) ==============
+
+/**
+ * Total PRODUCTION cost (USD) per client for a given month — a lean aggregation
+ * used to estimate an MRR bucket. This is usage-based cost, NOT contracted MRR.
+ * Returns Map<client_id, usd>.
+ */
+export async function fetchClientRevenue(month: string): Promise<Map<string, number>> {
+  return singleFlight(`client_revenue_${month}`, async () => {
+    const startDate = `${month}-01`;
+    const [yStr, mStr] = month.split('-');
+    const y = parseInt(yStr, 10);
+    const m = parseInt(mStr, 10);
+    const nextMonth = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+
+    const payload = {
+      type: 'query',
+      database: MB_DB_ID,
+      query: {
+        'source-table': TB.COSTS,
+        filter: ['and',
+          ['=',  ['field', FLD.MC_ENV], 'PRODUCTION'],
+          ['>=', ['field', FLD.MC_BILLING_START], startDate],
+          ['<',  ['field', FLD.MC_BILLING_START], nextMonth],
+        ],
+        aggregation: [['sum', ['field', FLD.MC_UNIT_COST_USD]]],
+        breakout: [['field', FLD.MC_CLIENT_ID]],
+      },
+    };
+    const res = await runAggregation(payload);
+    const cols = (res.data?.cols ?? []).map(c => c.name);
+    const iClient = cols.indexOf('client_id');
+    const iSum = cols.findIndex(c => c === 'sum');
+    const map = new Map<string, number>();
+    for (const row of res.data?.rows ?? []) {
+      map.set(str(row[iClient]), num(row[iSum]));
+    }
+    return map;
   });
 }
 
