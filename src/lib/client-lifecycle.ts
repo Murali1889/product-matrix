@@ -28,15 +28,18 @@ export interface LifecycleRow {
   operational_status: string;             // live | active | trial | inactive | ''
   stage: LifecycleStage;
   first_staging_date: string | null;      // YYYY-MM-DD
-  went_to_production_date: string | null; // YYYY-MM-DD
+  went_to_production_date: string | null; // YYYY-MM-DD — earliest prod cred (incl. disabled): true first go-live
   days_to_go_live: number | null;         // staging → prod, when both known
-  prod_app_count: number;
+  prod_app_count: number;                 // total prod credentials (enabled + disabled)
+  active_prod_app_count: number;          // prod credentials NOT disabled
+  currently_in_production: boolean;        // has >=1 enabled prod credential
   staging_app_count: number;
 }
 
 export interface LifecycleSummary {
   total: number;
-  production: number;
+  production: number;          // ever went to production (has any prod cred)
+  currentlyInProduction: number; // has >=1 enabled prod cred
   testingOnly: number;
 }
 
@@ -58,7 +61,7 @@ let refreshing: Promise<LifecycleResult> | null = null;
 
 // ---------- CSV ----------
 
-interface CsvCred { appId: string; type: string; createdDate: string }
+interface CsvCred { appId: string; type: string; createdDate: string; disabled: boolean }
 
 function parseCsv(): CsvCred[] {
   const text = readFileSync(CSV_PATH, 'utf-8');
@@ -68,9 +71,14 @@ function parseCsv(): CsvCred[] {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line) continue;
-    const [appId, type, createdDate] = line.split(',');
+    const [appId, type, createdDate, disabled] = line.split(',');
     if (!appId) continue;
-    out.push({ appId: appId.trim(), type: (type || '').trim(), createdDate: (createdDate || '').trim() });
+    out.push({
+      appId: appId.trim(),
+      type: (type || '').trim(),
+      createdDate: (createdDate || '').trim(),
+      disabled: (disabled || '').trim().toLowerCase() === 'yes',
+    });
   }
   return out;
 }
@@ -91,8 +99,9 @@ async function compute(): Promise<LifecycleResult> {
     cinfo.set(String(c['Client ID']), { name: String(c['Client Name'] || ''), status: String(c['Status'] || '') });
   }
 
-  const prod = new Map<string, string[]>();    // client_id → prod createdDates
-  const staging = new Map<string, string[]>(); // client_id → staging/testing createdDates
+  const prod = new Map<string, string[]>();       // client_id → prod createdDates (all, incl. disabled)
+  const activeProd = new Map<string, number>();   // client_id → count of ENABLED prod creds
+  const staging = new Map<string, string[]>();    // client_id → staging/testing createdDates
   let dataAsOf = '';
 
   for (const row of parseCsv()) {
@@ -101,7 +110,10 @@ async function compute(): Promise<LifecycleResult> {
     const d = row.createdDate.slice(0, 10);
     if (d && d > dataAsOf) dataAsOf = d;
     if (row.type === 'PRODUCTION') {
+      // Include disabled creds in the DATE: the earliest prod cred (even if now
+      // disabled/rotated) is when the client first went to production.
       (prod.get(cid) ?? prod.set(cid, []).get(cid)!).push(d);
+      if (!row.disabled) activeProd.set(cid, (activeProd.get(cid) ?? 0) + 1);
     } else {
       // STAGING or TESTING → both count as "testing"
       (staging.get(cid) ?? staging.set(cid, []).get(cid)!).push(d);
@@ -125,6 +137,7 @@ async function compute(): Promise<LifecycleResult> {
 
     const info = cinfo.get(cid);
     const stage: LifecycleStage = p.length ? 'production' : (s.length ? 'testing-only' : 'none');
+    const activeCount = activeProd.get(cid) ?? 0;
 
     rows.push({
       client_id: cid,
@@ -135,6 +148,8 @@ async function compute(): Promise<LifecycleResult> {
       went_to_production_date: wentToProd,
       days_to_go_live: days,
       prod_app_count: p.length,
+      active_prod_app_count: activeCount,
+      currently_in_production: activeCount > 0,
       staging_app_count: s.length,
     });
   }
@@ -151,6 +166,7 @@ async function compute(): Promise<LifecycleResult> {
   const summary: LifecycleSummary = {
     total: rows.length,
     production: rows.filter(r => r.stage === 'production').length,
+    currentlyInProduction: rows.filter(r => r.currently_in_production).length,
     testingOnly: rows.filter(r => r.stage === 'testing-only').length,
   };
 

@@ -72,12 +72,14 @@ interface LifecycleRow {
   went_to_production_date: string | null;
   days_to_go_live: number | null;
   prod_app_count: number;
+  active_prod_app_count: number;
+  currently_in_production: boolean;
   staging_app_count: number;
 }
 
 interface LifecycleResponse {
   clients: LifecycleRow[];
-  summary: { total: number; production: number; testingOnly: number };
+  summary: { total: number; production: number; currentlyInProduction: number; testingOnly: number };
   dataAsOf: string;
   computedAt: string;
 }
@@ -1560,7 +1562,7 @@ type LifecycleSortKey = 'client_name' | 'operational_status' | 'stage' | 'first_
 
 function LifecycleView({ data }: { data?: LifecycleResponse }) {
   const [search, setSearch] = useState('');
-  const [stageFilter, setStageFilter] = useState<'all' | 'production' | 'testing-only'>('all');
+  const [stageFilter, setStageFilter] = useState<'all' | 'production' | 'active' | 'testing-only'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<LifecycleSortKey>('went_to_production_date');
@@ -1580,7 +1582,8 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let out = rows.filter(r => {
-      if (stageFilter !== 'all' && r.stage !== stageFilter) return false;
+      if (stageFilter === 'active') { if (!r.currently_in_production) return false; }
+      else if (stageFilter !== 'all' && r.stage !== stageFilter) return false;
       if (statusFilter !== 'all' && r.operational_status !== statusFilter) return false;
       if (yearFilter !== 'all' && (r.went_to_production_date?.slice(0, 4) ?? '') !== yearFilter) return false;
       if (q && !r.client_name.toLowerCase().includes(q) && !r.client_id.toLowerCase().includes(q)) return false;
@@ -1642,8 +1645,11 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
           <h2 className="text-lg font-bold text-slate-800">Client Lifecycle</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold">
+            {data.summary.currentlyInProduction.toLocaleString()} currently in production
+          </span>
           <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
-            {data.summary.production.toLocaleString()} live in production
+            {data.summary.production.toLocaleString()} ever went live
           </span>
           <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium">
             {data.summary.testingOnly.toLocaleString()} testing only
@@ -1667,7 +1673,8 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
         </div>
         <select value={stageFilter} onChange={e => setStageFilter(e.target.value as typeof stageFilter)} className={selCls}>
           <option value="all">All stages</option>
-          <option value="production">Live in production</option>
+          <option value="active">Currently in production</option>
+          <option value="production">Ever went to production</option>
           <option value="testing-only">Testing only</option>
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={selCls}>
@@ -1708,13 +1715,18 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
                     <div className="text-[10px] text-slate-400 truncate max-w-[240px]" title={r.client_id}>{r.client_id}</div>
                   </td>
                   <td className="px-3 py-2 text-slate-600">{r.operational_status || '—'}</td>
-                  <td className="px-3 py-2">
-                    <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${sm.cls}`}>{sm.label}</span>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {r.stage === 'production' && !r.currently_in_production
+                      ? <span className="px-1.5 py-0.5 rounded border text-[10px] font-medium bg-slate-100 text-slate-500 border-slate-200" title="Went to production but all prod credentials are now disabled">Was in prod</span>
+                      : <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${sm.cls}`}>{sm.label}</span>}
+                    {r.currently_in_production && <span className="ml-1 w-1.5 h-1.5 inline-block rounded-full bg-emerald-500 align-middle" title="Currently active in production" />}
                   </td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums">{r.first_staging_date ?? '—'}</td>
                   <td className="px-3 py-2 tabular-nums font-medium text-slate-800">{r.went_to_production_date ?? '—'}</td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums">{r.days_to_go_live != null ? `${r.days_to_go_live}d` : '—'}</td>
-                  <td className="px-3 py-2 text-slate-600 tabular-nums">{r.prod_app_count || '—'}</td>
+                  <td className="px-3 py-2 text-slate-600 tabular-nums" title="active / total prod credentials">
+                    {r.prod_app_count ? `${r.active_prod_app_count}/${r.prod_app_count}` : '—'}
+                  </td>
                 </tr>
               );
             })}
@@ -4978,6 +4990,13 @@ function ClientDetailsPanel({
                   <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.went_to_production_date ? 'text-emerald-700' : 'text-slate-400'}`}>
                     {lifecycle?.went_to_production_date || (lifecycle?.stage === 'testing-only' ? 'Testing only' : '—')}
                   </div>
+                  {lifecycle?.went_to_production_date && (
+                    <div className={`text-[9px] mt-0.5 font-medium ${lifecycle.currently_in_production ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {lifecycle.currently_in_production
+                        ? `● active (${lifecycle.active_prod_app_count}/${lifecycle.prod_app_count} creds)`
+                        : 'prod creds disabled'}
+                    </div>
+                  )}
                 </div>
                 <div className="bg-amber-50/50 rounded-lg p-2.5 border border-amber-100">
                   <div className="text-[10px] text-amber-600/80 uppercase tracking-wider flex items-center gap-1">
