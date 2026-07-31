@@ -118,7 +118,7 @@ function fmtNum(value: number): string {
 }
 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = (url: string) => fetch(url, { credentials: 'same-origin' }).then(r => r.json());
 
 // ─── Animated Number Hook ───
 

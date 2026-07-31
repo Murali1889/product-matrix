@@ -6,7 +6,11 @@ import FeedbackWrapper from './FeedbackWrapper';
 import ToastNotifications from './ToastNotifications';
 
 const swrFetcher = (url: string) =>
-  fetch(url).then((res) => {
+  // credentials: 'same-origin' is REQUIRED — the middleware gates every /api/*
+  // route behind the auth cookie. Without this, SWR fetches omit the cookie,
+  // get a 401, and page.tsx interprets that as an invalid session and logs the
+  // user out. This was the root cause of the "keeps logging out" bug.
+  fetch(url, { credentials: 'same-origin' }).then((res) => {
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     return res.json();
   });
@@ -39,7 +43,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         fetcher: swrFetcher,
         dedupingInterval: 60_000,
         revalidateOnFocus: false,
-        revalidateOnReconnect: true,
+        revalidateOnReconnect: false,
         keepPreviousData: true,
       }}
     >

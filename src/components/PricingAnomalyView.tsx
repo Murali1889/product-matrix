@@ -86,7 +86,7 @@ interface ClientGroup {
 
 // ─── Constants ───
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = (url: string) => fetch(url, { credentials: 'same-origin' }).then(r => r.json());
 
 const TYPE_META: Record<AnomalyType, { label: string; color: string; bg: string; border: string }> = {
   'cross-module':    { label: 'Cross-Module',     color: 'text-rose-700',   bg: 'bg-rose-50',   border: 'border-rose-200' },

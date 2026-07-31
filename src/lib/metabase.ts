@@ -35,6 +35,7 @@ const TB = {
   CLIENTS:  20367,
   PRICING:  20377,
   COSTS:    20370,
+  CREDENTIALS: 20365,
 } as const;
 
 const FLD = {
@@ -329,6 +330,36 @@ export async function fetchClients(status: string = 'live'): Promise<GSClient[]>
 
     console.log(`[Metabase] Loaded ${out.length} clients (status=${status}) in ${Date.now() - start}ms`);
     setCache(cacheKey, out);
+    return out;
+  });
+}
+
+// ============== PUBLIC: CREDENTIALS ==============
+
+export interface GSCredential {
+  appId: string;
+  clientId: string;
+  environment: string; // PRODUCTION | STAGING | TESTING
+}
+
+/**
+ * All credential rows: app_id → client_id → environment (table 20365).
+ * NOTE: this table's `created_at` is an ETL load timestamp (not the real
+ * credential creation date), so it is intentionally NOT returned here — the
+ * real dates come from data/credentials-report.csv. This fetch exists purely
+ * to map appId → client_id for the lifecycle join.
+ */
+export async function fetchCredentials(): Promise<GSCredential[]> {
+  return singleFlight('credentials', async () => {
+    const start = Date.now();
+    const rows = await fetchAllRows(TB.CREDENTIALS);
+    const out: GSCredential[] = rows.map(r => ({
+      appId: str(r['App ID']),
+      clientId: str(r['Client ID']),
+      environment: str(r['Environment']),
+    }));
+    console.log(`[Metabase] Loaded ${out.length} credentials in ${Date.now() - start}ms`);
+    setCache('credentials', out);
     return out;
   });
 }

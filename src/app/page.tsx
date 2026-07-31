@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import useSWR, { mutate } from 'swr';
-import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers, Calendar, PanelLeftClose, PanelLeftOpen, Bell, BadgeDollarSign } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers, Calendar, PanelLeftClose, PanelLeftOpen, Bell, BadgeDollarSign, Rocket, CalendarClock, ArrowUpDown } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useFeedback } from 'react-visual-feedback';
 import { computeSegmentAdoption, findCrossSellOpportunities, buildCrossSellLookup } from '@/lib/adoption-analytics';
@@ -59,7 +59,28 @@ interface APIStats {
   avgPerClient: number;
 }
 
-type DashboardView = 'dashboard' | 'revenue-intel' | 'matrix';
+type DashboardView = 'dashboard' | 'revenue-intel' | 'matrix' | 'lifecycle';
+
+// Client lifecycle / go-live row (mirrors LifecycleRow in lib/client-lifecycle.ts,
+// redefined here to avoid importing the server-only module into the client bundle).
+interface LifecycleRow {
+  client_id: string;
+  client_name: string;
+  operational_status: string;
+  stage: 'production' | 'testing-only' | 'none';
+  first_staging_date: string | null;
+  went_to_production_date: string | null;
+  days_to_go_live: number | null;
+  prod_app_count: number;
+  staging_app_count: number;
+}
+
+interface LifecycleResponse {
+  clients: LifecycleRow[];
+  summary: { total: number; production: number; testingOnly: number };
+  dataAsOf: string;
+  computedAt: string;
+}
 
 interface SummaryStats {
   totalRevenue: number;
@@ -505,6 +526,15 @@ export default function Dashboard() {
   // SWR — background fetch, keepPreviousData set globally
   const { data: analyticsData, isLoading: loadingAnalytics, isValidating: isRevalidating, error: analyticsError } = useSWR<AnalyticsResponse & { availableMonths?: string[] }>(analyticsUrl);
   const { data: apisData, isLoading: loadingApis, error: apisError } = useSWR<{ masterAPIs?: MasterAPI[]; apis?: MasterAPI[]; unmatchedAPIs?: { name: string }[] }>(isAuthenticated ? '/api/apis' : null);
+
+  // Client lifecycle / go-live dates. Served from a disk+memory cache on the
+  // server so it returns instantly; kept warm across the app via SWR.
+  const { data: lifecycleData } = useSWR<LifecycleResponse>(isAuthenticated ? '/api/lifecycle' : null);
+  const lifecycleMap = useMemo(() => {
+    const m = new Map<string, LifecycleRow>();
+    lifecycleData?.clients?.forEach(r => m.set(r.client_id, r));
+    return m;
+  }, [lifecycleData]);
 
   // A 401 from a protected API means the session is invalid — not a connection
   // failure. The global SWR fetcher throws `Error("API error: 401")`, so detect
@@ -1192,7 +1222,13 @@ export default function Dashboard() {
             onLoadMonth={(yyyyMM: string) => {
               setApiMonth(yyyyMM);
             }}
+            lifecycleMap={lifecycleMap}
           />
+        )}
+
+        {/* Lifecycle / Go-Live View */}
+        {view === 'lifecycle' && (
+          <LifecycleView data={lifecycleData} />
         )}
 
         {/* Settings Modal */}
@@ -1512,6 +1548,200 @@ export default function Dashboard() {
   );
 }
 
+// ============== LIFECYCLE / GO-LIVE VIEW ==============
+
+const STAGE_META: Record<string, { label: string; cls: string }> = {
+  production:     { label: 'Production',   cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  'testing-only': { label: 'Testing only', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  none:           { label: 'No creds',     cls: 'bg-slate-100 text-slate-500 border-slate-200' },
+};
+
+type LifecycleSortKey = 'client_name' | 'operational_status' | 'stage' | 'first_staging_date' | 'went_to_production_date' | 'days_to_go_live' | 'prod_app_count';
+
+function LifecycleView({ data }: { data?: LifecycleResponse }) {
+  const [search, setSearch] = useState('');
+  const [stageFilter, setStageFilter] = useState<'all' | 'production' | 'testing-only'>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [yearFilter, setYearFilter] = useState<string>('all');
+  const [sortKey, setSortKey] = useState<LifecycleSortKey>('went_to_production_date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
+
+  const rows = data?.clients ?? [];
+
+  // Distinct go-live years for the year filter.
+  const years = useMemo(() => {
+    const s = new Set<string>();
+    rows.forEach(r => { if (r.went_to_production_date) s.add(r.went_to_production_date.slice(0, 4)); });
+    return Array.from(s).sort((a, b) => b.localeCompare(a));
+  }, [rows]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let out = rows.filter(r => {
+      if (stageFilter !== 'all' && r.stage !== stageFilter) return false;
+      if (statusFilter !== 'all' && r.operational_status !== statusFilter) return false;
+      if (yearFilter !== 'all' && (r.went_to_production_date?.slice(0, 4) ?? '') !== yearFilter) return false;
+      if (q && !r.client_name.toLowerCase().includes(q) && !r.client_id.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const dir = sortDir === 'asc' ? 1 : -1;
+    out = [...out].sort((a, b) => {
+      const av = a[sortKey]; const bv = b[sortKey];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;   // nulls last
+      if (bv == null) return -1;
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+    return out;
+  }, [rows, search, stageFilter, statusFilter, yearFilter, sortKey, sortDir]);
+
+  // Reset to first page whenever the filtered set changes.
+  useEffect(() => { setPage(0); }, [search, stageFilter, statusFilter, yearFilter]);
+
+  const pageRows = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+  const toggleSort = (k: LifecycleSortKey) => {
+    if (sortKey === k) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(k); setSortDir(k === 'client_name' || k === 'operational_status' ? 'asc' : 'asc'); }
+  };
+
+  const SortTh = ({ k, label, className = '' }: { k: LifecycleSortKey; label: string; className?: string }) => (
+    <th
+      onClick={() => toggleSort(k)}
+      className={`px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] cursor-pointer select-none hover:text-slate-700 whitespace-nowrap ${className}`}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <ArrowUpDown size={11} className={sortKey === k ? 'text-amber-500' : 'text-slate-300'} />
+      </span>
+    </th>
+  );
+
+  if (!data) {
+    return (
+      <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+        <div className="flex items-center gap-2">
+          <CalendarClock size={16} className="animate-pulse" /> Loading lifecycle data…
+        </div>
+      </div>
+    );
+  }
+
+  const selCls = 'px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer';
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="px-4 pt-4 pb-3 border-b border-stone-200">
+        <div className="flex items-center gap-2 mb-1">
+          <Rocket size={18} className="text-amber-500" />
+          <h2 className="text-lg font-bold text-slate-800">Client Lifecycle</h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+            {data.summary.production.toLocaleString()} live in production
+          </span>
+          <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium">
+            {data.summary.testingOnly.toLocaleString()} testing only
+          </span>
+          <span className="text-slate-400">·</span>
+          <span>{data.summary.total.toLocaleString()} clients</span>
+          {data.dataAsOf && <><span className="text-slate-400">·</span><span>data as of {data.dataAsOf}</span></>}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="px-4 py-2.5 flex flex-wrap items-center gap-2 border-b border-stone-200 bg-stone-50/60">
+        <div className="relative">
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search client…"
+            className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white w-56 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          />
+        </div>
+        <select value={stageFilter} onChange={e => setStageFilter(e.target.value as typeof stageFilter)} className={selCls}>
+          <option value="all">All stages</option>
+          <option value="production">Live in production</option>
+          <option value="testing-only">Testing only</option>
+        </select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={selCls}>
+          <option value="all">All statuses</option>
+          <option value="live">live</option>
+          <option value="active">active</option>
+          <option value="trial">trial</option>
+          <option value="inactive">inactive</option>
+        </select>
+        <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} className={selCls}>
+          <option value="all">Any go-live year</option>
+          {years.map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
+        <span className="ml-auto text-xs text-slate-400">{filtered.length.toLocaleString()} match</span>
+      </div>
+
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full text-xs">
+          <thead className="sticky top-0 bg-white shadow-[0_1px_0_0_#e7e5e4] z-10">
+            <tr>
+              <SortTh k="client_name" label="Client" className="min-w-[180px]" />
+              <SortTh k="operational_status" label="Status" />
+              <SortTh k="stage" label="Stage" />
+              <SortTh k="first_staging_date" label="Testing since" />
+              <SortTh k="went_to_production_date" label="Live since" />
+              <SortTh k="days_to_go_live" label="Days to go-live" />
+              <SortTh k="prod_app_count" label="Prod apps" />
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map(r => {
+              const sm = STAGE_META[r.stage] ?? STAGE_META.none;
+              return (
+                <tr key={r.client_id} className="border-b border-stone-100 hover:bg-amber-50/40">
+                  <td className="px-3 py-2">
+                    <div className="font-medium text-slate-800 truncate max-w-[240px]" title={r.client_name}>{r.client_name}</div>
+                    <div className="text-[10px] text-slate-400 truncate max-w-[240px]" title={r.client_id}>{r.client_id}</div>
+                  </td>
+                  <td className="px-3 py-2 text-slate-600">{r.operational_status || '—'}</td>
+                  <td className="px-3 py-2">
+                    <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${sm.cls}`}>{sm.label}</span>
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 tabular-nums">{r.first_staging_date ?? '—'}</td>
+                  <td className="px-3 py-2 tabular-nums font-medium text-slate-800">{r.went_to_production_date ?? '—'}</td>
+                  <td className="px-3 py-2 text-slate-600 tabular-nums">{r.days_to_go_live != null ? `${r.days_to_go_live}d` : '—'}</td>
+                  <td className="px-3 py-2 text-slate-600 tabular-nums">{r.prod_app_count || '—'}</td>
+                </tr>
+              );
+            })}
+            {pageRows.length === 0 && (
+              <tr><td colSpan={7} className="px-3 py-10 text-center text-slate-400">No clients match these filters.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="px-4 py-2 flex items-center justify-between border-t border-stone-200 text-xs text-slate-500">
+        <span>
+          {filtered.length === 0 ? '0' : `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, filtered.length)}`} of {filtered.length.toLocaleString()}
+        </span>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+            className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 cursor-pointer disabled:cursor-default"><ChevronLeft size={15} /></button>
+          <span className="px-2">{page + 1} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
+            className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 cursor-pointer disabled:cursor-default"><ChevronRight size={15} /></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DashboardFrame({
   children,
   view,
@@ -1545,6 +1775,7 @@ function DashboardFrame({
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, description: 'Executive overview' },
     { id: 'revenue-intel', label: 'Revenue Intel', icon: Target, description: 'Upsell pipeline' },
     { id: 'matrix', label: 'Matrix', icon: LayoutGrid, description: 'Client x API grid' },
+    { id: 'lifecycle', label: 'Lifecycle', icon: Rocket, description: 'Go-live dates' },
   ];
   const initials = currentUser
     .split(/[.\s_-]+/)
@@ -2324,6 +2555,7 @@ function MatrixView({
   availableMonthsYYYYMM = [],
   isLoadingMonth = false,
   onLoadMonth,
+  lifecycleMap,
 }: {
   clients: ProcessedClient[];
   masterAPIs: string[];
@@ -2343,6 +2575,7 @@ function MatrixView({
   availableMonthsYYYYMM?: string[];
   isLoadingMonth?: boolean;
   onLoadMonth?: (yyyyMM: string) => void;
+  lifecycleMap?: Map<string, LifecycleRow>;
 }) {
   // View mode: 'matrix' for API columns, 'mismatches' for fixing API names
   const [viewMode, setViewMode] = useState<'matrix' | 'mismatches'>('matrix');
@@ -2364,6 +2597,9 @@ function MatrixView({
 
   // Country filter
   const [selectedCountry, setSelectedCountry] = useState<string>('');
+
+  // Lifecycle stage filter (live in production / testing only)
+  const [lifecycleStageFilter, setLifecycleStageFilter] = useState<'all' | 'production' | 'testing-only'>('all');
 
   // Selected month for filtering (empty = latest/all time)
   const [selectedMonth, setSelectedMonth] = useState<string>('');
@@ -2788,6 +3024,11 @@ function MatrixView({
       filtered = filtered.filter(c => normalizeCountry(c.profile?.geography).name === selectedCountry);
     }
 
+    // Filter by lifecycle stage (go-live status)
+    if (lifecycleStageFilter !== 'all') {
+      filtered = filtered.filter(c => lifecycleMap?.get(c.client_id || '')?.stage === lifecycleStageFilter);
+    }
+
     // Filter by "not using" API (from adoption chart click)
     if (notUsingFilter) {
       filtered = filtered.filter(c => {
@@ -2840,7 +3081,7 @@ function MatrixView({
       // Default: sort by revenue within same category
       return b.totalRevenue - a.totalRevenue;
     });
-  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, selectedOwner, selectedCountry, notUsingFilter, getClientAPIData, sortByAPI, anomalyMode, matrixAnomalies]);
+  }, [clients, sortMode, getRowStatus, searchTerm, selectedSegment, selectedOwner, selectedCountry, notUsingFilter, getClientAPIData, sortByAPI, anomalyMode, matrixAnomalies, lifecycleStageFilter, lifecycleMap]);
 
   const totalPages = Math.ceil(sortedClients.length / pageSize);
 
@@ -3177,9 +3418,21 @@ function MatrixView({
                               })}
                             </select>
                           </div>
-                          {activeFilterCount > 0 && (
+                          <div>
+                            <label className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1 block">Lifecycle stage</label>
+                            <select
+                              value={lifecycleStageFilter}
+                              onChange={(e) => { setLifecycleStageFilter(e.target.value as 'all' | 'production' | 'testing-only'); setCurrentPage(1); }}
+                              className="w-full text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                            >
+                              <option value="all">All stages</option>
+                              <option value="production">Live in production</option>
+                              <option value="testing-only">Testing only</option>
+                            </select>
+                          </div>
+                          {(activeFilterCount > 0 || lifecycleStageFilter !== 'all') && (
                             <button
-                              onClick={() => { setSelectedMonth(''); setSelectedSegment(''); setSelectedCountry(''); setSelectedOwner(''); setSortMode('revenue'); setNotUsingFilter(null); setCurrentPage(1); if (onLoadMonth) onLoadMonth(''); }}
+                              onClick={() => { setSelectedMonth(''); setSelectedSegment(''); setSelectedCountry(''); setSelectedOwner(''); setLifecycleStageFilter('all'); setSortMode('revenue'); setNotUsingFilter(null); setCurrentPage(1); if (onLoadMonth) onLoadMonth(''); }}
                               className="w-full text-[11px] text-amber-600 hover:text-amber-700 font-medium py-1 cursor-pointer"
                             >
                               Clear all filters
@@ -3784,7 +4037,19 @@ function MatrixView({
                           )}
                           <div className="min-w-0">
                             <div className={`${compactMode ? 'text-[12px]' : 'text-[13px]'} font-medium truncate leading-tight tracking-[-0.01em] ${usesSelectedAPI ? 'text-amber-700' : 'text-slate-800'}`} title={client.client_name}>{client.client_name}</div>
-                            {!compactMode && <div className="text-[11px] text-slate-400 truncate leading-tight mt-0.5 tracking-wide">{client.profile?.segment || '-'}</div>}
+                            {!compactMode && (() => {
+                              const lc = lifecycleMap?.get(client.client_id || '');
+                              return (
+                                <div className="text-[11px] text-slate-400 truncate leading-tight mt-0.5 tracking-wide">
+                                  {client.profile?.segment || '-'}
+                                  {lc?.went_to_production_date
+                                    ? <span className="text-emerald-600" title="Live in production since"> · live {lc.went_to_production_date}</span>
+                                    : lc?.stage === 'testing-only'
+                                      ? <span className="text-amber-500" title="Testing only — not in production"> · testing</span>
+                                      : null}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       </td>
@@ -4101,6 +4366,7 @@ function MatrixView({
         selectedMonth={selectedMonth}
         masterAPINames={masterAPIs}
         matrixAnomalies={matrixAnomalies}
+        lifecycle={selectedClient?.client_id ? (lifecycleMap?.get(selectedClient.client_id) ?? null) : null}
       />
     </div>
   );
@@ -4346,6 +4612,7 @@ function ClientDetailsPanel({
   availableMonths,
   masterAPINames = [],
   matrixAnomalies = {},
+  lifecycle = null,
 }: {
   client: ProcessedClient | null;
   onClose: () => void;
@@ -4357,6 +4624,7 @@ function ClientDetailsPanel({
   availableMonths?: string[];
   masterAPINames?: string[];
   matrixAnomalies?: Record<string, { type: string; clientId: string; clientName: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number }[]>;
+  lifecycle?: LifecycleRow | null;
 }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('overview');
   const [panelMonth, setPanelMonth] = useState<string>('');
@@ -4701,6 +4969,25 @@ function ClientDetailsPanel({
             const country = normalizeCountry(client.profile?.geography);
             return (
             <div className="stagger-children space-y-3">
+              {/* Lifecycle / go-live */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-emerald-50/60 rounded-lg p-2.5 border border-emerald-100">
+                  <div className="text-[10px] text-emerald-600/80 uppercase tracking-wider flex items-center gap-1">
+                    <Rocket size={10} /> Live in production since
+                  </div>
+                  <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.went_to_production_date ? 'text-emerald-700' : 'text-slate-400'}`}>
+                    {lifecycle?.went_to_production_date || (lifecycle?.stage === 'testing-only' ? 'Testing only' : '—')}
+                  </div>
+                </div>
+                <div className="bg-amber-50/50 rounded-lg p-2.5 border border-amber-100">
+                  <div className="text-[10px] text-amber-600/80 uppercase tracking-wider flex items-center gap-1">
+                    <CalendarClock size={10} /> Testing since
+                  </div>
+                  <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.first_staging_date ? 'text-amber-700' : 'text-slate-400'}`}>
+                    {lifecycle?.first_staging_date || '—'}
+                  </div>
+                </div>
+              </div>
               {/* Compact info grid — 3x2 */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
