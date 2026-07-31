@@ -1593,6 +1593,9 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
     });
     const dir = sortDir === 'asc' ? 1 : -1;
     out = [...out].sort((a, b) => {
+      // Currently-live clients always float to the top; the selected column sort
+      // applies within each group.
+      if (a.currently_in_production !== b.currently_in_production) return a.currently_in_production ? -1 : 1;
       const av = a[sortKey]; const bv = b[sortKey];
       if (av == null && bv == null) return 0;
       if (av == null) return 1;   // nulls last
