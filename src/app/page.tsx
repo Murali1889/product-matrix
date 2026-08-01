@@ -2469,7 +2469,7 @@ function DashboardStatCard({
   const noteClass = tone === 'dark' ? 'text-slate-400' : 'text-slate-500';
 
   return (
-    <div className={`rounded-lg border p-4 shadow-sm ${toneClass}`}>
+    <div className={`rounded-lg border p-4 smooth-shadow-md ${toneClass}`}>
       <div className="flex items-center gap-2">
         <span className={`inline-flex size-8 items-center justify-center rounded-md ${iconClass}`}>
           <Icon size={16} />
@@ -5064,7 +5064,7 @@ function ClientDetailsPanel({
   return (
     <div className="fixed top-0 right-0 z-50 h-full">
       {/* Panel, no backdrop, stays open until close button */}
-      <div className="w-[700px] max-w-[85vw] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full" style={{ boxShadow: '-8px 0 30px rgba(0,0,0,0.12)' }}>
+      <div className="w-[700px] max-w-[85vw] h-full bg-white smooth-shadow-2xl flex flex-col animate-slide-in-right-full">
         {/* Header, compact: name + MRR inline, then tabs */}
         <div className="shrink-0 bg-white border-b border-slate-200 px-5 py-3">
           {/* Row 1: Status + Name + MRR + Month + Save + Close */}
