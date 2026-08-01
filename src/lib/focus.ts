@@ -1,5 +1,5 @@
 /**
- * Focus — ranks accounts into Protect / Grow / Watch buckets so a KAM can see
+ * Focus, ranks accounts into Protect / Grow / Watch buckets so a KAM can see
  * at a glance who to stay close to, who to expand, and who to defend.
  *
  * Pure and dependency-injected: `toUSD` is passed in (convertToUSD lives in
@@ -29,10 +29,19 @@ export interface FocusAccount {
   topUpsell?: string;  // filled in by the view (needs the recommendation engine)
 }
 
+export interface FocusCounts {
+  total: number;    // active clients = watch + protect + grow + steady
+  watch: number;
+  protect: number;
+  grow: number;
+  steady: number;   // paying, no action needed right now
+}
+
 export interface FocusResult {
   protect: FocusAccount[];
   grow: FocusAccount[];
   watch: FocusAccount[];
+  counts: FocusCounts;
 }
 
 type ToUSD = (amount: number, currency?: string | null) => number;
@@ -80,12 +89,12 @@ export function computeFocus(clients: ClientData[], opts: { toUSD: ToUSD; topN?:
   const watch: FocusAccount[] = [];
   const claimed = new Set<string>();
 
-  // 1) Watch — churned or declining (assigned first; highest concern).
+  // 1) Watch, churned or declining (assigned first; highest concern).
   for (const r of rows) {
     const id = r.client.client_id || r.client.client_name;
     // Churned: was paying, now zero.
     if (r.latestRaw === 0 && (r.prevUSD ?? 0) >= MIN_MRR_USD) {
-      watch.push(base(r, 'watch', 'churned', r.prevUSD ?? 0, false, `Churned — ${fmtK(r.prevUSD ?? 0)} lost`));
+      watch.push(base(r, 'watch', 'churned', r.prevUSD ?? 0, false, `Churned, ${fmtK(r.prevUSD ?? 0)} lost`));
       claimed.add(id);
       continue;
     }
@@ -98,7 +107,7 @@ export function computeFocus(clients: ClientData[], opts: { toUSD: ToUSD; topN?:
   }
   watch.sort((a, b) => b.atRiskUSD - a.atRiskUSD);
 
-  // 2) Protect — top N grossers not in Watch.
+  // 2) Protect, top N grossers not in Watch.
   const protectPool = rows
     .filter(r => !claimed.has(r.client.client_id || r.client.client_name) && r.mrrUSD > 0)
     .sort((a, b) => b.mrrUSD - a.mrrUSD)
@@ -107,22 +116,35 @@ export function computeFocus(clients: ClientData[], opts: { toUSD: ToUSD; topN?:
     const id = r.client.client_id || r.client.client_name;
     claimed.add(id);
     const slipping = r.momPct != null && r.momPct < 0;
-    const reason = slipping ? `Top account slipping ${Math.round(r.momPct as number)}% — keep extra close` : 'Top account — stay close';
+    const reason = slipping ? `Top account slipping ${Math.round(r.momPct as number)}%, keep extra close` : 'Top account, stay close';
     return base(r, 'protect', slipping ? 'declining' : 'stable', 0, slipping, reason);
   });
 
-  // 3) Grow — up-movers not already claimed, with meaningful revenue.
-  const grow: FocusAccount[] = rows
-    .filter(r => {
-      const id = r.client.client_id || r.client.client_name;
-      // Require BOTH months >= floor so the % is real momentum, not a
-      // jump from near-zero (which produces absurd +20000% noise).
-      return !claimed.has(id) && r.momPct != null && r.momPct > GROW_MIN_PCT
-        && r.mrrUSD >= MIN_MRR_USD && (r.prevUSD ?? 0) >= MIN_MRR_USD;
-    })
-    .map(r => base(r, 'grow', 'growing', 0, false, `+${Math.round(r.momPct as number)}% MoM — expand now`))
-    .sort((a, b) => (b.momPct ?? 0) - (a.momPct ?? 0) || b.mrrUSD - a.mrrUSD)
-    .slice(0, topN);
+  // 3) Grow: all up-movers not already claimed, with meaningful revenue.
+  // Require BOTH months >= floor so the % is real momentum, not a jump from
+  // near-zero (which produces absurd +20000% noise). Not capped, so the counts
+  // reconcile with the total.
+  const growPool = rows.filter(r => {
+    const id = r.client.client_id || r.client.client_name;
+    return !claimed.has(id) && r.momPct != null && r.momPct > GROW_MIN_PCT
+      && r.mrrUSD >= MIN_MRR_USD && (r.prevUSD ?? 0) >= MIN_MRR_USD;
+  });
+  const grow: FocusAccount[] = growPool
+    .map(r => base(r, 'grow', 'growing', 0, false, `+${Math.round(r.momPct as number)}% MoM, expand now`))
+    .sort((a, b) => (b.momPct ?? 0) - (a.momPct ?? 0) || b.mrrUSD - a.mrrUSD);
+  growPool.forEach(r => claimed.add(r.client.client_id || r.client.client_name));
 
-  return { protect, grow, watch };
+  // 4) Steady: active (paying) clients not in any bucket. Counted so the buckets
+  // reconcile with the total live-client count instead of leaving a gap.
+  let steady = 0;
+  for (const r of rows) {
+    const id = r.client.client_id || r.client.client_name;
+    if (!claimed.has(id) && r.mrrUSD > 0) steady++;
+  }
+  const total = watch.length + protect.length + grow.length + steady;
+
+  return {
+    protect, grow, watch,
+    counts: { total, watch: watch.length, protect: protect.length, grow: grow.length, steady },
+  };
 }

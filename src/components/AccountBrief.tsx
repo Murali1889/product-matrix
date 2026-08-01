@@ -5,7 +5,7 @@ import type { ClientData } from '@/types/client';
 import type { APIRecommendation } from '@/types/recommendation';
 import { computeRevenueTrend, computeRiskSignal } from '@/lib/account-brief';
 
-// Structural subset of the page's LifecycleRow — only the fields the Brief reads.
+// Structural subset of the page's LifecycleRow, only the fields the Brief reads.
 export interface LifecycleBrief {
   went_to_production_date: string | null;
   go_live_approximate: boolean;
@@ -26,7 +26,7 @@ interface Props {
   lifecycle: LifecycleBrief | null;
   topRecommendation: APIRecommendation | null;
   // Currency-aware money formatter (converts the client's billing-currency
-  // amount to a USD display) — same one the panel header uses. Revenue in
+  // amount to a USD display), same one the panel header uses. Revenue in
   // monthly_data/apiRevenues is in the billing currency, NOT USD.
   formatMoney: (n: number) => string;
 }
@@ -105,7 +105,7 @@ export default function AccountBrief({ client, lifecycle, topRecommendation, for
               {lifecycle.first_staging_date && <div className="text-[10px] text-slate-400 mt-0.5">Testing since {lifecycle.first_staging_date}</div>}
             </>
           ) : lifecycle?.stage === 'testing-only' ? (
-            <div className="text-[12px] text-amber-600 font-medium">Testing only — not in production{lifecycle.first_staging_date ? ` (since ${lifecycle.first_staging_date})` : ''}</div>
+            <div className="text-[12px] text-amber-600 font-medium">Testing only, not in production{lifecycle.first_staging_date ? ` (since ${lifecycle.first_staging_date})` : ''}</div>
           ) : (
             <div className="text-[12px] text-slate-400">No lifecycle data</div>
           )}
