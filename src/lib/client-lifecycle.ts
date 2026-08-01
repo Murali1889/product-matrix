@@ -2,7 +2,7 @@
  * Client Lifecycle / Go-Live loader.
  *
  * Computes, per client, when they went to PRODUCTION and when they started
- * STAGING/TESTING — the real dates. Metabase's `created_at` columns are ETL
+ * STAGING/TESTING, the real dates. Metabase's `created_at` columns are ETL
  * load timestamps (useless), so the real per-credential dates come from
  * data/credentials-report.csv (appId, type, createdDate). We map appId →
  * client_id via Metabase `credentials` (fetchCredentials) and enrich with
@@ -11,7 +11,7 @@
  * Caching: the join is expensive (fetches ~7.6K credential rows + client list
  * from Metabase). We cache the RESULT both in-memory and on disk
  * (.cache/client-lifecycle.json). On request we serve whatever is cached
- * IMMEDIATELY and refresh in the background when stale — so the UI loads
+ * IMMEDIATELY and refresh in the background when stale, so the UI loads
  * instantly and never blocks on Metabase.
  */
 
@@ -28,20 +28,20 @@ export interface LifecycleRow {
   operational_status: string;             // live | active | trial | inactive | ''
   stage: LifecycleStage;
   first_staging_date: string | null;      // YYYY-MM-DD
-  went_to_production_date: string | null; // YYYY-MM-DD — earliest prod cred (incl. disabled): true first go-live
+  went_to_production_date: string | null; // YYYY-MM-DD, earliest prod cred (incl. disabled): true first go-live
   go_live_approximate: boolean;            // true when the go-live date is a bulk-migration stamp (real date is ON OR BEFORE it)
   days_to_go_live: number | null;         // staging → prod, when both real & staging precedes prod
   prod_app_count: number;                 // total prod credentials (enabled + disabled)
   active_prod_app_count: number;          // prod credentials NOT disabled
   currently_in_production: boolean;        // has >=1 enabled prod credential
   staging_app_count: number;
-  // Enrichment (best-effort from our data — see caveats):
+  // Enrichment (best-effort from our data, see caveats):
   geography: string;                      // region (India / ASEAN / …) derived from country code
   country: string;                        // raw country code
   kam: string;                            // KAM/CSM display name, derived from account_owner email
   account_owner: string;                  // raw account_owner email (same source the matrix page shows)
   zoho_id: string;                        // from business_units (blank for many clients)
-  mrr_usd: number;                        // last completed month PRODUCTION cost (USD) — usage-based
+  mrr_usd: number;                        // last completed month PRODUCTION cost (USD), usage-based
   mrr_bucket: string;                     // 'More than 50K' | '10K to 50K' | 'Under 10K' | ''
 }
 
@@ -54,7 +54,7 @@ export interface LifecycleSummary {
 }
 
 export interface LifecycleResult {
-  version: number;     // schema version — disk caches with a different version are ignored
+  version: number;     // schema version, disk caches with a different version are ignored
   clients: LifecycleRow[];
   summary: LifecycleSummary;
   migrationDates: string[]; // bulk-import dates auto-detected in the CSV (not real creation dates)
@@ -107,7 +107,7 @@ const MIGRATION_DAY_THRESHOLD = 100;
 const CSV_PATH = path.join(process.cwd(), 'data', 'credentials-report.csv');
 const CACHE_DIR = path.join(process.cwd(), '.cache');
 const CACHE_FILE = path.join(CACHE_DIR, 'client-lifecycle.json');
-const TTL = 6 * 60 * 60 * 1000; // 6h — CSV is static, mapping changes rarely
+const TTL = 6 * 60 * 60 * 1000; // 6h, CSV is static, mapping changes rarely
 
 interface MemEntry { data: LifecycleResult; ts: number }
 let memory: MemEntry | null = null;
@@ -214,7 +214,7 @@ async function compute(): Promise<LifecycleResult> {
     const goLiveApprox = wentToProd != null && migrationDates.has(wentToProd);
     const stagingApprox = firstStaging != null && migrationDates.has(firstStaging);
 
-    // Time from first testing credential to first production credential — only
+    // Time from first testing credential to first production credential, only
     // meaningful when testing genuinely PRECEDES go-live AND neither date is a
     // migration stamp (which would make the gap fictional). Otherwise null.
     let days: number | null = null;

@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
   const email = user?.email || '';
   if (!email.endsWith('@hyperverge.co')) {
     await supabase.auth.signOut();
-    // Fresh redirect — signOut wrote to `response`, but we want to clear it.
+    // Fresh redirect, signOut wrote to `response`, but we want to clear it.
     response = NextResponse.redirect(`${origin}/?error=unauthorized_domain`);
     return response;
   }

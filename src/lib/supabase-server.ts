@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 
 /**
  * Creates a Supabase client for server-side use (API routes, middleware).
- * All keys stay server-side only — never exposed to the browser.
+ * All keys stay server-side only, never exposed to the browser.
  * Returns null only if env vars are missing.
  */
 export async function createServerSupabaseClient() {

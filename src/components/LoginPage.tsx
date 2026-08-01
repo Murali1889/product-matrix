@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = () => {
     setLoading(true);
-    // Redirect to server-side login route — no keys in the browser
+    // Redirect to server-side login route, no keys in the browser
     window.location.href = '/api/auth/login';
   };
 

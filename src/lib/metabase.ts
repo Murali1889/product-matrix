@@ -9,10 +9,10 @@
  *                           usage so 300K+ raw cost rows collapse to ~3K.
  *
  * Why not just paginate /api/dataset? Metabase silently ignores the `offset`
- * parameter on that endpoint — every page returns the same first 2000 rows,
+ * parameter on that endpoint, every page returns the same first 2000 rows,
  * which would loop forever.
  *
- * Secrets: METABASE_URL, METABASE_API_KEY, METABASE_DB_ID — required env
+ * Secrets: METABASE_URL, METABASE_API_KEY, METABASE_DB_ID, required env
  * vars, never NEXT_PUBLIC_, never imported into client components.
  */
 
@@ -216,7 +216,7 @@ interface MBDatasetResponse {
   data?: { cols: { name: string }[]; rows: unknown[][] };
 }
 
-// Concurrency-limited pool — a fully serial queue meant every cold month of
+// Concurrency-limited pool, a fully serial queue meant every cold month of
 // usage (~56s each) waited for the previous one, so 10 months = ~9 min of the
 // app being unresponsive. A small pool lets a few run at once (cutting cold load
 // several-fold) while still capping load on Metabase / undici. Cache +
@@ -300,7 +300,7 @@ async function fetchAllRows(tableId: number, filter?: MBFilter): Promise<Record<
   return data as Record<string, unknown>[];
 }
 
-/** Run an MBQL aggregation query — returns standard {cols,rows} shape. */
+/** Run an MBQL aggregation query, returns standard {cols,rows} shape. */
 async function runAggregation(payload: unknown): Promise<MBDatasetResponse> {
   const res = (await mbCall('/api/dataset', payload, false)) as MBDatasetResponse;
   if (res.status && res.status !== 'completed') {
@@ -326,7 +326,7 @@ export async function fetchProducts(): Promise<GSProduct[]> {
     const rows = await fetchAllRows(TB.PRODUCTS);
     const out: GSProduct[] = rows.map(r => ({
       'Module Name': str(r['Module Name']),
-      'Sub-Module': str(r['Unit Name']) || '—',
+      'Sub-Module': str(r['Unit Name']) || '-',
       'Unit (Billing Key)': str(r['Unit']),
       'Module Type': str(r['Module Type']),
       'Description': str(r['Description']),
@@ -358,7 +358,7 @@ function mapClientRow(r: Record<string, unknown>): GSClient {
     'Created At': str(r['Created At']).slice(0, 10),
     'Trial Expires': str(r['Trial Expire At']).slice(0, 10),
     // The Apps Script aggregated these from BUIDS/APPIDS/WORKFLOWS/COSTS
-    // tables (500K+ rows each) — none of which the matrix UI actually reads
+    // tables (500K+ rows each), none of which the matrix UI actually reads
     // in a load-blocking way. Left as 0 to keep refresh fast.
     'BUIDs': 0,
     'BUID Names': '',
@@ -406,7 +406,7 @@ export interface GSCredential {
 /**
  * All credential rows: app_id → client_id → environment (table 20365).
  * NOTE: this table's `created_at` is an ETL load timestamp (not the real
- * credential creation date), so it is intentionally NOT returned here — the
+ * credential creation date), so it is intentionally NOT returned here, the
  * real dates come from data/credentials-report.csv. This fetch exists purely
  * to map appId → client_id for the lifecycle join.
  */
@@ -451,7 +451,7 @@ export async function fetchBusinessUnits(): Promise<GSBusinessUnit[]> {
 // ============== PUBLIC: CLIENT REVENUE (for MRR estimate) ==============
 
 /**
- * Total PRODUCTION cost (USD) per client for a given month — a lean aggregation
+ * Total PRODUCTION cost (USD) per client for a given month, a lean aggregation
  * used to estimate an MRR bucket. This is usage-based cost, NOT contracted MRR.
  * Returns Map<client_id, usd>.
  */
@@ -544,7 +544,7 @@ export async function fetchPricing(): Promise<GSPricing[]> {
 /**
  * Usage for a month, aggregated server-side at Metabase.
  *
- * Raw module_costs has 300K+ rows for one month — paginating all of them
+ * Raw module_costs has 300K+ rows for one month, paginating all of them
  * would take 10+ minutes (and is impossible anyway, since /api/dataset
  * silently ignores `offset`). Instead we GROUP BY client+module+unit and
  * SUM, collapsing to ~3K rows in ~5s. BUID / App ID / Workflow ID

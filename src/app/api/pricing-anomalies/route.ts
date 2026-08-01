@@ -29,7 +29,7 @@ export async function GET() {
       return NextResponse.json(cachedResult);
     }
 
-    // Sequential, not Promise.all — Metabase is the bottleneck and we've
+    // Sequential, not Promise.all, Metabase is the bottleneck and we've
     // serialized requests at the client level anyway.
     const allPricingRows = await fetchPricing();
     const liveClients = await fetchClients('live');
@@ -138,7 +138,7 @@ export async function GET() {
       }
     }
 
-    // ── Unmapped: rows with no Module Name — detect same issues using moduleType as label ──
+    // ── Unmapped: rows with no Module Name, detect same issues using moduleType as label ──
     const unmappedAnomalies: Anomaly[] = [];
     {
       const uGroups: Record<string, typeof unmappedRows> = {};
@@ -172,7 +172,7 @@ export async function GET() {
     const pricingConflicts = anomalies.filter(a => a.type === 'pricing-conflict');
     const slabOverlaps = anomalies.filter(a => a.type === 'slab-overlap');
 
-    // Group by product name for matrix — separate maps
+    // Group by product name for matrix, separate maps
     const conflictsByProduct: Record<string, Anomaly[]> = {};
     for (const a of pricingConflicts) {
       if (!conflictsByProduct[a.productName]) conflictsByProduct[a.productName] = [];

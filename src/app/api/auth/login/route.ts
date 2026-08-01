@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Initiates Google OAuth via Supabase (PKCE flow).
  *
  * The PKCE code-verifier cookie set during signInWithOAuth must be carried
- * forward on the redirect response we return — otherwise the callback can't
+ * forward on the redirect response we return, otherwise the callback can't
  * exchange the code. Next.js's NextResponse.redirect() drops cookies set
  * via the cookies() helper, so we build a redirect response up front and
  * have Supabase write straight onto it.

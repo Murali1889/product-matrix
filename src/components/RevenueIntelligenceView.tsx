@@ -594,7 +594,7 @@ export default function RevenueIntelligenceView({ month, availableMonths, onMont
 
           {/* Footer */}
           <div className="px-4 py-2.5 border-t border-stone-100 bg-stone-50/50 text-[12px] text-slate-500">
-            Showing {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} across {new Set(filteredClients.map(c => c.segment)).size} segment{new Set(filteredClients.map(c => c.segment)).size !== 1 ? 's' : ''}{hasActiveFilters ? ' (filtered)' : ''} — click a row to view details
+            Showing {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} across {new Set(filteredClients.map(c => c.segment)).size} segment{new Set(filteredClients.map(c => c.segment)).size !== 1 ? 's' : ''}{hasActiveFilters ? ' (filtered)' : ''}, click a row to view details
           </div>
         </div>
 
@@ -615,7 +615,7 @@ export default function RevenueIntelligenceView({ month, availableMonths, onMont
                 {selectedClientData.geography && <><span className="text-stone-300">·</span><span>{selectedClientData.geography}</span></>}
               </div>
 
-              {/* Stats grid — 4 columns, proper table alignment */}
+              {/* Stats grid, 4 columns, proper table alignment */}
               <table className="w-full">
                 <thead>
                   <tr>
@@ -751,7 +751,7 @@ export default function RevenueIntelligenceView({ month, availableMonths, onMont
                         </tbody>
                       </table>
                     ) : (
-                      <div className="text-[12px] text-slate-400 py-8 text-center">Full adoption — no upsell gaps found</div>
+                      <div className="text-[12px] text-slate-400 py-8 text-center">Full adoption, no upsell gaps found</div>
                     )}
                   </div>
                 )}
@@ -790,7 +790,7 @@ export default function RevenueIntelligenceView({ month, availableMonths, onMont
                                   </div>
                                 </td>
                                 <td className="py-1.5 px-2 text-right">
-                                  <span className="text-[11px] text-slate-400 tabular-nums">{api.usage > 0 ? fmtNum(api.usage) : '–'}</span>
+                                  <span className="text-[11px] text-slate-400 tabular-nums">{api.usage > 0 ? fmtNum(api.usage) : '-'}</span>
                                 </td>
                                 <td className="py-1.5 pl-2 text-right">
                                   <span className="text-[12px] font-semibold text-emerald-600 tabular-nums">{fmt(api.revenue)}</span>
@@ -808,7 +808,7 @@ export default function RevenueIntelligenceView({ month, availableMonths, onMont
                 {/* ── Tab: Needs Attention ── */}
                 {detailTab === 'attention' && (
                   <div>
-                    <p className="text-[11px] text-slate-400 mb-2">APIs generating negligible revenue (&le;$50) — potential billing, pricing, or adoption issues</p>
+                    <p className="text-[11px] text-slate-400 mb-2">APIs generating negligible revenue (&le;$50), potential billing, pricing, or adoption issues</p>
                     {attentionApis.length > 0 ? (
                       <table className="w-full border-collapse">
                         <thead>

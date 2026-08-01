@@ -637,7 +637,7 @@ export default function PricingAnomalyView() {
                       )}
                     </div>
 
-                    {/* Slab entries — side-by-side for overlap/cross-module (2 entries), stacked otherwise */}
+                    {/* Slab entries, side-by-side for overlap/cross-module (2 entries), stacked otherwise */}
                     {(a.type === 'overlap' || a.type === 'cross-module' || a.type === 'duplicate') && a.entries.length === 2 ? (
                       <div className="grid grid-cols-2 divide-x divide-stone-200">
                         {a.entries.map((entry, ei) => {
@@ -649,7 +649,7 @@ export default function PricingAnomalyView() {
                               <div className="text-[11px] font-mono text-slate-400 truncate mb-1">{entry.moduleType}</div>
                               <div className="flex items-baseline justify-between">
                                 <span className={`text-[12px] font-mono ${endMismatch ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
-                                  {fmtSlab(entry.start)} — {fmtSlab(entry.end)}
+                                  {fmtSlab(entry.start)}, {fmtSlab(entry.end)}
                                 </span>
                                 <span className={`text-[14px] font-mono font-bold ${priceMismatch ? 'text-rose-600' : 'text-slate-700'}`}>
                                   {curr(selected.billingCurrency)}{entry.unitPrice}
@@ -668,7 +668,7 @@ export default function PricingAnomalyView() {
                             <div key={ei} className="flex items-center px-4 py-2 gap-3 text-[12px]">
                               <span className="font-mono text-slate-500 truncate flex-1 min-w-0">{entry.moduleType}</span>
                               <span className={`w-28 text-right font-mono ${endMismatch ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
-                                {fmtSlab(entry.start)} — {fmtSlab(entry.end)}
+                                {fmtSlab(entry.start)}, {fmtSlab(entry.end)}
                               </span>
                               <span className={`w-16 text-right font-mono font-bold ${priceMismatch ? 'text-rose-600' : 'text-slate-700'}`}>
                                 {curr(selected.billingCurrency)}{entry.unitPrice}

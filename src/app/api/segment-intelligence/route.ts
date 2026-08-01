@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SECRET_KEY || ''
 );
 
-// Currency conversion — match page.tsx rates
+// Currency conversion, match page.tsx rates
 const CONVERSION_TO_USD: Record<string, number> = {
   'USD': 1,
   'INR': 0.012,
@@ -116,9 +116,9 @@ async function computeCrossSellData(month?: string): Promise<CrossSellData> {
       if (ct?.segment) { c.profile.segment = ct.segment; return; }
       if (ct?.geography && c.profile.geography === 'Unknown') { c.profile.geography = ct.geography; }
 
-      // Priority 3: inferSegment() already applied by data loader — keep as is
+      // Priority 3: inferSegment() already applied by data loader, keep as is
     });
-  } catch { /* Supabase not configured — use inferred segments */ }
+  } catch { /* Supabase not configured, use inferred segments */ }
 
   // Collect all unique API names from data
   const allAPINames = new Set<string>();

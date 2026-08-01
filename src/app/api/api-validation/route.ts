@@ -155,7 +155,7 @@ export async function GET(request: Request) {
 
       // Try just the first part before any dash
       if (!masterInfo) {
-        const parts = apiName.split(/[-–]/);
+        const parts = apiName.split(/[--]/);
         if (parts.length > 0) {
           masterInfo = masterLookup.get(normalizeAPIName(parts[0].trim()));
         }

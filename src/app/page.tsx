@@ -118,7 +118,7 @@ interface RevenueHealthClient {
   prevAPIs: string[];
 }
 
-// An account leaking revenue this month — the "defend" side of growth.
+// An account leaking revenue this month, the "defend" side of growth.
 interface RiskAccount {
   name: string;
   segment?: string | null;
@@ -129,7 +129,7 @@ interface RiskAccount {
   topAPI?: string;  // the product that stopped / their biggest product
 }
 
-// A cross-sell opening — a segment peer pattern this account is missing (the "grow" side).
+// A cross-sell opening, a segment peer pattern this account is missing (the "grow" side).
 interface ExpansionPlay {
   clientName: string;
   segment: string;
@@ -150,7 +150,7 @@ interface DashboardAnalytics {
   monthlyTrend: { month: string; revenue: number }[];
   latestMonthData?: { month: string; revenue: number; momGrowth: number };
   momGrowthCalc: number;
-  // Growth levers — the "where to focus next" signals.
+  // Growth levers, the "where to focus next" signals.
   revenueAtRisk: number;          // total monthly USD across declining + churned accounts
   atRiskAccounts: RiskAccount[];  // sorted by $ at risk, biggest first
   expansionPipeline: number;      // total monthly USD of high-confidence cross-sell gaps
@@ -246,8 +246,8 @@ const SEGMENT_COLORS = [
 
 /**
  * Turn raw client health into the two revenue levers the dashboard acts on:
- *   1. Defend — revenue slipping away (churned or declining accounts).
- *   2. Grow  — cross-sell gaps where segment peers already buy an API this
+ *   1. Defend, revenue slipping away (churned or declining accounts).
+ *   2. Grow , cross-sell gaps where segment peers already buy an API this
  *              account doesn't. Estimated at the peer average, in USD.
  * All figures are per-month USD, converted from each account's billing currency.
  */
@@ -539,7 +539,7 @@ export default function Dashboard() {
     return apiMonth ? `${base}&month=${apiMonth}` : base;
   }, [apiMonth, isAuthenticated]);
 
-  // SWR — background fetch, keepPreviousData set globally
+  // SWR, background fetch, keepPreviousData set globally
   const { data: analyticsData, isLoading: loadingAnalytics, isValidating: isRevalidating, error: analyticsError } = useSWR<AnalyticsResponse & { availableMonths?: string[] }>(analyticsUrl);
   const { data: apisData, isLoading: loadingApis, error: apisError } = useSWR<{ masterAPIs?: MasterAPI[]; apis?: MasterAPI[]; unmatchedAPIs?: { name: string }[] }>(isAuthenticated ? '/api/apis' : null);
 
@@ -552,7 +552,7 @@ export default function Dashboard() {
     return m;
   }, [lifecycleData]);
 
-  // A 401 from a protected API means the session is invalid — not a connection
+  // A 401 from a protected API means the session is invalid, not a connection
   // failure. The global SWR fetcher throws `Error("API error: 401")`, so detect
   // the status in the message.
   const isUnauthorizedError = (e: unknown): boolean =>
@@ -570,7 +570,7 @@ export default function Dashboard() {
 
   // Only show loading if zero data (very first visit, no cache at all)
   const loading = isAuthenticated && !hasCachedData && (loadingAnalytics || loadingApis);
-  // Don't surface auth failures as a connection error — those route to login.
+  // Don't surface auth failures as a connection error, those route to login.
   const error = isAuthenticated && analyticsError && !hasCachedData && !sessionInvalid ? 'Failed to load data' : null;
 
   // Sync indicator (thin bar at top, never blocks content)
@@ -710,7 +710,7 @@ export default function Dashboard() {
     return response.json();
   };
 
-  // Handle cell edit — save to Supabase immediately, fallback to localStorage
+  // Handle cell edit, save to Supabase immediately, fallback to localStorage
   const handleCellEdit = useCallback((clientName: string, month: string, newValue: number, oldValue: number) => {
     if (newValue === oldValue) {
       setEditingCell(null);
@@ -739,7 +739,7 @@ export default function Dashboard() {
     setEditingCell(null);
     setEditValue('');
 
-    // Save to Supabase immediately — if it fails, queue in localStorage
+    // Save to Supabase immediately, if it fails, queue in localStorage
     const edit: CellEdit = { clientName, month, field: 'total_revenue_usd', oldValue, newValue, timestamp: Date.now() };
     fetch('/api/matrix', {
       method: 'POST',
@@ -747,9 +747,9 @@ export default function Dashboard() {
       body: JSON.stringify({ clientName, api: month, value: newValue, field: 'total_revenue_usd' })
     }).then(res => {
       if (!res.ok) throw new Error('Save failed');
-      // Saved successfully — no need for localStorage
+      // Saved successfully, no need for localStorage
     }).catch(() => {
-      // Failed — queue in localStorage for retry
+      // Failed, queue in localStorage for retry
       setPendingEdits(prev => {
         const filtered = prev.filter(e => !(e.clientName === clientName && e.month === month));
         const updated = [...filtered, edit];
@@ -821,7 +821,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Supabase realtime — live updates from other users
+  // Supabase realtime, live updates from other users
   useEffect(() => {
     if (!supabase || !isAuthenticated) return;
 
@@ -938,7 +938,7 @@ export default function Dashboard() {
 
   const dashboardClients = useMemo<ProcessedClient[]>(() => {
     return (data.clients || [])
-      // Only include clients from clients.json (master list) — single source of truth
+      // Only include clients from clients.json (master list), single source of truth
       .filter(c => c.isInMasterList)
       .map(client => {
         const curr = client.profile?.billing_currency;
@@ -948,7 +948,7 @@ export default function Dashboard() {
         const months = client.monthly_data?.length || 0;
         const avgMonthly = months > 0 ? totalRevenue : 0;
 
-        // Build API revenue map from latest month (keep native currency — converted at display)
+        // Build API revenue map from latest month (keep native currency, converted at display)
         const apiRevenues: Record<string, number> = {};
         latestMonth?.apis?.forEach(api => {
           if (api.name) {
@@ -979,7 +979,7 @@ export default function Dashboard() {
       });
   }, [dashboardClients, searchTerm, sortBy]);
 
-  // Focus buckets (Protect / Grow / Watch) — computed once over the full client
+  // Focus buckets (Protect / Grow / Watch), computed once over the full client
   // set (not search-filtered) and shared with the Focus view, nav badge, and
   // dashboard banner.
   const focus = useMemo<FocusResult>(() => computeFocus(dashboardClients, { toUSD: convertToUSD }), [dashboardClients]);
@@ -1069,7 +1069,7 @@ export default function Dashboard() {
   }, [apiMonth, dashboardClients]);
 
   if (loading) {
-    // Minimal progress indicator — not a skeleton, just a centered loading bar
+    // Minimal progress indicator, not a skeleton, just a centered loading bar
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center animate-fade-in">
@@ -1129,14 +1129,14 @@ export default function Dashboard() {
       onLogout={handleLogout}
       focusCounts={focusCounts}
     >
-      {/* Sync status bar — thin progress line at very top */}
+      {/* Sync status bar, thin progress line at very top */}
       {syncState === 'syncing' && (
         <div className="fixed top-0 left-0 right-0 z-[60] h-0.5 bg-stone-200 overflow-hidden">
           <div className="h-full bg-amber-400 rounded-full" style={{ width: '30%', animation: 'progress 1.5s ease-in-out infinite' }} />
         </div>
       )}
 
-      {/* Floating view switcher — no layout space */}
+      {/* Floating view switcher, no layout space */}
       <div className="hidden">
         <button
           onClick={() => setView('revenue-intel')}
@@ -1162,7 +1162,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Floating nav actions — save only, settings/logout commented out */}
+      {/* Floating nav actions, save only, settings/logout commented out */}
       <div className="hidden">
         {pendingEdits.length > 0 && (
           <button
@@ -1267,7 +1267,7 @@ export default function Dashboard() {
           <LifecycleView data={lifecycleData} />
         )}
 
-        {/* Focus View — who to work today */}
+        {/* Focus View, who to work today */}
         {view === 'focus' && (
           <div className="h-full px-4 py-4 sm:px-6 sm:py-5">
             <FocusView
@@ -1613,7 +1613,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<LifecycleSortKey>('went_to_production_date');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc'); // latest go-live first — current info matters most
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc'); // latest go-live first, current info matters most
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
 
@@ -1793,9 +1793,9 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
               <SortTh k="operational_status" label="Status" />
               <SortTh k="stage" label="Stage" />
               <SortTh k="geography" label="Geography" />
-              <SortTh k="kam" label="KAM/CSM" title="From account_owner in our data — may differ from the Zoho KAM/CSM" />
+              <SortTh k="kam" label="KAM/CSM" title="From account_owner in our data, may differ from the Zoho KAM/CSM" />
               <SortTh k="mrr_usd" label="MRR (est.)" title="Estimated from last completed month's PRODUCTION usage cost (USD). This is usage-based, NOT contracted MRR." />
-              <SortTh k="zoho_id" label="ZOHO ID" title="From business_units.zoho_id — blank for clients where it isn't populated" />
+              <SortTh k="zoho_id" label="ZOHO ID" title="From business_units.zoho_id, blank for clients where it isn't populated" />
               <SortTh k="first_staging_date" label="Testing since" />
               <SortTh k="went_to_production_date" label="Live since" />
               <SortTh k="days_to_go_live" label="Testing → Live" title="Days from the client's first testing/staging credential to their first production credential. Shown only when testing happened before go-live; blank otherwise." />
@@ -1811,32 +1811,32 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
                     <div className="font-medium text-slate-800 truncate max-w-[240px]" title={r.client_name}>{r.client_name}</div>
                     <div className="text-[10px] text-slate-400 truncate max-w-[240px]" title={r.client_id}>{r.client_id}</div>
                   </td>
-                  <td className="px-3 py-2 text-slate-600">{r.operational_status || '—'}</td>
+                  <td className="px-3 py-2 text-slate-600">{r.operational_status || '-'}</td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {r.stage === 'production' && !r.currently_in_production
                       ? <span className="px-1.5 py-0.5 rounded border text-[10px] font-medium bg-slate-100 text-slate-500 border-slate-200" title="Went to production but all prod credentials are now disabled">Was in prod</span>
                       : <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${sm.cls}`}>{sm.label}</span>}
                     {r.currently_in_production && <span className="ml-1 w-1.5 h-1.5 inline-block rounded-full bg-emerald-500 align-middle" title="Currently active in production" />}
                   </td>
-                  <td className="px-3 py-2 text-slate-600" title={r.country}>{r.geography || '—'}</td>
-                  <td className="px-3 py-2 text-slate-600 whitespace-nowrap" title={r.account_owner || undefined}>{r.kam || r.account_owner || '—'}</td>
+                  <td className="px-3 py-2 text-slate-600" title={r.country}>{r.geography || '-'}</td>
+                  <td className="px-3 py-2 text-slate-600 whitespace-nowrap" title={r.account_owner || undefined}>{r.kam || r.account_owner || '-'}</td>
                   <td className="px-3 py-2 whitespace-nowrap" title={r.mrr_usd ? `~$${r.mrr_usd.toLocaleString()} last month (usage-based)` : 'No production usage last month'}>
                     {r.mrr_bucket
                       ? <span className={`px-1.5 py-0.5 rounded border text-[10px] font-medium ${r.mrr_bucket === 'More than 50K' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : r.mrr_bucket === '10K to 50K' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{r.mrr_bucket}</span>
-                      : <span className="text-slate-400">—</span>}
+                      : <span className="text-slate-400">-</span>}
                   </td>
-                  <td className="px-3 py-2 text-slate-500 tabular-nums text-[10px]" title={r.zoho_id}>{r.zoho_id || '—'}</td>
-                  <td className="px-3 py-2 text-slate-600 tabular-nums">{r.first_staging_date ?? '—'}</td>
+                  <td className="px-3 py-2 text-slate-500 tabular-nums text-[10px]" title={r.zoho_id}>{r.zoho_id || '-'}</td>
+                  <td className="px-3 py-2 text-slate-600 tabular-nums">{r.first_staging_date ?? '-'}</td>
                   <td className="px-3 py-2 tabular-nums font-medium text-slate-800">
                     {r.went_to_production_date
                       ? (r.go_live_approximate
-                          ? <span className="text-slate-500" title={`Bulk-migration stamp — client was live on or before ${r.went_to_production_date}, exact date unknown`}>≤ {r.went_to_production_date}</span>
+                          ? <span className="text-slate-500" title={`Bulk-migration stamp, client was live on or before ${r.went_to_production_date}, exact date unknown`}>≤ {r.went_to_production_date}</span>
                           : r.went_to_production_date)
-                      : '—'}
+                      : '-'}
                   </td>
-                  <td className="px-3 py-2 text-slate-600 tabular-nums" title={r.days_to_go_live != null ? `Took ${r.days_to_go_live} days from first testing to going live` : 'No testing recorded before go-live'}>{r.days_to_go_live != null ? `${r.days_to_go_live}d` : '—'}</td>
+                  <td className="px-3 py-2 text-slate-600 tabular-nums" title={r.days_to_go_live != null ? `Took ${r.days_to_go_live} days from first testing to going live` : 'No testing recorded before go-live'}>{r.days_to_go_live != null ? `${r.days_to_go_live}d` : '-'}</td>
                   <td className="px-3 py-2 text-slate-600 tabular-nums" title="active / total prod credentials">
-                    {r.prod_app_count ? `${r.active_prod_app_count}/${r.prod_app_count}` : '—'}
+                    {r.prod_app_count ? `${r.active_prod_app_count}/${r.prod_app_count}` : '-'}
                   </td>
                 </tr>
               );
@@ -1851,7 +1851,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
       {/* Pagination */}
       <div className="px-4 py-2 flex items-center justify-between border-t border-stone-200 text-xs text-slate-500">
         <span>
-          {filtered.length === 0 ? '0' : `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, filtered.length)}`} of {filtered.length.toLocaleString()}
+          {filtered.length === 0 ? '0' : `${page * PAGE_SIZE + 1}-${Math.min((page + 1) * PAGE_SIZE, filtered.length)}`} of {filtered.length.toLocaleString()}
         </span>
         <div className="flex items-center gap-1">
           <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
@@ -2324,7 +2324,7 @@ function SalesDashboardOverview({
 }
 
 /**
- * The "what do I do next" panel: two prioritized action lists side by side —
+ * The "what do I do next" panel: two prioritized action lists side by side -
  * accounts to defend (revenue slipping) and cross-sell plays to win.
  */
 function FocusNextSection({
@@ -2361,7 +2361,7 @@ function FocusNextSection({
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <TrendingDown size={15} className="text-rose-500" />
-              <span className="text-sm font-semibold text-slate-800">Defend — Revenue at Risk</span>
+              <span className="text-sm font-semibold text-slate-800">Defend, Revenue at Risk</span>
             </div>
             <span className="shrink-0 tabular-nums text-sm font-semibold text-rose-600">{formatCurrency(analytics.revenueAtRisk)}/mo</span>
           </div>
@@ -2400,7 +2400,7 @@ function FocusNextSection({
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Sparkles size={15} className="text-emerald-500" />
-              <span className="text-sm font-semibold text-slate-800">Grow — Cross-sell Plays</span>
+              <span className="text-sm font-semibold text-slate-800">Grow, Cross-sell Plays</span>
             </div>
             <span className="shrink-0 tabular-nums text-sm font-semibold text-emerald-600">{formatCurrency(analytics.expansionPipeline)}/mo</span>
           </div>
@@ -2432,7 +2432,7 @@ function FocusNextSection({
 
       {inPlay > 0 && (
         <div className="border-t border-stone-100 bg-stone-50/60 px-5 py-3 text-sm text-slate-600 text-pretty">
-          <span className="font-semibold text-slate-900">{formatCurrency(inPlay)}/mo</span> of MRR is in play —{' '}
+          <span className="font-semibold text-slate-900">{formatCurrency(inPlay)}/mo</span> of MRR is in play -{' '}
           {formatCurrency(analytics.revenueAtRisk)} to defend and {formatCurrency(analytics.expansionPipeline)} to win through cross-sell.
         </div>
       )}
@@ -2780,7 +2780,7 @@ function MatrixView({
   // Compact mode (32px rows vs 40px)
   const [compactMode, setCompactMode] = useState(false);
 
-  // Fit rows to screen — measure actual table position dynamically
+  // Fit rows to screen, measure actual table position dynamically
   useEffect(() => {
     const calculate = () => {
       const rowHeight = compactMode ? 32 : 40;
@@ -2806,7 +2806,7 @@ function MatrixView({
   // Selected client for details panel
   const [selectedClient, setSelectedClient] = useState<ProcessedClient | null>(null);
 
-  // Recommendation engine for the Account Brief — built once over the current
+  // Recommendation engine for the Account Brief, built once over the current
   // client set, then queried lazily for whichever client is open.
   const briefEngine = useMemo(() => new RecommendationEngine(clients, masterAPIs), [clients, masterAPIs]);
   const briefRecommendation = useMemo<APIRecommendation | null>(
@@ -2929,7 +2929,7 @@ function MatrixView({
     setSavingMapping(true);
 
     try {
-      // API mapping is noted locally — actual data persists via client-overrides
+      // API mapping is noted locally, actual data persists via client-overrides
       showToast('success', `Saved: "${mappingModal.api}" ${mappingModal.action === 'add' ? 'will be added to api.json' : `mapped to "${mappingTarget || mappingModal.suggestedMatch}"`}`);
       setMappingModal(null);
       setMappingTarget('');
@@ -3210,7 +3210,7 @@ function MatrixView({
       });
     }
 
-    // Filter by anomaly mode — only show clients that have pricing anomalies
+    // Filter by anomaly mode, only show clients that have pricing anomalies
     if (anomalyMode && Object.keys(matrixAnomalies).length > 0) {
       const anomalyClientIds = new Set<string>();
       for (const entries of Object.values(matrixAnomalies)) {
@@ -3230,7 +3230,7 @@ function MatrixView({
         if (aHas && !bHas) return -1;
         if (!aHas && bHas) return 1;
         if (aHas && bHas) return bData.revenue - aData.revenue;
-        // Both don't use it — fall through to default sort
+        // Both don't use it, fall through to default sort
       }
 
       // Primary sort: Active clients always first
@@ -3465,12 +3465,12 @@ function MatrixView({
           </div>
         </div>
 
-        {/* Filters Row — single compact row */}
+        {/* Filters Row, single compact row */}
         {viewMode === 'matrix' && (
           <div className="mt-2.5 animate-fade-in space-y-2">
             {/* Primary filter row */}
             <div className="flex items-center gap-2 pb-0.5">
-              {/* Inline search — fixed width, no layout shift */}
+              {/* Inline search, fixed width, no layout shift */}
               <div className="relative shrink-0">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
@@ -3735,7 +3735,7 @@ function MatrixView({
               )}
             </div>
 
-            {/* Active filter chips — complete visibility of all constraints */}
+            {/* Active filter chips, complete visibility of all constraints */}
             {(selectedSegment || selectedOwner || selectedCountry || searchTerm || apiSearchTerm || notUsingFilter || selectedMonth || sortByAPI) && (
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[11px] text-slate-400">Active:</span>
@@ -3841,7 +3841,7 @@ function MatrixView({
                     <div>
                       <div className="flex items-center gap-2">
                         <Target size={15} className="text-amber-500" />
-                        <span className="text-[13px] font-bold text-slate-800 tracking-[-0.02em]">{selectedSegment} — API Adoption & Opportunities</span>
+                        <span className="text-[13px] font-bold text-slate-800 tracking-[-0.02em]">{selectedSegment}, API Adoption & Opportunities</span>
                       </div>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-[12px] text-slate-500">{segTotal} clients in segment</span>
@@ -3868,7 +3868,7 @@ function MatrixView({
                     </div>
                   )}
 
-                  {/* Adoption bars — click to filter */}
+                  {/* Adoption bars, click to filter */}
                   <div className="space-y-[5px] max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
                     {adoptionList.map((api) => {
                       const adoptPct = Math.round(api.rate * 100);
@@ -3949,7 +3949,7 @@ function MatrixView({
                     <div className="mt-4 pt-4 border-t border-slate-200">
                       <div className="flex items-center gap-2 mb-3">
                         <Target size={14} className="text-amber-500" />
-                        <span className="text-[12px] font-bold text-slate-800">Top Opportunities — Who to Target Next</span>
+                        <span className="text-[12px] font-bold text-slate-800">Top Opportunities, Who to Target Next</span>
                         <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">{crossSellOppsList.length} total</span>
                       </div>
                       <div className="overflow-x-auto">
@@ -4087,7 +4087,7 @@ function MatrixView({
             </div>
           )}
 
-          {/* Inner sync indicator — thin bar, not blocking */}
+          {/* Inner sync indicator, thin bar, not blocking */}
           {isLoadingMonth && (
             <div className="h-0.5 bg-stone-200 rounded-full overflow-hidden mb-1">
               <div className="h-full bg-amber-400 rounded-full" style={{ width: '30%', animation: 'progress 1.5s ease-in-out infinite' }} />
@@ -4137,7 +4137,7 @@ function MatrixView({
                               {anomalyClients} {anomalyClients === 1 ? 'client' : 'clients'}
                             </div>
                           )}
-                          {/* Client count badge: using / total — click to sort clients by this API */}
+                          {/* Client count badge: using / total, click to sort clients by this API */}
                           {!selectedSegment && (
                             <div
                               className={`text-[10px] px-1.5 py-px rounded-full font-medium cursor-pointer transition-colors ${
@@ -4218,7 +4218,7 @@ function MatrixView({
                                   {lc?.went_to_production_date
                                     ? <span className="text-emerald-600" title={lc.go_live_approximate ? 'Live on or before this date (migration stamp)' : 'Live in production since'}> · live {lc.go_live_approximate ? '≤' : ''}{lc.went_to_production_date}</span>
                                     : lc?.stage === 'testing-only'
-                                      ? <span className="text-amber-500" title="Testing only — not in production"> · testing</span>
+                                      ? <span className="text-amber-500" title="Testing only, not in production"> · testing</span>
                                       : null}
                                 </div>
                               );
@@ -4231,7 +4231,7 @@ function MatrixView({
                         className={`sticky left-[244px] z-10 px-3 text-center w-[100px] shadow-[inset_-1px_0_0_#cbd5e1,inset_1px_0_0_#cbd5e1,inset_0_-1px_0_#e2e8f0] ${discrepancy.hasIssue ? 'bg-[#fef2f2]' : rowBg}`}
                       >
                         <span className={`rev-num text-[12px] font-semibold tracking-[0.01em] ${clientTotal > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
-                          {clientTotal > 0 ? formatCurrency(clientTotal, client.profile?.billing_currency || 'USD') : '\u2014'}
+                          {clientTotal > 0 ? formatCurrency(clientTotal, client.profile?.billing_currency || 'USD') : '-'}
                         </span>
                       </td>
                       {/* API cells */}
@@ -4332,7 +4332,7 @@ function MatrixView({
                                           ? `~${formatCurrency(crossSellOpp.estimatedRevenue, client.profile?.billing_currency || 'USD')}`
                                           : potential > 0
                                             ? `~${formatCurrency(potential, 'USD')}`
-                                            : '\u2014'}
+                                            : '-'}
                                   </span>
                                 </div>
                                 {!compactMode && usage > 0 && (
@@ -4369,7 +4369,7 @@ function MatrixView({
                   </td>
                   {visibleAPIs.map(api => (
                     <td key={api} className="pl-4 pr-3 text-right rev-num text-[12px] text-slate-400 border-r border-t border-slate-700">
-                      {apiTotals[api] > 0 ? formatUSD(apiTotals[api]) : '\u2014'}
+                      {apiTotals[api] > 0 ? formatUSD(apiTotals[api]) : '-'}
                     </td>
                   ))}
                 </tr>
@@ -4624,25 +4624,25 @@ function CellPopupWithComments({
         <div className="flex justify-between items-center">
           <span className="text-[12px] text-slate-400 tracking-wide">Revenue</span>
           <span className="text-[14px] font-semibold text-slate-800 rev-num">
-            {cellPopup.revenue > 0 ? formatCurrency(cellPopup.revenue, cellPopup.currency) : '\u2014'}
+            {cellPopup.revenue > 0 ? formatCurrency(cellPopup.revenue, cellPopup.currency) : '-'}
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-[12px] text-slate-400 tracking-wide">Billable Count</span>
           <span className="text-[14px] font-semibold text-slate-700 tabular-nums">
-            {(cellPopup.prodBillable + cellPopup.stagingBillable) > 0 ? (cellPopup.prodBillable + cellPopup.stagingBillable).toLocaleString('en-US') : '\u2014'}
+            {(cellPopup.prodBillable + cellPopup.stagingBillable) > 0 ? (cellPopup.prodBillable + cellPopup.stagingBillable).toLocaleString('en-US') : '-'}
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-[12px] text-slate-400 tracking-wide">Total Calls</span>
           <span className="text-[14px] font-semibold text-slate-700 tabular-nums">
-            {cellPopup.usage > 0 ? cellPopup.usage.toLocaleString('en-US') : '\u2014'}
+            {cellPopup.usage > 0 ? cellPopup.usage.toLocaleString('en-US') : '-'}
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-[12px] text-slate-400 tracking-wide">Cost / Call</span>
           <span className="text-[14px] font-semibold text-slate-600 rev-num">
-            {cellPopup.usage > 0 && cellPopup.revenue > 0 ? `$${(cellPopup.revenue / cellPopup.usage).toFixed(2)}` : '\u2014'}
+            {cellPopup.usage > 0 && cellPopup.revenue > 0 ? `$${(cellPopup.revenue / cellPopup.usage).toFixed(2)}` : '-'}
           </span>
         </div>
       </div>
@@ -4825,7 +4825,7 @@ function ClientDetailsPanel({
     }
   }, [client, initialMonth]);
 
-  // Billing filters state — must be before any early return
+  // Billing filters state, must be before any early return
   interface FilterRow { type: 'discount' | 'codes' | 'kibana_exclude' | 'kibana_include'; value: string; api?: string; }
   const [filterRows, setFilterRows] = useState<FilterRow[]>([]);
   const [filterSaving, setFilterSaving] = useState(false);
@@ -5062,9 +5062,9 @@ function ClientDetailsPanel({
 
   return (
     <div className="fixed top-0 right-0 z-50 h-full">
-      {/* Panel — no backdrop, stays open until close button */}
+      {/* Panel, no backdrop, stays open until close button */}
       <div className="w-[700px] max-w-[85vw] h-full bg-white shadow-2xl flex flex-col animate-slide-in-right-full" style={{ boxShadow: '-8px 0 30px rgba(0,0,0,0.12)' }}>
-        {/* Header — compact: name + MRR inline, then tabs */}
+        {/* Header, compact: name + MRR inline, then tabs */}
         <div className="shrink-0 bg-white border-b border-slate-200 px-5 py-3">
           {/* Row 1: Status + Name + MRR + Month + Save + Close */}
           <div className="flex items-center justify-between gap-3">
@@ -5122,7 +5122,7 @@ function ClientDetailsPanel({
             </div>
           </div>
 
-          {/* Row 2: Tabs — compact */}
+          {/* Row 2: Tabs, compact */}
           <div className="flex gap-0.5 mt-3 bg-slate-100 p-0.5 rounded-lg">
             {tabs.map((tab) => (
               <button
@@ -5143,7 +5143,7 @@ function ClientDetailsPanel({
 
         {/* Content - scrollable */}
         <div className="flex-1 overflow-y-auto p-5">
-          {/* Brief Tab — at-a-glance summary for pre-call prep */}
+          {/* Brief Tab, at-a-glance summary for pre-call prep */}
           {activeTab === 'brief' && (
             <AccountBrief
               client={client}
@@ -5164,10 +5164,10 @@ function ClientDetailsPanel({
                   <div className="text-[10px] text-emerald-600/80 uppercase tracking-wider flex items-center gap-1">
                     <Rocket size={10} /> Live in production since
                   </div>
-                  <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.went_to_production_date ? 'text-emerald-700' : 'text-slate-400'}`} title={lifecycle?.go_live_approximate ? 'Bulk-migration stamp — live on or before this date, exact date unknown' : undefined}>
+                  <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.went_to_production_date ? 'text-emerald-700' : 'text-slate-400'}`} title={lifecycle?.go_live_approximate ? 'Bulk-migration stamp, live on or before this date, exact date unknown' : undefined}>
                     {lifecycle?.went_to_production_date
                       ? (lifecycle.go_live_approximate ? `≤ ${lifecycle.went_to_production_date}` : lifecycle.went_to_production_date)
-                      : (lifecycle?.stage === 'testing-only' ? 'Testing only' : '—')}
+                      : (lifecycle?.stage === 'testing-only' ? 'Testing only' : '-')}
                   </div>
                   {lifecycle?.went_to_production_date && (
                     <div className={`text-[9px] mt-0.5 font-medium ${lifecycle.currently_in_production ? 'text-emerald-600' : 'text-slate-400'}`}>
@@ -5182,11 +5182,11 @@ function ClientDetailsPanel({
                     <CalendarClock size={10} /> Testing since
                   </div>
                   <div className={`text-[11px] font-semibold mt-0.5 tabular-nums ${lifecycle?.first_staging_date ? 'text-amber-700' : 'text-slate-400'}`}>
-                    {lifecycle?.first_staging_date || '—'}
+                    {lifecycle?.first_staging_date || '-'}
                   </div>
                 </div>
               </div>
-              {/* Compact info grid — 3x2 */}
+              {/* Compact info grid, 3x2 */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider">Owner</div>
@@ -5509,7 +5509,7 @@ function ClientDetailsPanel({
 
             return (
             <div className="space-y-5">
-              {/* Effective filters — what actually applies */}
+              {/* Effective filters, what actually applies */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div>
@@ -5520,7 +5520,7 @@ function ClientDetailsPanel({
                       ) : hasAnyFilter ? (
                         <>Default filters (apply to all months)</>
                       ) : (
-                        <>No filters — all status codes billed</>
+                        <>No filters, all status codes billed</>
                       )}
                     </p>
                   </div>
@@ -5638,7 +5638,7 @@ function ClientDetailsPanel({
                 )}
               </div>
 
-              {/* Raw config — collapsible */}
+              {/* Raw config, collapsible */}
               {Object.keys(clientFilters).length > 0 && (
                 <details className="border-t border-slate-100 pt-3">
                   <summary className="text-[11px] text-slate-400 cursor-pointer hover:text-slate-600">All saved filters by month</summary>

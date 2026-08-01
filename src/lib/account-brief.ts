@@ -1,5 +1,5 @@
 /**
- * Account Brief helpers — pure functions that turn a client's monthly revenue
+ * Account Brief helpers, pure functions that turn a client's monthly revenue
  * history into a trend and a risk signal for the "Brief" tab. No React, no
  * fetching, so they're trivially testable.
  *
@@ -63,7 +63,7 @@ export function computeRiskSignal(client: ClientData, lifecycle?: LifecycleLike 
 
   // Churned: was paying, now zero.
   if (latest === 0 && previous > 0) {
-    return { kind: 'churned', momPct, atRisk: previous, label: 'Churned — stopped paying' };
+    return { kind: 'churned', momPct, atRisk: previous, label: 'Churned, stopped paying' };
   }
   // Declining: >10% drop on a non-trivial base.
   if (momPct != null && momPct < -10 && previous > 100 && latest < previous) {
