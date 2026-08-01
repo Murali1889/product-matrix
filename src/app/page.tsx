@@ -1264,7 +1264,9 @@ export default function Dashboard() {
 
         {/* Lifecycle / Go-Live View */}
         {view === 'lifecycle' && (
-          <LifecycleView data={lifecycleData} />
+          <div className="h-full p-3 sm:p-4">
+            <LifecycleView data={lifecycleData} />
+          </div>
         )}
 
         {/* Focus View, who to work today */}
@@ -1719,7 +1721,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   const selCls = 'px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer';
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white border border-stone-200 rounded-lg smooth-shadow-md overflow-hidden">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-stone-200">
         <div className="flex items-center gap-2 mb-1">
@@ -3428,7 +3430,7 @@ function MatrixView({
   }, [cellPopup, selectedClient]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col h-full">
+    <div className="bg-white border border-slate-200 rounded-lg smooth-shadow-md flex flex-col h-full">
       {/* Header Bar */}
       <div className="px-3 sm:px-4 py-2 border-b border-slate-200 bg-white shrink-0">
         {/* Top row: Title and Stats */}
