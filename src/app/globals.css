@@ -1,4 +1,16 @@
 @import "tailwindcss";
+@import "shadow-plugin";
+
+/* Upgrade every default shadow utility (shadow-sm/md/lg/...) to the smooth,
+   layered shadow so the whole app gets nicer depth without touching each card. */
+@theme {
+  --shadow-xs: var(--smooth-shadow-xs);
+  --shadow-sm: var(--smooth-shadow-sm);
+  --shadow-md: var(--smooth-shadow-md);
+  --shadow-lg: var(--smooth-shadow-lg);
+  --shadow-xl: var(--smooth-shadow-xl);
+  --shadow-2xl: var(--smooth-shadow-2xl);
+}
 
 /*
  * 60-30-10 Color Theory

@@ -41,7 +41,7 @@ function Row({ item, onOpen }: { item: AttentionItem; onOpen: (n: string) => voi
   return (
     <button
       onClick={() => onOpen(item.clientName)}
-      className="w-full text-left rounded-lg border border-slate-100 bg-white hover:bg-amber-50/40 hover:border-amber-200 transition-colors px-3 py-2"
+      className="w-full text-left rounded-lg bg-white smooth-shadow-sm hover:smooth-shadow-md hover:bg-amber-50/40 transition-all px-3 py-2"
     >
       <div className="flex items-center justify-between gap-3">
         <span className="font-semibold text-slate-800 text-[13px] truncate">{item.name}</span>
@@ -52,13 +52,14 @@ function Row({ item, onOpen }: { item: AttentionItem; onOpen: (n: string) => voi
   );
 }
 
-function Section({ title, subtitle, icon, tone, items, loading, onOpen }: {
+function Section({ title, subtitle, icon, tone, items, loading, onOpen, forceExpanded }: {
   title: string; subtitle: string; icon: React.ReactNode; tone: string;
-  items: AttentionItem[]; loading?: boolean; onOpen: (n: string) => void;
+  items: AttentionItem[]; loading?: boolean; onOpen: (n: string) => void; forceExpanded?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const TOP = 5;
-  const shown = expanded ? items : items.slice(0, TOP);
+  const isExpanded = forceExpanded || expanded;
+  const shown = isExpanded ? items : items.slice(0, TOP);
   return (
     <div className="mb-5">
       <div className={`flex items-center gap-2 pb-1.5 mb-2 border-b-2 ${ACCENT[tone]}`}>
@@ -77,12 +78,12 @@ function Section({ title, subtitle, icon, tone, items, loading, onOpen }: {
       ) : (
         <div className="space-y-1.5">
           {shown.map(it => <Row key={`${it.id}`} item={it} onOpen={onOpen} />)}
-          {items.length > TOP && (
+          {items.length > TOP && !forceExpanded && (
             <button
               onClick={() => setExpanded(e => !e)}
               className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
             >
-              {expanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show all {items.length}</>}
+              {isExpanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show all {items.length}</>}
             </button>
           )}
         </div>
@@ -131,28 +132,40 @@ export default function FocusView({ focus, clients, lifecycle, masterAPIs, forma
     return s.size;
   }, [sections]);
 
+  // Chip filter: 'all' shows every section, otherwise just the picked one.
+  const [active, setActive] = useState<string>('all');
+  const chipCls = (on: boolean) =>
+    `text-[11px] px-2.5 py-1 rounded-full border cursor-pointer transition-colors ${
+      on ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+    }`;
+  const visible = active === 'all' ? sections : sections.filter(s => s.key === active);
+
   return (
     <div className="h-full flex flex-col">
       <div className="px-1 pb-3 shrink-0">
         <div className="flex items-baseline gap-2 flex-wrap">
           <h2 className="text-lg font-bold text-slate-800">Focus</h2>
           <span className="text-[12px] text-slate-500">
-            {distinctAccounts.toLocaleString()} accounts need attention today
+            {distinctAccounts.toLocaleString()} accounts need attention today. Click a category to filter.
           </span>
         </div>
-        <div className="flex flex-wrap gap-1.5 mt-1.5">
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          <button onClick={() => setActive('all')} className={chipCls(active === 'all')}>
+            All <span className="font-semibold">{distinctAccounts}</span>
+          </button>
           {sections.map(s => (
-            <span key={s.key} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-slate-500">
-              {s.title}: <span className="font-semibold text-slate-700">{s.loading ? '...' : s.items.length}</span>
-            </span>
+            <button key={s.key} onClick={() => setActive(active === s.key ? 'all' : s.key)} className={chipCls(active === s.key)}>
+              {s.title}: <span className="font-semibold">{s.loading ? '...' : s.items.length}</span>
+            </button>
           ))}
         </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-        {sections.map(s => (
+        {visible.map(s => (
           <Section key={s.key} title={s.title} subtitle={s.subtitle} icon={s.icon} tone={s.tone}
-            items={s.items} loading={s.loading} onOpen={onOpenClient} />
+            items={s.items} loading={s.loading} onOpen={onOpenClient}
+            forceExpanded={active === s.key} />
         ))}
       </div>
     </div>

@@ -59,7 +59,7 @@ const Card = ({ title, icon, children, tone = 'default' }: { title: string; icon
   const border = tone === 'emerald' ? 'border-emerald-100' : tone === 'amber' ? 'border-amber-100' : tone === 'red' ? 'border-red-100' : 'border-slate-100';
   const bg = tone === 'emerald' ? 'bg-emerald-50/40' : tone === 'amber' ? 'bg-amber-50/40' : tone === 'red' ? 'bg-red-50/40' : 'bg-slate-50/60';
   return (
-    <div className={`rounded-xl border ${border} ${bg} p-3`}>
+    <div className={`rounded-xl border ${border} ${bg} p-3 smooth-shadow-sm`}>
       <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
         {icon}{title}
       </div>
