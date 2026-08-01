@@ -134,17 +134,61 @@ export interface GSUsage {
 }
 
 // ============== CACHE + SINGLE-FLIGHT ==============
+//
+// Two-tier cache: in-memory (fast) backed by disk (.cache/metabase/*.json).
+// Metabase queries are very slow (a single month of usage aggregates for ~56s),
+// so without a persistent cache every server restart / cache expiry re-pays
+// minutes of latency and blocks the app. The billing/usage data is effectively
+// static once a month closes, so a long TTL is safe. On a miss we fall back to
+// disk before hitting Metabase, making warm restarts instant.
+
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
+import path from 'path';
 
 interface CacheEntry<T> { data: T; timestamp: number }
 const cache: Record<string, CacheEntry<unknown>> = {};
 const inflight: Record<string, Promise<unknown>> = {};
-const CACHE_TTL = 5 * 60 * 1000;
+const MEM_TTL = 30 * 60 * 1000;        // 30 min in-memory
+const DISK_TTL = 24 * 60 * 60 * 1000;  // 24 h on disk
+
+const CACHE_DIR = path.join(process.cwd(), '.cache', 'metabase');
+const diskPath = (key: string) => path.join(CACHE_DIR, `${key.replace(/[^a-z0-9_-]/gi, '_')}.json`);
+
+function readDisk<T>(key: string): T | null {
+  try {
+    const p = diskPath(key);
+    if (!existsSync(p)) return null;
+    const entry = JSON.parse(readFileSync(p, 'utf-8')) as CacheEntry<T>;
+    if (Date.now() - entry.timestamp >= DISK_TTL) return null;
+    return entry.data;
+  } catch { return null; }
+}
+
+function writeDisk<T>(key: string, entry: CacheEntry<T>): void {
+  try {
+    if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR, { recursive: true });
+    writeFileSync(diskPath(key), JSON.stringify(entry), 'utf-8');
+  } catch (e) {
+    console.warn(`[Metabase] disk cache write failed for ${key}:`, (e as Error).message);
+  }
+}
 
 function getCached<T>(key: string): T | null {
   const e = cache[key];
-  return e && Date.now() - e.timestamp < CACHE_TTL ? (e.data as T) : null;
+  if (e && Date.now() - e.timestamp < MEM_TTL) return e.data as T;
+  // Fall back to disk (survives restarts / in-memory expiry).
+  const disk = readDisk<T>(key);
+  if (disk != null) {
+    cache[key] = { data: disk, timestamp: Date.now() };
+    return disk;
+  }
+  return null;
 }
-function setCache<T>(key: string, data: T): void { cache[key] = { data, timestamp: Date.now() }; }
+function setCache<T>(key: string, data: T): void {
+  const entry = { data, timestamp: Date.now() };
+  cache[key] = entry;
+  writeDisk(key, entry);
+}
 
 async function singleFlight<T>(key: string, loader: () => Promise<T>): Promise<T> {
   const cached = getCached<T>(key);
@@ -172,10 +216,23 @@ interface MBDatasetResponse {
   data?: { cols: { name: string }[]; rows: unknown[][] };
 }
 
-// Global serializer — every Metabase call goes through one queue. Removes
-// concurrency surprises from undici / Metabase under load. Cache + single-
-// flight ensure we don't make redundant calls in the first place.
-let mbQueue: Promise<unknown> = Promise.resolve();
+// Concurrency-limited pool — a fully serial queue meant every cold month of
+// usage (~56s each) waited for the previous one, so 10 months = ~9 min of the
+// app being unresponsive. A small pool lets a few run at once (cutting cold load
+// several-fold) while still capping load on Metabase / undici. Cache +
+// single-flight keep us from making redundant calls in the first place.
+const MAX_CONCURRENCY = 4;
+let active = 0;
+const waiters: Array<() => void> = [];
+async function acquire(): Promise<void> {
+  if (active < MAX_CONCURRENCY) { active++; return; }
+  await new Promise<void>(resolve => waiters.push(resolve)); // resumed = slot handed over
+}
+function release(): void {
+  const next = waiters.shift();
+  if (next) next();      // hand our slot to a waiter (active unchanged)
+  else active--;         // no waiter → free the slot
+}
 
 async function mbCall(
   endpoint: '/api/dataset' | '/api/dataset/json',
@@ -220,9 +277,12 @@ async function mbCall(
     }
     throw lastErr;
   };
-  const next = mbQueue.then(run, run);
-  mbQueue = next.catch(() => undefined);
-  return next;
+  await acquire();
+  try {
+    return await run();
+  } finally {
+    release();
+  }
 }
 
 /** Fetch every row of a table (no 2000-row cap). Returns objects keyed by
