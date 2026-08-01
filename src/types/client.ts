@@ -37,6 +37,7 @@ export interface ClientProfile {
   domain_list?: string[];
   go_live_date?: string | null;
   billing_start_month?: string | null;
+  trial_expires?: string | null;
   zoho_name?: string | null;
   business_units?: string[];
   industry?: string | null;

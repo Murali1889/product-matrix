@@ -1,117 +1,159 @@
 'use client';
 
-import { useMemo } from 'react';
-import { ShieldCheck, TrendingUp, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import useSWR from 'swr';
+import { ShieldCheck, TrendingUp, AlertTriangle, Rocket, Target, CalendarClock, BadgeDollarSign, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ClientData } from '@/types/client';
-import type { FocusAccount, FocusResult } from '@/lib/focus';
 import { RecommendationEngine } from '@/lib/recommendation-engine';
+import {
+  type FocusResult, type AttentionItem, type MetricTone,
+  watchItems, growItems, protectItems,
+  trialExpiringItems, readyToGoLiveItems, upsellGapItems, pricingIssueItems,
+} from '@/lib/focus';
+
+interface LifecycleLite {
+  client_id: string;
+  client_name: string;
+  stage: 'production' | 'testing-only' | 'none';
+  first_staging_date: string | null;
+  staging_app_count: number;
+}
 
 interface Props {
-  focus: FocusResult;                 // precomputed buckets (shared with nav badge / banner)
-  clients: ClientData[];              // for the recommendation engine (Grow upsell enrichment)
+  focus: FocusResult;
+  clients: ClientData[];
+  lifecycle: LifecycleLite[];
   masterAPIs: string[];
   formatUSD: (n: number) => string;
   onOpenClient: (clientName: string) => void;
 }
 
-const MoM = ({ pct }: { pct: number | null }) => {
-  if (pct == null) return <span className="text-slate-300 text-[10px]">-</span>;
-  const up = pct >= 0;
-  return <span className={`text-[11px] font-medium tabular-nums ${up ? 'text-emerald-600' : 'text-red-600'}`}>{up ? '▲' : '▼'} {up ? '+' : ''}{pct}%</span>;
+const fetcher = (url: string) => fetch(url, { credentials: 'same-origin' }).then(r => r.json());
+
+const TONE_TEXT: Record<MetricTone, string> = {
+  red: 'text-red-600', amber: 'text-amber-600', emerald: 'text-emerald-600', slate: 'text-slate-600',
+};
+const ACCENT: Record<string, string> = {
+  red: 'border-red-200', amber: 'border-amber-200', blue: 'border-blue-200', emerald: 'border-emerald-200', slate: 'border-slate-200',
 };
 
-function Row({ a, formatUSD, onOpen }: { a: FocusAccount; formatUSD: (n: number) => string; onOpen: (n: string) => void }) {
+function Row({ item, onOpen }: { item: AttentionItem; onOpen: (n: string) => void }) {
   return (
     <button
-      onClick={() => onOpen(a.client_name)}
-      className="w-full text-left rounded-lg border border-slate-100 bg-white hover:bg-amber-50/40 hover:border-amber-200 transition-colors p-2.5 group"
+      onClick={() => onOpen(item.clientName)}
+      className="w-full text-left rounded-lg border border-slate-100 bg-white hover:bg-amber-50/40 hover:border-amber-200 transition-colors px-3 py-2"
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-slate-800 text-[13px] truncate">{a.client_name}</span>
-        <span className="text-[12px] font-semibold text-slate-700 tabular-nums shrink-0">{formatUSD(a.mrrUSD)}</span>
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-semibold text-slate-800 text-[13px] truncate">{item.name}</span>
+        <span className={`text-[12px] font-semibold tabular-nums shrink-0 ${TONE_TEXT[item.metricTone]}`}>{item.metric}</span>
       </div>
-      <div className="flex items-center justify-between gap-2 mt-0.5">
-        <span className="text-[10px] text-slate-400 truncate">{a.segment}</span>
-        <MoM pct={a.momPct} />
-      </div>
-      <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-        {a.slipping && <AlertTriangle size={10} className="text-amber-500 shrink-0" />}
-        <span className="truncate">{a.reason}</span>
-      </div>
-      {a.topUpsell && (
-        <div className="text-[10px] text-blue-600 mt-1 flex items-center gap-1 truncate">
-          <ArrowUpRight size={10} className="shrink-0" /> {a.topUpsell}
-        </div>
-      )}
+      <div className="text-[11px] text-slate-500 mt-0.5 truncate">{item.reason}</div>
     </button>
   );
 }
 
-function Column({ title, subtitle, icon, accent, items, formatUSD, onOpen, empty }: {
-  title: string; subtitle: string; icon: React.ReactNode; accent: string;
-  items: FocusAccount[]; formatUSD: (n: number) => string; onOpen: (n: string) => void; empty: string;
+function Section({ title, subtitle, icon, tone, items, loading, onOpen }: {
+  title: string; subtitle: string; icon: React.ReactNode; tone: string;
+  items: AttentionItem[]; loading?: boolean; onOpen: (n: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const TOP = 5;
+  const shown = expanded ? items : items.slice(0, TOP);
   return (
-    <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-      <div className={`flex items-center gap-2 pb-2 mb-2 border-b-2 shrink-0 ${accent}`}>
+    <div className="mb-5">
+      <div className={`flex items-center gap-2 pb-1.5 mb-2 border-b-2 ${ACCENT[tone]}`}>
         {icon}
         <div className="min-w-0">
-          <div className="text-[13px] font-bold text-slate-800">{title} <span className="text-slate-400 font-medium">({items.length})</span></div>
+          <div className="text-[13px] font-bold text-slate-800">
+            {title} <span className="text-slate-400 font-medium">({loading ? '...' : items.length})</span>
+          </div>
           <div className="text-[10px] text-slate-400 truncate">{subtitle}</div>
         </div>
       </div>
-      <div className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1">
-        {items.length === 0
-          ? <div className="text-[11px] text-slate-400 py-6 text-center">{empty}</div>
-          : items.map(a => <Row key={a.client_id} a={a} formatUSD={formatUSD} onOpen={onOpen} />)}
-      </div>
+      {loading ? (
+        <div className="text-[11px] text-slate-400 py-3 px-1">Loading...</div>
+      ) : items.length === 0 ? (
+        <div className="text-[11px] text-slate-400 py-2 px-1">All clear</div>
+      ) : (
+        <div className="space-y-1.5">
+          {shown.map(it => <Row key={`${it.id}`} item={it} onOpen={onOpen} />)}
+          {items.length > TOP && (
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
+            >
+              {expanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show all {items.length}</>}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-export default function FocusView({ focus: focusIn, clients, masterAPIs, formatUSD, onOpenClient }: Props) {
+export default function FocusView({ focus, clients, lifecycle, masterAPIs, formatUSD, onOpenClient }: Props) {
   const engine = useMemo(() => new RecommendationEngine(clients, masterAPIs), [clients, masterAPIs]);
 
-  // Enrich Grow rows with each account's top upsell (cheap, only the shortlist).
-  const focus = useMemo(() => ({
-    ...focusIn,
-    grow: focusIn.grow.map(a => {
+  // Grow enrichment: attach each up-mover's top upsell (cheap, only the shortlist).
+  const enrichedFocus = useMemo(() => ({
+    ...focus,
+    grow: focus.grow.map(a => {
       const top = engine.getClientRecommendations(a.client_name)?.recommendations?.[0]?.apiName;
       return top ? { ...a, topUpsell: `Upsell: ${top}` } : a;
     }),
-  }), [focusIn, engine]);
+  }), [focus, engine]);
+
+  // Fetched sections (cached server-side).
+  const { data: segResp, isLoading: segLoading } = useSWR('/api/segment-intelligence?action=all', fetcher, { revalidateOnFocus: false, keepPreviousData: true });
+  const { data: pricingResp, isLoading: pricingLoading } = useSWR('/api/pricing-anomalies', fetcher, { revalidateOnFocus: false, keepPreviousData: true });
+
+  const sections = useMemo(() => ([
+    { key: 'watch', title: 'Watch', subtitle: 'At risk, defend now', tone: 'red',
+      icon: <AlertTriangle size={17} className="text-red-500" />, items: watchItems(enrichedFocus, formatUSD) },
+    { key: 'trial', title: 'Trial expiring', subtitle: 'Convert before it lapses', tone: 'amber',
+      icon: <CalendarClock size={17} className="text-amber-500" />, items: trialExpiringItems(clients) },
+    { key: 'golive', title: 'Ready to go live', subtitle: 'Unlock revenue stuck in testing', tone: 'blue',
+      icon: <Rocket size={17} className="text-blue-500" />, items: readyToGoLiveItems(lifecycle) },
+    { key: 'upsell', title: 'Big upsell gaps', subtitle: 'Segment peers already buy this', tone: 'emerald',
+      icon: <Target size={17} className="text-emerald-600" />, items: upsellGapItems(segResp?.data, formatUSD), loading: segLoading && !segResp },
+    { key: 'grow', title: 'Grow', subtitle: 'Ride momentum, expand now', tone: 'emerald',
+      icon: <TrendingUp size={17} className="text-blue-600" />, items: growItems(enrichedFocus, formatUSD) },
+    { key: 'pricing', title: 'Pricing and billing issues', subtitle: 'Fix revenue leaks', tone: 'slate',
+      icon: <BadgeDollarSign size={17} className="text-slate-500" />, items: pricingIssueItems(pricingResp), loading: pricingLoading && !pricingResp },
+    { key: 'protect', title: 'Protect', subtitle: 'Top accounts, stay close', tone: 'slate',
+      icon: <ShieldCheck size={17} className="text-emerald-600" />, items: protectItems(enrichedFocus, formatUSD) },
+  ]), [enrichedFocus, clients, lifecycle, segResp, pricingResp, segLoading, pricingLoading, formatUSD]);
+
+  // Distinct accounts needing attention (an account can appear in more than one section).
+  const distinctAccounts = useMemo(() => {
+    const s = new Set<string>();
+    sections.forEach(sec => sec.items.forEach(i => s.add(i.clientName)));
+    return s.size;
+  }, [sections]);
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-1 pb-3">
+      <div className="px-1 pb-3 shrink-0">
         <div className="flex items-baseline gap-2 flex-wrap">
           <h2 className="text-lg font-bold text-slate-800">Focus</h2>
           <span className="text-[12px] text-slate-500">
-            {focus.counts.total.toLocaleString()} active clients:
-            {' '}<span className="text-red-600 font-medium">{focus.counts.watch}</span> to watch,
-            {' '}<span className="text-emerald-700 font-medium">{focus.counts.protect}</span> top to protect,
-            {' '}<span className="text-blue-600 font-medium">{focus.counts.grow}</span> growing,
-            {' '}<span className="text-slate-600 font-medium">{focus.counts.steady.toLocaleString()}</span> steady
+            {distinctAccounts.toLocaleString()} accounts need attention today
           </span>
         </div>
-        <p className="text-[12px] text-slate-400 mt-0.5">Who to work today: protect your best, ride momentum, defend what&apos;s slipping. The rest are steady and need no action now.</p>
+        <div className="flex flex-wrap gap-1.5 mt-1.5">
+          {sections.map(s => (
+            <span key={s.key} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-slate-500">
+              {s.title}: <span className="font-semibold text-slate-700">{s.loading ? '...' : s.items.length}</span>
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="flex-1 min-h-0 grid grid-cols-3 gap-4">
-        <Column
-          title="Protect" subtitle="Top accounts, stay close"
-          icon={<ShieldCheck size={18} className="text-emerald-600" />} accent="border-emerald-200"
-          items={focus.protect} formatUSD={formatUSD} onOpen={onOpenClient} empty="Nothing to protect right now"
-        />
-        <Column
-          title="Grow" subtitle="Momentum + upsell, expand now"
-          icon={<TrendingUp size={18} className="text-blue-600" />} accent="border-blue-200"
-          items={focus.grow} formatUSD={formatUSD} onOpen={onOpenClient} empty="No up-movers right now"
-        />
-        <Column
-          title="Watch" subtitle="Slipping or churned, defend"
-          icon={<AlertTriangle size={18} className="text-red-500" />} accent="border-red-200"
-          items={focus.watch} formatUSD={formatUSD} onOpen={onOpenClient} empty="Nothing at risk right now"
-        />
+
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+        {sections.map(s => (
+          <Section key={s.key} title={s.title} subtitle={s.subtitle} icon={s.icon} tone={s.tone}
+            items={s.items} loading={s.loading} onOpen={onOpenClient} />
+        ))}
       </div>
     </div>
   );

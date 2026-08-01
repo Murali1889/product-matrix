@@ -1273,6 +1273,7 @@ export default function Dashboard() {
             <FocusView
               focus={focus}
               clients={dashboardClients}
+              lifecycle={lifecycleData?.clients ?? []}
               masterAPIs={allAPIs}
               formatUSD={formatUSD}
               onOpenClient={(name) => { setSearchTerm(name); setView('matrix'); }}

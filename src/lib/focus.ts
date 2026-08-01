@@ -148,3 +148,171 @@ export function computeFocus(clients: ClientData[], opts: { toUSD: ToUSD; topN?:
     counts: { total, watch: watch.length, protect: protect.length, grow: grow.length, steady },
   };
 }
+
+// ============== ATTENTION SECTIONS (the "needs attention" hub) ==============
+//
+// Each builder returns a ranked AttentionItem[] for one section of the Focus
+// hub. Pure and testable; the view supplies formatting/click handling.
+
+export type MetricTone = 'red' | 'amber' | 'emerald' | 'slate';
+
+export interface AttentionItem {
+  id: string;
+  name: string;
+  clientName: string;   // passed to onOpenClient
+  metric: string;       // right-aligned key figure
+  metricTone: MetricTone;
+  reason: string;       // one-line context
+}
+
+type Fmt = (n: number) => string;
+
+// --- from FocusResult (Watch / Grow / Protect) ---
+
+export function watchItems(f: FocusResult, fmt: Fmt): AttentionItem[] {
+  return f.watch.map(a => ({
+    id: a.client_id, name: a.client_name, clientName: a.client_name,
+    metric: a.atRiskUSD > 0 ? `${fmt(a.atRiskUSD)} at risk` : a.reason,
+    metricTone: 'red',
+    reason: a.momPct != null ? `${a.reason} (now ${fmt(a.mrrUSD)}/mo)` : a.reason,
+  }));
+}
+
+export function growItems(f: FocusResult, fmt: Fmt): AttentionItem[] {
+  return f.grow.map(a => ({
+    id: a.client_id, name: a.client_name, clientName: a.client_name,
+    metric: `${fmt(a.mrrUSD)}/mo`,
+    metricTone: 'emerald',
+    reason: a.topUpsell ? `${a.reason}. ${a.topUpsell}` : a.reason,
+  }));
+}
+
+export function protectItems(f: FocusResult, fmt: Fmt): AttentionItem[] {
+  return f.protect.map(a => ({
+    id: a.client_id, name: a.client_name, clientName: a.client_name,
+    metric: `${fmt(a.mrrUSD)}/mo`,
+    metricTone: a.slipping ? 'amber' : 'slate',
+    reason: a.reason,
+  }));
+}
+
+// --- Trial expiring (from client profiles) ---
+
+export function trialExpiringItems(clients: ClientData[], withinDays = 30, nowMs = Date.now()): AttentionItem[] {
+  const out: { item: AttentionItem; days: number }[] = [];
+  for (const c of clients) {
+    const raw = c.profile?.trial_expires;
+    if (!raw) continue;
+    const t = Date.parse(String(raw));
+    if (Number.isNaN(t)) continue;
+    const days = Math.round((t - nowMs) / 86_400_000);
+    if (days < 0 || days > withinDays) continue;   // only upcoming, within window
+    out.push({
+      days,
+      item: {
+        id: c.client_id || c.client_name, name: c.client_name, clientName: c.client_name,
+        metric: days === 0 ? 'expires today' : `expires in ${days}d`,
+        metricTone: days <= 7 ? 'red' : 'amber',
+        reason: `Trial ${c.profile?.segment ? `(${c.profile.segment})` : ''}, convert before it lapses`.replace(/\s+,/, ','),
+      },
+    });
+  }
+  return out.sort((a, b) => a.days - b.days).map(o => o.item);
+}
+
+// --- Ready to go live (from lifecycle rows) ---
+
+interface LifecycleGoLive {
+  client_id: string;
+  client_name: string;
+  stage: 'production' | 'testing-only' | 'none';
+  first_staging_date: string | null;
+  staging_app_count: number;
+}
+
+export function readyToGoLiveItems(rows: LifecycleGoLive[], withinDays = 120, nowMs = Date.now()): AttentionItem[] {
+  // Only genuinely-recent testing counts as "ready to go live". Most testing-only
+  // clients are years-old abandoned test credentials, not live onboarding, and
+  // surfacing all ~1,900 of them would flood the hub instead of focusing it.
+  const cutoff = nowMs - withinDays * 86_400_000;
+  return rows
+    .filter(r => r.stage === 'testing-only')
+    .filter(r => {
+      if (!r.first_staging_date) return false;
+      const t = Date.parse(r.first_staging_date);
+      return !Number.isNaN(t) && t >= cutoff;
+    })
+    .sort((a, b) => (b.first_staging_date || '').localeCompare(a.first_staging_date || ''))
+    .map(r => ({
+      id: r.client_id, name: r.client_name, clientName: r.client_name,
+      metric: r.first_staging_date ? `testing since ${r.first_staging_date}` : 'in testing',
+      metricTone: 'amber' as MetricTone,
+      reason: `${r.staging_app_count} staging cred${r.staging_app_count === 1 ? '' : 's'}, not in production yet`,
+    }));
+}
+
+// --- Big upsell gaps (from segment intelligence) ---
+
+interface SegClientGap {
+  name: string;
+  clientId?: string;
+  potentialRevenue: number;
+  apisMissing: Array<{ name: string; priority: string }>;
+}
+interface SegData { segments?: Array<{ clients?: SegClientGap[] }> }
+
+export function upsellGapItems(seg: SegData | null | undefined, fmt: Fmt): AttentionItem[] {
+  if (!seg?.segments) return [];
+  const scored: { pot: number; item: AttentionItem }[] = [];
+  for (const s of seg.segments) {
+    for (const c of s.clients || []) {
+      const high = (c.apisMissing || []).filter(g => g.priority === 'high');
+      if (high.length === 0 || c.potentialRevenue <= 0) continue;
+      scored.push({
+        pot: c.potentialRevenue,
+        item: {
+          id: c.clientId || c.name, name: c.name, clientName: c.name,
+          metric: `~${fmt(c.potentialRevenue)}/mo`,
+          metricTone: 'emerald',
+          reason: `Missing ${high[0].name}${high.length > 1 ? ` +${high.length - 1} more` : ''}, peers already buy it`,
+        },
+      });
+    }
+  }
+  return scored.sort((a, b) => b.pot - a.pot).map(s => s.item);
+}
+
+// --- Pricing / billing issues (from pricing-anomaly response) ---
+
+interface AnomalyLite { clientId: string; clientName: string; priceDiff: number }
+interface PricingResp {
+  pricingConflicts?: Record<string, AnomalyLite[]>;
+  slabOverlaps?: Record<string, AnomalyLite[]>;
+  unmapped?: Record<string, AnomalyLite[]>;
+}
+
+export function pricingIssueItems(p: PricingResp | null | undefined): AttentionItem[] {
+  if (!p) return [];
+  const byClient = new Map<string, { name: string; count: number; maxDiff: number }>();
+  const groups = [p.pricingConflicts, p.slabOverlaps, p.unmapped];
+  for (const g of groups) {
+    for (const arr of Object.values(g || {})) {
+      for (const a of arr) {
+        const key = a.clientName || a.clientId;
+        if (!key) continue;
+        const e = byClient.get(key) || { name: a.clientName || a.clientId, count: 0, maxDiff: 0 };
+        e.count += 1;
+        e.maxDiff = Math.max(e.maxDiff, a.priceDiff || 0);
+        byClient.set(key, e);
+      }
+    }
+  }
+  return [...byClient.values()]
+    .sort((a, b) => b.count - a.count || b.maxDiff - a.maxDiff)
+    .map(e => ({
+      id: e.name, name: e.name, clientName: e.name,
+      metric: `${e.count} issue${e.count === 1 ? '' : 's'}`,
+      metricTone: 'slate' as MetricTone,
+      reason: 'Pricing conflict or unmapped usage, possible revenue leak',
+    }));
+}
