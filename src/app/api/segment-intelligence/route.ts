@@ -24,7 +24,7 @@ function toUSD(amount: number, currency?: string): number {
 let cachedResult: CrossSellData | null = null;
 let cachedMonthKey = '';
 let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 30 * 60 * 1000;
 
 interface CrossSellData {
   generatedAt: string;
@@ -271,7 +271,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'overview';
     const month = searchParams.get('month') || undefined;
-    const data = await computeCrossSellData(month);
+    // Only the cross-sell actions need the heavy computation; client-meta must
+    // NOT trigger it (it was computing and discarding the whole thing, doubling
+    // the work every time the Revenue Intel view loaded).
+    const needsCrossSell = action === 'overview' || action === 'segment' || action === 'all';
+    const data = needsCrossSell ? await computeCrossSellData(month) : null!;
 
     switch (action) {
       case 'overview':

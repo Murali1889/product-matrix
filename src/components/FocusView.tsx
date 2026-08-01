@@ -52,15 +52,15 @@ function Column({ title, subtitle, icon, accent, items, formatUSD, onOpen, empty
   items: FocusAccount[]; formatUSD: (n: number) => string; onOpen: (n: string) => void; empty: string;
 }) {
   return (
-    <div className="flex-1 min-w-0 flex flex-col">
-      <div className={`flex items-center gap-2 pb-2 mb-2 border-b-2 ${accent}`}>
+    <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+      <div className={`flex items-center gap-2 pb-2 mb-2 border-b-2 shrink-0 ${accent}`}>
         {icon}
         <div className="min-w-0">
           <div className="text-[13px] font-bold text-slate-800">{title} <span className="text-slate-400 font-medium">({items.length})</span></div>
           <div className="text-[10px] text-slate-400 truncate">{subtitle}</div>
         </div>
       </div>
-      <div className="space-y-2 overflow-y-auto pr-1">
+      <div className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1">
         {items.length === 0
           ? <div className="text-[11px] text-slate-400 py-6 text-center">{empty}</div>
           : items.map(a => <Row key={a.client_id} a={a} formatUSD={formatUSD} onOpen={onOpen} />)}
