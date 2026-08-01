@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import useSWR, { mutate } from 'swr';
-import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers, Calendar, PanelLeftClose, PanelLeftOpen, Bell, BadgeDollarSign, Rocket, CalendarClock, ArrowUpDown } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Search, LayoutGrid, BarChart3, X, TrendingUp, TrendingDown, AlertCircle, Globe, CreditCard, Building2, Users, PieChart, Activity, Database, HardDrive, Save, Check, Edit3, Sparkles, Target, Brain, LogOut, MessageSquare, MessageSquarePlus, Settings, Filter, Send, Trash2, StickyNote, Download, Minimize2, Maximize2, ArrowUpRight, ArrowDownRight, Layers, Calendar, PanelLeftClose, PanelLeftOpen, Bell, BadgeDollarSign, Rocket, CalendarClock, ArrowUpDown, Crosshair } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useFeedback } from 'react-visual-feedback';
 import { computeSegmentAdoption, findCrossSellOpportunities, buildCrossSellLookup } from '@/lib/adoption-analytics';
@@ -15,6 +15,7 @@ import type { SlackSettings } from '@/lib/slack';
 import RevenueIntelligenceView from '@/components/RevenueIntelligenceView';
 import LoginPage from '@/components/LoginPage';
 import AccountBrief from '@/components/AccountBrief';
+import FocusView from '@/components/FocusView';
 import { RecommendationEngine } from '@/lib/recommendation-engine';
 import type { APIRecommendation } from '@/types/recommendation';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
@@ -62,7 +63,7 @@ interface APIStats {
   avgPerClient: number;
 }
 
-type DashboardView = 'dashboard' | 'revenue-intel' | 'matrix' | 'lifecycle';
+type DashboardView = 'dashboard' | 'revenue-intel' | 'matrix' | 'lifecycle' | 'focus';
 
 // Client lifecycle / go-live row (mirrors LifecycleRow in lib/client-lifecycle.ts,
 // redefined here to avoid importing the server-only module into the client bundle).
@@ -1245,6 +1246,19 @@ export default function Dashboard() {
           <LifecycleView data={lifecycleData} />
         )}
 
+        {/* Focus View — who to work today */}
+        {view === 'focus' && (
+          <div className="h-full px-4 py-4 sm:px-6 sm:py-5">
+            <FocusView
+              clients={processedClients}
+              masterAPIs={allAPIs}
+              toUSD={convertToUSD}
+              formatUSD={formatUSD}
+              onOpenClient={(name) => { setSearchTerm(name); setView('matrix'); }}
+            />
+          </div>
+        )}
+
         {/* Settings Modal */}
         {showSettings && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -1861,6 +1875,7 @@ function DashboardFrame({
 }) {
   const navItems: Array<{ id: DashboardView; label: string; icon: LucideIcon; description: string }> = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, description: 'Executive overview' },
+    { id: 'focus', label: 'Focus', icon: Crosshair, description: 'Who to work today' },
     { id: 'revenue-intel', label: 'Revenue Intel', icon: Target, description: 'Upsell pipeline' },
     { id: 'matrix', label: 'Matrix', icon: LayoutGrid, description: 'Client x API grid' },
     { id: 'lifecycle', label: 'Lifecycle', icon: Rocket, description: 'Go-live dates' },
