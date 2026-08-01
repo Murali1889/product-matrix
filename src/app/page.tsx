@@ -16,6 +16,7 @@ import RevenueIntelligenceView from '@/components/RevenueIntelligenceView';
 import LoginPage from '@/components/LoginPage';
 import AccountBrief from '@/components/AccountBrief';
 import FocusView from '@/components/FocusView';
+import { computeFocus, type FocusResult } from '@/lib/focus';
 import { RecommendationEngine } from '@/lib/recommendation-engine';
 import type { APIRecommendation } from '@/types/recommendation';
 import type { ClientData, AnalyticsResponse } from '@/types/client';
@@ -978,6 +979,16 @@ export default function Dashboard() {
       });
   }, [dashboardClients, searchTerm, sortBy]);
 
+  // Focus buckets (Protect / Grow / Watch) — computed once over the full client
+  // set (not search-filtered) and shared with the Focus view, nav badge, and
+  // dashboard banner.
+  const focus = useMemo<FocusResult>(() => computeFocus(dashboardClients, { toUSD: convertToUSD }), [dashboardClients]);
+  const focusCounts = useMemo(
+    () => ({ protect: focus.protect.length, grow: focus.grow.length, watch: focus.watch.length }),
+    [focus],
+  );
+  const [focusBannerDismissed, setFocusBannerDismissed] = useState(false);
+
   const dashboardSignature = useMemo(() => {
     return createDashboardInputSignature({
       month: apiMonth,
@@ -1116,6 +1127,7 @@ export default function Dashboard() {
       onSavePending={savePendingEdits}
       onOpenSettings={() => setShowSettings(true)}
       onLogout={handleLogout}
+      focusCounts={focusCounts}
     >
       {/* Sync status bar — thin progress line at very top */}
       {syncState === 'syncing' && (
@@ -1188,6 +1200,15 @@ export default function Dashboard() {
       <div className={`${view === 'matrix' ? 'h-full px-2 py-2 sm:px-4 sm:py-3' : view === 'dashboard' ? 'h-full overflow-y-auto px-4 py-4 sm:px-6 sm:py-5' : 'h-full overflow-hidden'}`}>
 
         {/* Dashboard View */}
+        {view === 'dashboard' && !focusBannerDismissed && (focusCounts.watch + focusCounts.grow + focusCounts.protect) > 0 && (
+          <FocusBanner
+            counts={focusCounts}
+            onOpen={() => setView('focus')}
+            onDismiss={() => setFocusBannerDismissed(true)}
+          />
+        )}
+
+        {/* Dashboard View */}
         {view === 'dashboard' && (
           <SalesDashboardOverview
             summary={summary}
@@ -1250,9 +1271,9 @@ export default function Dashboard() {
         {view === 'focus' && (
           <div className="h-full px-4 py-4 sm:px-6 sm:py-5">
             <FocusView
-              clients={processedClients}
+              focus={focus}
+              clients={dashboardClients}
               masterAPIs={allAPIs}
-              toUSD={convertToUSD}
               formatUSD={formatUSD}
               onOpenClient={(name) => { setSearchTerm(name); setView('matrix'); }}
             />
@@ -1844,6 +1865,34 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   );
 }
 
+function FocusBanner({ counts, onOpen, onDismiss }: {
+  counts: { protect: number; grow: number; watch: number };
+  onOpen: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-2.5">
+      <AlertCircle size={16} className="text-amber-500 shrink-0" />
+      <div className="text-[13px] text-slate-700 min-w-0 flex-1">
+        <span className="font-semibold text-red-600 tabular-nums">{counts.watch}</span> to watch
+        <span className="text-slate-300 mx-1.5">·</span>
+        <span className="font-semibold text-emerald-600 tabular-nums">{counts.grow}</span> to grow
+        <span className="text-slate-300 mx-1.5">·</span>
+        <span className="font-semibold text-slate-700 tabular-nums">{counts.protect}</span> to protect
+      </div>
+      <button
+        onClick={onOpen}
+        className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-700 cursor-pointer transition-colors"
+      >
+        <Crosshair size={13} /> Open Focus
+      </button>
+      <button onClick={onDismiss} title="Dismiss for now" className="shrink-0 p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
+        <X size={15} />
+      </button>
+    </div>
+  );
+}
+
 function DashboardFrame({
   children,
   view,
@@ -1858,6 +1907,7 @@ function DashboardFrame({
   onSavePending,
   onOpenSettings,
   onLogout,
+  focusCounts,
 }: {
   children: React.ReactNode;
   view: DashboardView;
@@ -1872,6 +1922,7 @@ function DashboardFrame({
   onSavePending: () => void;
   onOpenSettings: () => void;
   onLogout: () => void;
+  focusCounts?: { protect: number; grow: number; watch: number };
 }) {
   const navItems: Array<{ id: DashboardView; label: string; icon: LucideIcon; description: string }> = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, description: 'Executive overview' },
@@ -1908,24 +1959,35 @@ function DashboardFrame({
             {navItems.map(item => {
               const Icon = item.icon;
               const active = view === item.id;
+              const badge = item.id === 'focus' && focusCounts && focusCounts.watch > 0 ? focusCounts.watch : null;
+              const badgeText = badge != null ? (badge > 99 ? '99+' : String(badge)) : '';
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onViewChange(item.id)}
                   aria-label={item.label}
+                  title={badge != null ? `${badge} accounts at risk` : undefined}
                   className={`flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors ${
                     active
                       ? 'bg-white text-slate-900 shadow-sm ring-1 ring-stone-200'
                       : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
                   }`}
                 >
-                  <Icon size={18} className={active ? 'text-amber-600' : 'text-slate-400'} />
+                  <span className="relative shrink-0">
+                    <Icon size={18} className={active ? 'text-amber-600' : 'text-slate-400'} />
+                    {badge != null && !navOpen && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-red-500 px-0.5 text-[9px] font-bold text-white">{badgeText}</span>
+                    )}
+                  </span>
                   {navOpen && (
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{item.label}</span>
                       <span className="block truncate text-xs text-slate-400">{item.description}</span>
                     </span>
+                  )}
+                  {badge != null && navOpen && (
+                    <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{badgeText}</span>
                   )}
                 </button>
               );

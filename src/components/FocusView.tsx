@@ -3,13 +3,13 @@
 import { useMemo } from 'react';
 import { ShieldCheck, TrendingUp, AlertTriangle, ArrowUpRight } from 'lucide-react';
 import type { ClientData } from '@/types/client';
-import { computeFocus, type FocusAccount } from '@/lib/focus';
+import type { FocusAccount, FocusResult } from '@/lib/focus';
 import { RecommendationEngine } from '@/lib/recommendation-engine';
 
 interface Props {
-  clients: ClientData[];
+  focus: FocusResult;                 // precomputed buckets (shared with nav badge / banner)
+  clients: ClientData[];              // for the recommendation engine (Grow upsell enrichment)
   masterAPIs: string[];
-  toUSD: (amount: number, currency?: string | null) => number;
   formatUSD: (n: number) => string;
   onOpenClient: (clientName: string) => void;
 }
@@ -69,18 +69,17 @@ function Column({ title, subtitle, icon, accent, items, formatUSD, onOpen, empty
   );
 }
 
-export default function FocusView({ clients, masterAPIs, toUSD, formatUSD, onOpenClient }: Props) {
+export default function FocusView({ focus: focusIn, clients, masterAPIs, formatUSD, onOpenClient }: Props) {
   const engine = useMemo(() => new RecommendationEngine(clients, masterAPIs), [clients, masterAPIs]);
 
-  const focus = useMemo(() => {
-    const f = computeFocus(clients, { toUSD });
-    // Enrich Grow rows with the account's top upsell (cheap — only the shortlist).
-    f.grow = f.grow.map(a => {
+  // Enrich Grow rows with each account's top upsell (cheap — only the shortlist).
+  const focus = useMemo(() => ({
+    ...focusIn,
+    grow: focusIn.grow.map(a => {
       const top = engine.getClientRecommendations(a.client_name)?.recommendations?.[0]?.apiName;
       return top ? { ...a, topUpsell: `Upsell: ${top}` } : a;
-    });
-    return f;
-  }, [clients, toUSD, engine]);
+    }),
+  }), [focusIn, engine]);
 
   return (
     <div className="h-full flex flex-col">
