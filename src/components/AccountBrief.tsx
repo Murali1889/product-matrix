@@ -25,7 +25,10 @@ interface Props {
   client: ClientData;
   lifecycle: LifecycleBrief | null;
   topRecommendation: APIRecommendation | null;
-  formatUSD: (n: number) => string;
+  // Currency-aware money formatter (converts the client's billing-currency
+  // amount to a USD display) — same one the panel header uses. Revenue in
+  // monthly_data/apiRevenues is in the billing currency, NOT USD.
+  formatMoney: (n: number) => string;
 }
 
 // ---- tiny inline sparkline (no dependency) ----
@@ -65,7 +68,7 @@ const Card = ({ title, icon, children, tone = 'default' }: { title: string; icon
   );
 };
 
-export default function AccountBrief({ client, lifecycle, topRecommendation, formatUSD }: Props) {
+export default function AccountBrief({ client, lifecycle, topRecommendation, formatMoney }: Props) {
   const trend = computeRevenueTrend(client);
   const risk = computeRiskSignal(client, lifecycle);
 
@@ -112,7 +115,7 @@ export default function AccountBrief({ client, lifecycle, topRecommendation, for
         <Card title="Revenue trend" icon={momUp ? <TrendingUp size={11} className="text-emerald-500" /> : <TrendingDown size={11} className="text-red-500" />}>
           <div className="flex items-center justify-between gap-2">
             <div>
-              <div className="text-[13px] font-semibold text-slate-800 tabular-nums">{formatUSD(trend.latest)}<span className="text-[10px] text-slate-400 font-normal">/mo</span></div>
+              <div className="text-[13px] font-semibold text-slate-800 tabular-nums">{formatMoney(trend.latest)}<span className="text-[10px] text-slate-400 font-normal">/mo</span></div>
               {trend.momPct != null ? (
                 <div className={`text-[11px] mt-0.5 font-medium ${momUp ? 'text-emerald-600' : 'text-red-600'}`}>
                   {momUp ? '▲' : '▼'} {momUp ? '+' : ''}{Math.round(trend.momPct)}% MoM
@@ -132,7 +135,7 @@ export default function AccountBrief({ client, lifecycle, topRecommendation, for
               <div className="text-[13px] font-semibold text-slate-800 truncate" title={topRecommendation.apiName}>{topRecommendation.apiName}</div>
               <div className="text-[11px] mt-0.5 text-slate-500">
                 score {topRecommendation.score}
-                {topRecommendation.potentialRevenue > 0 && <> · ~{formatUSD(topRecommendation.potentialRevenue)}/mo</>}
+                {topRecommendation.potentialRevenue > 0 && <> · ~{formatMoney(topRecommendation.potentialRevenue)}/mo</>}
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-2">{topRecommendation.reason}</div>
             </>
@@ -150,7 +153,7 @@ export default function AccountBrief({ client, lifecycle, topRecommendation, for
           <div className={`text-[13px] font-semibold ${risk.kind === 'churned' ? 'text-red-600' : risk.kind === 'declining' ? 'text-amber-600' : risk.kind === 'growing' ? 'text-emerald-600' : 'text-slate-600'}`}>
             {risk.label}
           </div>
-          {risk.atRisk > 0 && <div className="text-[11px] mt-0.5 text-red-500 font-medium tabular-nums">{formatUSD(risk.atRisk)} at risk</div>}
+          {risk.atRisk > 0 && <div className="text-[11px] mt-0.5 text-red-500 font-medium tabular-nums">{formatMoney(risk.atRisk)} at risk</div>}
           {risk.kind === 'stable' && risk.momPct == null && <div className="text-[10px] text-slate-400 mt-0.5">no month-over-month signal</div>}
         </Card>
       </div>

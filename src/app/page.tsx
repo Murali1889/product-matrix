@@ -5072,7 +5072,7 @@ function ClientDetailsPanel({
               client={client}
               lifecycle={lifecycle}
               topRecommendation={topRecommendation}
-              formatUSD={formatUSD}
+              formatMoney={(n) => formatCurrency(n, client.profile?.billing_currency || 'USD')}
             />
           )}
 
