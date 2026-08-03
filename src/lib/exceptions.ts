@@ -24,6 +24,7 @@ export interface ExceptionRecord {
   raisedBy: string;    // resolved to a name when it was a Slack id
   approvedBy: string;
   time: string;        // ISO or sheet value
+  threadLink: string;  // Slack permalink to the request thread
 }
 
 export interface ExceptionsResult {
@@ -114,6 +115,7 @@ async function compute(): Promise<ExceptionsResult> {
       raisedBy,
       approvedBy,
       time: pick(row, 'Time', 'time', 'date_utc'),
+      threadLink: pick(row, 'Thread link', 'Thread Link', 'threadLink', 'message_link', 'Message link'),
     });
   }
 

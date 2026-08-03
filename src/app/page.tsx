@@ -108,6 +108,7 @@ interface ExceptionRecord {
   raisedBy: string;
   approvedBy: string;
   time: string;
+  threadLink: string;
 }
 interface ExceptionsResponse {
   exceptions: ExceptionRecord[];
@@ -1713,7 +1714,7 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
   );
 
   const downloadCsv = () => {
-    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'geography', 'country', 'kam_csm', 'account_owner_email', 'mrr_bucket', 'mrr_usd_est', 'zoho_id', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count', 'exception', 'exception_request_type', 'exception_reason', 'exception_raised_by', 'exception_approved_by', 'exception_raised_on'];
+    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'geography', 'country', 'kam_csm', 'account_owner_email', 'mrr_bucket', 'mrr_usd_est', 'zoho_id', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count', 'exception', 'exception_request_type', 'exception_reason', 'exception_raised_by', 'exception_approved_by', 'exception_raised_on', 'exception_thread_link'];
     const esc = (v: unknown) => {
       const s = v == null ? '' : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -1728,7 +1729,7 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
         r.first_staging_date ?? '', r.went_to_production_date ?? '',
         r.go_live_approximate ? 'yes' : 'no',
         r.days_to_go_live ?? '', r.active_prod_app_count, r.prod_app_count,
-        ex ? 'yes' : 'no', ex?.requestType ?? '', ex?.reason ?? '', ex?.raisedBy ?? '', ex?.approvedBy ?? '', ex ? (ex.time || '').slice(0, 10) : '',
+        ex ? 'yes' : 'no', ex?.requestType ?? '', ex?.reason ?? '', ex?.raisedBy ?? '', ex?.approvedBy ?? '', ex ? (ex.time || '').slice(0, 10) : '', ex?.threadLink ?? '',
       ].map(esc).join(','));
     }
     const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -1882,7 +1883,9 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {ex
-                      ? <span className="px-1.5 py-0.5 rounded border text-[10px] font-medium bg-rose-50 text-rose-700 border-rose-200" title={`${ex.requestType || 'Exception'}${ex.approvedBy ? ` · approved by ${ex.approvedBy}` : ''}${ex.businessUnit ? ` · BU ${ex.businessUnit}` : ''}`}>Yes</span>
+                      ? (ex.threadLink
+                          ? <a href={ex.threadLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-[10px] font-medium bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100" title={`Open Slack thread. ${ex.requestType || 'Exception'}${ex.approvedBy ? ` · approved by ${ex.approvedBy}` : ''}${ex.businessUnit ? ` · BU ${ex.businessUnit}` : ''}`}>Yes <ArrowUpRight size={9} /></a>
+                          : <span className="px-1.5 py-0.5 rounded border text-[10px] font-medium bg-rose-50 text-rose-700 border-rose-200" title={`${ex.requestType || 'Exception'}${ex.approvedBy ? ` · approved by ${ex.approvedBy}` : ''}`}>Yes</span>)
                       : <span className="text-slate-300">-</span>}
                   </td>
                   <td className="px-3 py-2 text-slate-600 max-w-[280px]">
@@ -5227,6 +5230,11 @@ function ClientDetailsPanel({
                     {exception.approvedBy ? ` · approved by ${exception.approvedBy}` : ''}
                     {exception.businessUnit ? ` · BU ${exception.businessUnit}` : ''}
                   </div>
+                  {exception.threadLink && (
+                    <a href={exception.threadLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-medium text-rose-700 hover:text-rose-800">
+                      View Slack thread <ArrowUpRight size={11} />
+                    </a>
+                  )}
                 </div>
               )}
               {/* Lifecycle / go-live */}
