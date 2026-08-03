@@ -1851,7 +1851,12 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
               return (
                 <tr key={r.client_id} className="border-b border-stone-100 hover:bg-amber-50/40">
                   <td className="px-3 py-2">
-                    <div className="font-medium text-slate-800 truncate max-w-[240px]" title={r.client_name}>{r.client_name}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium text-slate-800 truncate max-w-[200px]" title={r.client_name}>{r.client_name}</span>
+                      {ex && (ex.threadLink
+                        ? <a href={ex.threadLink} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="shrink-0 inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-semibold hover:bg-rose-200" title={`Production-access exception. ${ex.reason || ''}`}>EXC <ArrowUpRight size={8} /></a>
+                        : <span className="shrink-0 px-1 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-semibold" title={`Production-access exception. ${ex.reason || ''}`}>EXC</span>)}
+                    </div>
                     <div className="text-[10px] text-slate-400 truncate max-w-[240px]" title={r.client_id}>{r.client_id}</div>
                   </td>
                   <td className="px-3 py-2 text-slate-600">{r.operational_status || '-'}</td>
