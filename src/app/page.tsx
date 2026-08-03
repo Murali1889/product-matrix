@@ -1842,6 +1842,7 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
               <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Reason</th>
               <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Raised by</th>
               <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Raised on</th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Open</th>
             </tr>
           </thead>
           <tbody>
@@ -1898,11 +1899,16 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
                   </td>
                   <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{ex?.raisedBy || <span className="text-slate-300">-</span>}</td>
                   <td className="px-3 py-2 text-slate-500 tabular-nums whitespace-nowrap">{ex ? (ex.time || '').slice(0, 10) || '-' : <span className="text-slate-300">-</span>}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {ex?.threadLink
+                      ? <a href={ex.threadLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[11px] font-medium text-blue-600 hover:text-blue-800" title="Open the Slack thread">Open <ArrowUpRight size={10} /></a>
+                      : <span className="text-slate-300">-</span>}
+                  </td>
                 </tr>
               );
             })}
             {pageRows.length === 0 && (
-              <tr><td colSpan={15} className="px-3 py-10 text-center text-slate-400">No clients match these filters.</td></tr>
+              <tr><td colSpan={16} className="px-3 py-10 text-center text-slate-400">No clients match these filters.</td></tr>
             )}
           </tbody>
         </table>
