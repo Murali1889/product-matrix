@@ -115,7 +115,10 @@ async function compute(): Promise<ExceptionsResult> {
       raisedBy,
       approvedBy,
       time: pick(row, 'Time', 'time', 'date_utc'),
-      threadLink: pick(row, 'Thread link', 'Thread Link', 'threadLink', 'message_link', 'Message link'),
+      // Normalize app.slack.com deep links to the workspace domain so they open
+      // directly in hyperverge.slack.com.
+      threadLink: pick(row, 'Thread link', 'Thread Link', 'threadLink', 'message_link', 'Message link')
+        .replace('://app.slack.com/', '://hyperverge.slack.com/'),
     });
   }
 
