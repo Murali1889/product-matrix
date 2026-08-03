@@ -1670,8 +1670,11 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
     });
     const dir = sortDir === 'asc' ? 1 : -1;
     out = [...out].sort((a, b) => {
-      // Currently-live clients always float to the top; the selected column sort
-      // applies within each group.
+      // Exception-raised clients float to the very top, then currently-live,
+      // then the selected column sort (default: latest go-live first).
+      const ax = exceptionFor?.(a.client_id, a.client_name) ? 1 : 0;
+      const bx = exceptionFor?.(b.client_id, b.client_name) ? 1 : 0;
+      if (ax !== bx) return bx - ax;
       if (a.currently_in_production !== b.currently_in_production) return a.currently_in_production ? -1 : 1;
       const av = a[sortKey]; const bv = b[sortKey];
       if (av == null && bv == null) return 0;
@@ -1681,7 +1684,7 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
       return String(av).localeCompare(String(bv)) * dir;
     });
     return out;
-  }, [rows, search, stageFilter, statusFilter, yearFilter, sortKey, sortDir]);
+  }, [rows, search, stageFilter, statusFilter, yearFilter, sortKey, sortDir, exceptionFor]);
 
   // Reset to first page whenever the filtered set changes.
   useEffect(() => { setPage(0); }, [search, stageFilter, statusFilter, yearFilter]);
