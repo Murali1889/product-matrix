@@ -98,6 +98,24 @@ interface LifecycleResponse {
   computedAt: string;
 }
 
+// Production-access exception (mirrors ExceptionRecord in lib/exceptions.ts).
+interface ExceptionRecord {
+  requestType: string;
+  clientName: string;
+  clientId: string;
+  businessUnit: string;
+  reason: string;
+  raisedBy: string;
+  approvedBy: string;
+  time: string;
+}
+interface ExceptionsResponse {
+  exceptions: ExceptionRecord[];
+  byClientId: Record<string, ExceptionRecord>;
+  byClientName: Record<string, ExceptionRecord>;
+  updatedAt: string;
+}
+
 interface SummaryStats {
   totalRevenue: number;
   activeClients: number;
@@ -551,6 +569,16 @@ export default function Dashboard() {
     lifecycleData?.clients?.forEach(r => m.set(r.client_id, r));
     return m;
   }, [lifecycleData]);
+
+  // Production-access exceptions (from the Exceptions sheet via Apps Script).
+  const { data: exceptionsData } = useSWR<ExceptionsResponse>(isAuthenticated ? '/api/exceptions' : null);
+  const exceptionFor = useCallback((clientId?: string, clientName?: string): ExceptionRecord | null => {
+    if (!exceptionsData) return null;
+    const byId = clientId ? exceptionsData.byClientId?.[clientId.trim().toLowerCase()] : undefined;
+    if (byId) return byId;
+    const byName = clientName ? exceptionsData.byClientName?.[clientName.trim().toLowerCase()] : undefined;
+    return byName ?? null;
+  }, [exceptionsData]);
 
   // A 401 from a protected API means the session is invalid, not a connection
   // failure. The global SWR fetcher throws `Error("API error: 401")`, so detect
@@ -1259,13 +1287,14 @@ export default function Dashboard() {
               setApiMonth(yyyyMM);
             }}
             lifecycleMap={lifecycleMap}
+            exceptionFor={exceptionFor}
           />
         )}
 
         {/* Lifecycle / Go-Live View */}
         {view === 'lifecycle' && (
           <div className="h-full p-3 sm:p-4">
-            <LifecycleView data={lifecycleData} />
+            <LifecycleView data={lifecycleData} exceptionFor={exceptionFor} />
           </div>
         )}
 
@@ -1610,7 +1639,7 @@ const STAGE_META: Record<string, { label: string; cls: string }> = {
 
 type LifecycleSortKey = 'client_name' | 'operational_status' | 'stage' | 'geography' | 'kam' | 'mrr_usd' | 'zoho_id' | 'first_staging_date' | 'went_to_production_date' | 'days_to_go_live' | 'prod_app_count';
 
-function LifecycleView({ data }: { data?: LifecycleResponse }) {
+function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; exceptionFor?: (clientId?: string, clientName?: string) => ExceptionRecord | null }) {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<'all' | 'production' | 'active' | 'testing-only'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -1681,13 +1710,14 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
   );
 
   const downloadCsv = () => {
-    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'geography', 'country', 'kam_csm', 'account_owner_email', 'mrr_bucket', 'mrr_usd_est', 'zoho_id', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count'];
+    const headers = ['client_id', 'client_name', 'operational_status', 'stage', 'geography', 'country', 'kam_csm', 'account_owner_email', 'mrr_bucket', 'mrr_usd_est', 'zoho_id', 'currently_in_production', 'first_staging_date', 'went_to_production_date', 'go_live_approximate', 'days_to_go_live', 'active_prod_app_count', 'prod_app_count', 'exception', 'exception_request_type', 'exception_reason', 'exception_raised_by', 'exception_approved_by', 'exception_raised_on'];
     const esc = (v: unknown) => {
       const s = v == null ? '' : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const lines = [headers.join(',')];
     for (const r of filtered) {
+      const ex = exceptionFor?.(r.client_id, r.client_name) ?? null;
       lines.push([
         r.client_id, r.client_name, r.operational_status, r.stage,
         r.geography, r.country, r.kam, r.account_owner, r.mrr_bucket, r.mrr_usd, r.zoho_id,
@@ -1695,6 +1725,7 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
         r.first_staging_date ?? '', r.went_to_production_date ?? '',
         r.go_live_approximate ? 'yes' : 'no',
         r.days_to_go_live ?? '', r.active_prod_app_count, r.prod_app_count,
+        ex ? 'yes' : 'no', ex?.requestType ?? '', ex?.reason ?? '', ex?.raisedBy ?? '', ex?.approvedBy ?? '', ex ? (ex.time || '').slice(0, 10) : '',
       ].map(esc).join(','));
     }
     const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -1803,11 +1834,16 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
               <SortTh k="went_to_production_date" label="Live since" />
               <SortTh k="days_to_go_live" label="Testing → Live" title="Days from the client's first testing/staging credential to their first production credential. Shown only when testing happened before go-live; blank otherwise." />
               <SortTh k="prod_app_count" label="Prod apps" />
+              <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap" title="Production access granted before contract/legal review (from the Exceptions sheet)">Exception</th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Reason</th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Raised by</th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Raised on</th>
             </tr>
           </thead>
           <tbody>
             {pageRows.map(r => {
               const sm = STAGE_META[r.stage] ?? STAGE_META.none;
+              const ex = exceptionFor?.(r.client_id, r.client_name) ?? null;
               return (
                 <tr key={r.client_id} className="border-b border-stone-100 hover:bg-amber-50/40">
                   <td className="px-3 py-2">
@@ -1841,11 +1877,21 @@ function LifecycleView({ data }: { data?: LifecycleResponse }) {
                   <td className="px-3 py-2 text-slate-600 tabular-nums" title="active / total prod credentials">
                     {r.prod_app_count ? `${r.active_prod_app_count}/${r.prod_app_count}` : '-'}
                   </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {ex
+                      ? <span className="px-1.5 py-0.5 rounded border text-[10px] font-medium bg-rose-50 text-rose-700 border-rose-200" title={`${ex.requestType || 'Exception'}${ex.approvedBy ? ` · approved by ${ex.approvedBy}` : ''}${ex.businessUnit ? ` · BU ${ex.businessUnit}` : ''}`}>Yes</span>
+                      : <span className="text-slate-300">-</span>}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 max-w-[280px]">
+                    {ex ? <span className="block truncate" title={ex.reason}>{ex.reason || '-'}</span> : <span className="text-slate-300">-</span>}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{ex?.raisedBy || <span className="text-slate-300">-</span>}</td>
+                  <td className="px-3 py-2 text-slate-500 tabular-nums whitespace-nowrap">{ex ? (ex.time || '').slice(0, 10) || '-' : <span className="text-slate-300">-</span>}</td>
                 </tr>
               );
             })}
             {pageRows.length === 0 && (
-              <tr><td colSpan={11} className="px-3 py-10 text-center text-slate-400">No clients match these filters.</td></tr>
+              <tr><td colSpan={15} className="px-3 py-10 text-center text-slate-400">No clients match these filters.</td></tr>
             )}
           </tbody>
         </table>
@@ -2724,6 +2770,7 @@ function MatrixView({
   isLoadingMonth = false,
   onLoadMonth,
   lifecycleMap,
+  exceptionFor,
 }: {
   clients: ProcessedClient[];
   masterAPIs: string[];
@@ -2744,6 +2791,7 @@ function MatrixView({
   isLoadingMonth?: boolean;
   onLoadMonth?: (yyyyMM: string) => void;
   lifecycleMap?: Map<string, LifecycleRow>;
+  exceptionFor?: (clientId?: string, clientName?: string) => ExceptionRecord | null;
 }) {
   // View mode: 'matrix' for API columns, 'mismatches' for fixing API names
   const [viewMode, setViewMode] = useState<'matrix' | 'mismatches'>('matrix');
@@ -4543,6 +4591,7 @@ function MatrixView({
         masterAPINames={masterAPIs}
         matrixAnomalies={matrixAnomalies}
         lifecycle={selectedClient?.client_id ? (lifecycleMap?.get(selectedClient.client_id) ?? null) : null}
+        exception={exceptionFor?.(selectedClient?.client_id, selectedClient?.client_name) ?? null}
         topRecommendation={briefRecommendation}
       />
     </div>
@@ -4791,6 +4840,7 @@ function ClientDetailsPanel({
   matrixAnomalies = {},
   lifecycle = null,
   topRecommendation = null,
+  exception = null,
 }: {
   client: ProcessedClient | null;
   onClose: () => void;
@@ -4804,6 +4854,7 @@ function ClientDetailsPanel({
   matrixAnomalies?: Record<string, { type: string; clientId: string; clientName: string; productName: string; slabStart: number; entries: { moduleType: string; unit: string; slabStart: number; slabEnd: number; unitPrice: number }[]; priceDiff: number }[]>;
   lifecycle?: LifecycleRow | null;
   topRecommendation?: APIRecommendation | null;
+  exception?: ExceptionRecord | null;
 }) {
   const [activeTab, setActiveTab] = useState<'brief' | 'overview' | 'apis' | 'filters' | 'notes' | 'revenue'>('brief');
   const [panelMonth, setPanelMonth] = useState<string>('');
@@ -5161,6 +5212,20 @@ function ClientDetailsPanel({
             const country = normalizeCountry(client.profile?.geography);
             return (
             <div className="stagger-children space-y-3">
+              {/* Production-access exception */}
+              {exception && (
+                <div className="rounded-lg p-2.5 border border-rose-200 bg-rose-50/70">
+                  <div className="flex items-center gap-1.5 text-[10px] text-rose-600 uppercase tracking-wider font-semibold">
+                    <AlertCircle size={11} /> Production-access exception
+                  </div>
+                  <div className="text-[12px] text-slate-700 mt-1">{exception.reason || exception.requestType || 'Exception raised'}</div>
+                  <div className="text-[10px] text-slate-500 mt-1">
+                    Raised by {exception.raisedBy || 'unknown'}{exception.time ? ` on ${exception.time.slice(0, 10)}` : ''}
+                    {exception.approvedBy ? ` · approved by ${exception.approvedBy}` : ''}
+                    {exception.businessUnit ? ` · BU ${exception.businessUnit}` : ''}
+                  </div>
+                </div>
+              )}
               {/* Lifecycle / go-live */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-emerald-50/60 rounded-lg p-2.5 border border-emerald-100">
