@@ -11,9 +11,18 @@
  */
 
 import 'server-only';
+import { readFileSync } from 'fs';
+import path from 'path';
 
 const GS_URL = process.env.EXCEPTIONS_GS_URL;
 const SLACK_TOKEN = process.env.SLACK_BOT_TOKEN;
+
+// Thread links parsed from the raw Slack export (data/exception-threads.json),
+// used as a fallback so links show even when the sheet has no Thread link column.
+let THREADS: { byId: Record<string, string>; byName: Record<string, string> } = { byId: {}, byName: {} };
+try {
+  THREADS = JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'exception-threads.json'), 'utf-8'));
+} catch { /* file optional */ }
 
 export interface ExceptionRecord {
   requestType: string;
@@ -115,10 +124,12 @@ async function compute(): Promise<ExceptionsResult> {
       raisedBy,
       approvedBy,
       time: pick(row, 'Time', 'time', 'date_utc'),
-      // Normalize app.slack.com deep links to the workspace domain so they open
-      // directly in hyperverge.slack.com.
-      threadLink: pick(row, 'Thread link', 'Thread Link', 'threadLink', 'message_link', 'Message link')
-        .replace('://app.slack.com/', '://hyperverge.slack.com/'),
+      // Prefer a link from the sheet; fall back to the CSV-derived map by client
+      // id / name. Normalize app.slack.com to the workspace domain.
+      threadLink: (
+        pick(row, 'Thread link', 'Thread Link', 'threadLink', 'message_link', 'Message link')
+        || THREADS.byId[norm(clientId)] || THREADS.byName[norm(clientName)] || ''
+      ).replace('://app.slack.com/', '://hyperverge.slack.com/'),
     });
   }
 
