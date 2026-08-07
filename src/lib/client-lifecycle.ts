@@ -2,23 +2,23 @@
  * Client Lifecycle / Go-Live loader.
  *
  * Computes, per client, when they went to PRODUCTION and when they started
- * STAGING/TESTING, the real dates. Metabase's `created_at` columns are ETL
- * load timestamps (useless), so the real per-credential dates come from
- * data/credentials-report.csv (appId, type, createdDate). We map appId →
- * client_id via Metabase `credentials` (fetchCredentials) and enrich with
- * client name/operational_status via fetchClients.
+ * STAGING/TESTING, live from Metabase (no static CSV):
+ *   - real dates from DB36 credentials_table MIN(created_at) per client+env
+ *     (a daily snapshot, so MIN = true creation date, back to 2022, and it
+ *     self-updates as new clients/appIds appear). Validated 99% exact vs the
+ *     old CSV, and it fixes the CSV's bulk-migration-stamp errors.
+ *   - active production from module_costs recent production appIds.
+ *   - geo / KAM / zoho / MRR / status from clients / business_units / usage.
  *
- * Caching: the join is expensive (fetches ~7.6K credential rows + client list
- * from Metabase). We cache the RESULT both in-memory and on disk
- * (.cache/client-lifecycle.json). On request we serve whatever is cached
- * IMMEDIATELY and refresh in the background when stale, so the UI loads
- * instantly and never blocks on Metabase.
+ * Caching: the RESULT is cached in-memory and on disk (.cache/client-lifecycle
+ * .json). On request we serve whatever is cached IMMEDIATELY and refresh in the
+ * background when stale, so the UI loads instantly and never blocks on Metabase.
  */
 
 import 'server-only';
-import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import path from 'path';
-import { fetchCredentials, fetchClients, fetchBusinessUnits, fetchClientRevenue, getLastCompletedMonth } from './metabase';
+import { fetchClients, fetchBusinessUnits, fetchClientRevenue, fetchCredentialDates, fetchActiveProdCounts, getLastCompletedMonth } from './metabase';
 
 export type LifecycleStage = 'production' | 'testing-only' | 'none';
 
@@ -64,7 +64,7 @@ export interface LifecycleResult {
 
 // Bump whenever LifecycleRow / LifecycleSummary shape changes, so a stale
 // disk cache written by an older build is discarded instead of served.
-const CACHE_VERSION = 6;
+const CACHE_VERSION = 7;
 
 // Country code → sales region. Fallback: the raw country value.
 const REGION_BY_COUNTRY: Record<string, string> = {
@@ -98,58 +98,34 @@ function mrrBucket(usd: number): string {
   return '';
 }
 
-// Any single day with at least this many credential createdDates is treated as a
-// bulk data-migration batch, not organic creation. In this export 2023-08-02 has
-// ~1,963 and 2022-08-23 has ~183; the next busiest real day has <40. Credentials
-// stamped on these days carry the migration date, not their true creation date.
+// A go-live date shared by at least this many clients is a bulk/backfill day,
+// not organic creation, so it is flagged approximate. With the live source this
+// is rarely hit, but it protects against any residual bulk dates.
 const MIGRATION_DAY_THRESHOLD = 100;
 
-const CSV_PATH = path.join(process.cwd(), 'data', 'credentials-report.csv');
 const CACHE_DIR = path.join(process.cwd(), '.cache');
 const CACHE_FILE = path.join(CACHE_DIR, 'client-lifecycle.json');
-const TTL = 6 * 60 * 60 * 1000; // 6h, CSV is static, mapping changes rarely
+const TTL = 6 * 60 * 60 * 1000; // 6h
 
 interface MemEntry { data: LifecycleResult; ts: number }
 let memory: MemEntry | null = null;
 let refreshing: Promise<LifecycleResult> | null = null;
 
-// ---------- CSV ----------
-
-interface CsvCred { appId: string; type: string; createdDate: string; disabled: boolean }
-
-function parseCsv(): CsvCred[] {
-  const text = readFileSync(CSV_PATH, 'utf-8');
-  const lines = text.split(/\r?\n/);
-  const out: CsvCred[] = [];
-  // header: appId,type,createdDate,disabled
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line) continue;
-    const [appId, type, createdDate, disabled] = line.split(',');
-    if (!appId) continue;
-    out.push({
-      appId: appId.trim(),
-      type: (type || '').trim(),
-      createdDate: (createdDate || '').trim(),
-      disabled: (disabled || '').trim().toLowerCase() === 'yes',
-    });
-  }
-  return out;
-}
-
 // ---------- compute ----------
 
 async function compute(): Promise<LifecycleResult> {
   const mrrMonth = getLastCompletedMonth();
-  const [creds, clients, businessUnits, revenue] = await Promise.all([
-    fetchCredentials(),
+  // "active production" window: production usage in the last 2 completed months.
+  const [y, m] = mrrMonth.split('-').map(Number);
+  const activeSince = m === 1 ? `${y - 1}-12-01` : `${y}-${String(m - 1).padStart(2, '0')}-01`;
+
+  const [clients, businessUnits, revenue, credDates, activeProd] = await Promise.all([
     fetchClients('all'),
     fetchBusinessUnits().catch(() => []),
     fetchClientRevenue(mrrMonth).catch(() => new Map<string, number>()),
+    fetchCredentialDates(),
+    fetchActiveProdCounts(activeSince).catch(() => new Map<string, number>()),
   ]);
-
-  const app2client = new Map<string, string>();
-  for (const c of creds) if (c.appId) app2client.set(c.appId, c.clientId);
 
   // client_id → first non-empty zoho_id
   const zohoByClient = new Map<string, string>();
@@ -167,63 +143,30 @@ async function compute(): Promise<LifecycleResult> {
     });
   }
 
-  const allRows = parseCsv();
-
-  // Auto-detect bulk-migration dates: any single day carrying an outsized number
-  // of createdDates is an import batch, not organic creation. Credentials stamped
-  // on those days don't have a trustworthy date.
+  // Flag any go-live date shared by an outsized number of clients (a backfill),
+  // so it renders as approximate rather than a false precise date.
   const dayCounts = new Map<string, number>();
-  for (const row of allRows) {
-    const d = row.createdDate.slice(0, 10);
-    if (d) dayCounts.set(d, (dayCounts.get(d) ?? 0) + 1);
+  for (const [, cd] of credDates) {
+    if (cd.prodFirst) dayCounts.set(cd.prodFirst, (dayCounts.get(cd.prodFirst) ?? 0) + 1);
   }
   const migrationDates = new Set<string>(
     [...dayCounts.entries()].filter(([, n]) => n >= MIGRATION_DAY_THRESHOLD).map(([d]) => d),
   );
 
-  const prod = new Map<string, string[]>();       // client_id → prod createdDates (all, incl. disabled)
-  const activeProd = new Map<string, number>();   // client_id → count of ENABLED prod creds
-  const staging = new Map<string, string[]>();    // client_id → staging/testing createdDates
-  let dataAsOf = '';
-
-  for (const row of allRows) {
-    const cid = app2client.get(row.appId);
-    if (!cid) continue;
-    const d = row.createdDate.slice(0, 10);
-    if (d && d > dataAsOf) dataAsOf = d;
-    if (row.type === 'PRODUCTION') {
-      // Include disabled creds in the DATE: the earliest prod cred (even if now
-      // disabled/rotated) is when the client first went to production.
-      (prod.get(cid) ?? prod.set(cid, []).get(cid)!).push(d);
-      if (!row.disabled) activeProd.set(cid, (activeProd.get(cid) ?? 0) + 1);
-    } else {
-      // STAGING or TESTING → both count as "testing"
-      (staging.get(cid) ?? staging.set(cid, []).get(cid)!).push(d);
-    }
-  }
-
-  const clientIds = new Set<string>([...prod.keys(), ...staging.keys()]);
   const rows: LifecycleRow[] = [];
-
-  for (const cid of clientIds) {
-    const p = (prod.get(cid) ?? []).filter(Boolean).sort();
-    const s = (staging.get(cid) ?? []).filter(Boolean).sort();
-    const wentToProd = p.length ? p[0] : null;
-    const firstStaging = s.length ? s[0] : null;
-
+  for (const [cid, cd] of credDates) {
+    const wentToProd = cd.prodFirst;
+    const firstStaging = cd.stagingFirst;
     const goLiveApprox = wentToProd != null && migrationDates.has(wentToProd);
     const stagingApprox = firstStaging != null && migrationDates.has(firstStaging);
 
-    // Time from first testing credential to first production credential, only
-    // meaningful when testing genuinely PRECEDES go-live AND neither date is a
-    // migration stamp (which would make the gap fictional). Otherwise null.
     let days: number | null = null;
     if (wentToProd && firstStaging && firstStaging < wentToProd && !goLiveApprox && !stagingApprox) {
       days = Math.round((Date.parse(wentToProd) - Date.parse(firstStaging)) / 86_400_000);
     }
 
     const info = cinfo.get(cid);
-    const stage: LifecycleStage = p.length ? 'production' : (s.length ? 'testing-only' : 'none');
+    const stage: LifecycleStage = cd.prodCount > 0 ? 'production' : (cd.stagingCount > 0 ? 'testing-only' : 'none');
     const activeCount = activeProd.get(cid) ?? 0;
     const country = info?.country || '';
     const mrr = revenue.get(cid) ?? 0;
@@ -237,10 +180,10 @@ async function compute(): Promise<LifecycleResult> {
       went_to_production_date: wentToProd,
       go_live_approximate: goLiveApprox,
       days_to_go_live: days,
-      prod_app_count: p.length,
-      active_prod_app_count: activeCount,
+      prod_app_count: cd.prodCount,
+      active_prod_app_count: activeCount,          // prod appIds with usage in the last 2 months
       currently_in_production: activeCount > 0,
-      staging_app_count: s.length,
+      staging_app_count: cd.stagingCount,
       geography: toRegion(country),
       country,
       kam: ownerToName(info?.owner || ''),
@@ -250,6 +193,8 @@ async function compute(): Promise<LifecycleResult> {
       mrr_bucket: mrrBucket(mrr),
     });
   }
+
+  const dataAsOf = new Date().toISOString().slice(0, 10); // live source
 
   // Sort: production clients first (by earliest go-live), then testing-only by name.
   rows.sort((a, b) => {

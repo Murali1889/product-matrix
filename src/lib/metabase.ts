@@ -44,6 +44,7 @@ const FLD = {
   MC_ENV:           1029071, // module_costs.environment
   MC_BILLING_START: 1029058, // module_costs.billing_month_start_date
   MC_CLIENT_ID:     1029063,
+  MC_APP_ID:        1029064, // module_costs.app_id
   MC_MODULE_NAME:   1029072,
   MC_UNIT_NAME:     1029061,
   MC_UNIT:          1029067,
@@ -52,6 +53,17 @@ const FLD = {
   MC_UNIT_COST:     1029066,
   MC_UNIT_COST_USD: 1029068,
 } as const;
+
+// Platform Analytics DB (36) credentials_table (18419): a daily snapshot whose
+// MIN(created_at) per app_id is the REAL credential creation date (back to 2022,
+// live, self-updating), unlike DB 201 credentials whose created_at is an ETL
+// stamp. Field ids in that table:
+const PLATFORM_DB_ID = 36;
+const CREDS_TABLE = 18419;
+const CT_CLIENT_ID  = 891654;
+const CT_ENV        = 891653;
+const CT_CREATED_AT = 891650;
+const CT_APP_ID     = 891651;
 
 // ============== TYPES (Apps-Script-compatible output shapes) ==============
 
@@ -484,6 +496,94 @@ export async function fetchClientRevenue(month: string): Promise<Map<string, num
     const map = new Map<string, number>();
     for (const row of res.data?.rows ?? []) {
       map.set(str(row[iClient]), num(row[iSum]));
+    }
+    return map;
+  });
+}
+
+// ============== PUBLIC: CREDENTIAL DATES (live, real) ==============
+
+export interface CredentialDates {
+  prodFirst: string | null;    // YYYY-MM-DD (UTC) earliest PRODUCTION credential
+  stagingFirst: string | null; // earliest STAGING/TESTING credential
+  prodCount: number;           // distinct production appIds
+  stagingCount: number;        // distinct staging/testing appIds
+}
+
+const toUtcDate = (v: unknown): string | null => {
+  const s = str(v);
+  if (!s) return null;
+  const t = Date.parse(s);
+  return Number.isNaN(t) ? s.slice(0, 10) : new Date(t).toISOString().slice(0, 10);
+};
+
+/**
+ * Real credential creation dates per client from DB36 credentials_table (a daily
+ * snapshot: MIN(created_at) per app = true creation date). One grouped query
+ * gives earliest prod + staging date and distinct app counts for every client.
+ * Replaces the static credentials CSV; live and self-updating for new clients.
+ */
+export async function fetchCredentialDates(): Promise<Map<string, CredentialDates>> {
+  return singleFlight('credential_dates', async () => {
+    const start = Date.now();
+    const payload = {
+      type: 'query',
+      database: PLATFORM_DB_ID,
+      query: {
+        'source-table': CREDS_TABLE,
+        breakout: [['field', CT_CLIENT_ID, null], ['field', CT_ENV, null]],
+        aggregation: [['min', ['field', CT_CREATED_AT, null]], ['distinct', ['field', CT_APP_ID, null]]],
+      },
+    };
+    const rows = (await mbCall('/api/dataset/json', payload, true)) as Record<string, unknown>[];
+    const map = new Map<string, CredentialDates>();
+    for (const r of Array.isArray(rows) ? rows : []) {
+      const cid = str(r['Client ID']);
+      if (!cid) continue;
+      const env = str(r['Environment']).toUpperCase();
+      const first = toUtcDate(r['Min of Created At']);
+      const count = num(r['Distinct values of App ID']);
+      const e = map.get(cid) ?? { prodFirst: null, stagingFirst: null, prodCount: 0, stagingCount: 0 };
+      if (env === 'PRODUCTION') {
+        e.prodFirst = e.prodFirst && first ? (e.prodFirst < first ? e.prodFirst : first) : (first ?? e.prodFirst);
+        e.prodCount += count;
+      } else { // STAGING or TESTING
+        e.stagingFirst = e.stagingFirst && first ? (e.stagingFirst < first ? e.stagingFirst : first) : (first ?? e.stagingFirst);
+        e.stagingCount += count;
+      }
+      map.set(cid, e);
+    }
+    console.log(`[Metabase] Loaded credential dates for ${map.size} clients in ${Date.now() - start}ms`);
+    setCache('credential_dates', map);
+    return map;
+  });
+}
+
+/**
+ * Distinct PRODUCTION appIds with billing activity in the last `months` months,
+ * per client. Used as the live "active production" signal (better than a static
+ * disabled flag). Returns Map<client_id, activeProdAppCount>.
+ */
+export async function fetchActiveProdCounts(sinceMonthStart: string): Promise<Map<string, number>> {
+  return singleFlight(`active_prod_${sinceMonthStart}`, async () => {
+    const payload = {
+      type: 'query',
+      database: MB_DB_ID,
+      query: {
+        'source-table': TB.COSTS,
+        filter: ['and',
+          ['=',  ['field', FLD.MC_ENV], 'PRODUCTION'],
+          ['>=', ['field', FLD.MC_BILLING_START], sinceMonthStart],
+        ],
+        breakout: [['field', FLD.MC_CLIENT_ID]],
+        aggregation: [['distinct', ['field', FLD.MC_APP_ID]]],
+      },
+    };
+    const rows = (await mbCall('/api/dataset/json', payload, true)) as Record<string, unknown>[];
+    const map = new Map<string, number>();
+    for (const r of Array.isArray(rows) ? rows : []) {
+      const cid = str(r['Client ID']);
+      if (cid) map.set(cid, num(r['Distinct values of App ID']));
     }
     return map;
   });
