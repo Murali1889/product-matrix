@@ -108,6 +108,7 @@ export interface APIUsage {
   subModule: string;      // "Liveness Check"
   revenue_usd: number;
   usage: number;
+  unitPrice?: number;     // native-currency price per unit (first slab from pricing table)
   success: number;
   currency: string;
   environment?: 'production' | 'staging';
@@ -482,6 +483,7 @@ export async function loadMatrixData(month?: string, options: { historyMonths?: 
           subModule: data.subModule === '-' ? '' : data.subModule,
           revenue_usd: data.cost,
           usage: data.usage,
+          unitPrice: data.unitPrice,
           success: data.billable,
           currency,
           environment: 'production',

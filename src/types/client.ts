@@ -3,6 +3,7 @@ export interface APIUsage {
   sub_module?: string | null;
   revenue_usd: number;
   usage?: number;
+  unitPrice?: number; // native-currency price per unit from the pricing table (first slab)
   environment?: 'production' | 'staging';
   // Prod vs Staging breakdown
   prodTotal?: number;

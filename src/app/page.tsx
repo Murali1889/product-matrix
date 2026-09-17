@@ -1295,7 +1295,7 @@ export default function Dashboard() {
         {/* Lifecycle / Go-Live View */}
         {view === 'lifecycle' && (
           <div className="h-full p-3 sm:p-4">
-            <LifecycleView data={lifecycleData} exceptionFor={exceptionFor} />
+            <LifecycleView data={lifecycleData} exceptionFor={exceptionFor} exceptions={exceptionsData?.exceptions} />
           </div>
         )}
 
@@ -1640,7 +1640,7 @@ const STAGE_META: Record<string, { label: string; cls: string }> = {
 
 type LifecycleSortKey = 'client_name' | 'operational_status' | 'stage' | 'geography' | 'kam' | 'mrr_usd' | 'zoho_id' | 'first_staging_date' | 'went_to_production_date' | 'days_to_go_live' | 'prod_app_count';
 
-function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; exceptionFor?: (clientId?: string, clientName?: string) => ExceptionRecord | null }) {
+function LifecycleView({ data, exceptionFor, exceptions }: { data?: LifecycleResponse; exceptionFor?: (clientId?: string, clientName?: string) => ExceptionRecord | null; exceptions?: ExceptionRecord[] }) {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<'all' | 'production' | 'active' | 'testing-only'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -1648,9 +1648,32 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
   const [sortKey, setSortKey] = useState<LifecycleSortKey>('went_to_production_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc'); // latest go-live first, current info matters most
   const [page, setPage] = useState(0);
+  const [rollupOpen, setRollupOpen] = useState(true);
   const PAGE_SIZE = 50;
 
   const rows = data?.clients ?? [];
+
+  // "Production access without a valid contract" rollup, grouped by the Rep/POC
+  // who raised the exception. Time comes from the sheet as a full date string
+  // (e.g. "Mon Jan 05 2026 08:58:33 GMT+0530 (India Standard Time)").
+  const parseTime = (t: string) => { const n = Date.parse(t || ''); return Number.isNaN(n) ? 0 : n; };
+  const monthLabel = (t: string) => { const n = parseTime(t); return n ? new Date(n).toLocaleString('en-US', { month: 'short', year: 'numeric' }) : ''; };
+  const contractRollup = useMemo(() => {
+    const list = (exceptions ?? []).filter(e => (e.requestType || '').toLowerCase().includes('contract'));
+    const byRep = new Map<string, ExceptionRecord[]>();
+    for (const e of list) {
+      const rep = (e.raisedBy || '').trim() || 'Unknown';
+      if (!byRep.has(rep)) byRep.set(rep, []);
+      byRep.get(rep)!.push(e);
+    }
+    const groups = Array.from(byRep.entries()).map(([rep, items]) => ({
+      rep,
+      count: items.length,
+      items: [...items].sort((a, b) => parseTime(b.time) - parseTime(a.time)), // latest first
+    }));
+    groups.sort((a, b) => b.count - a.count || a.rep.localeCompare(b.rep));
+    return { total: list.length, groups };
+  }, [exceptions]);
 
   // Distinct go-live years for the year filter.
   const years = useMemo(() => {
@@ -1790,6 +1813,53 @@ function LifecycleView({ data, exceptionFor }: { data?: LifecycleResponse; excep
           )}
         </div>
       </div>
+
+      {/* Production access without a valid contract, rolled up by Rep / POC */}
+      {contractRollup.total > 0 && (
+        <div className="px-4 py-3 border-b border-stone-200 bg-rose-50/40">
+          <button onClick={() => setRollupOpen(o => !o)} className="w-full flex items-center gap-2 text-left cursor-pointer">
+            {rollupOpen ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+            <AlertCircle size={15} className="text-rose-500" />
+            <span className="text-sm font-semibold text-slate-800">Production access without a valid contract</span>
+            <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold tabular-nums">{contractRollup.total}</span>
+            <span className="text-xs text-slate-500">across {contractRollup.groups.length} rep{contractRollup.groups.length === 1 ? '' : 's'}</span>
+          </button>
+          {rollupOpen && (
+            <div className="mt-3 max-h-64 overflow-auto rounded-lg border border-rose-100 bg-white smooth-shadow-sm">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-rose-50/90 backdrop-blur">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap">Rep / POC</th>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px] whitespace-nowrap" title="Number of clients this rep pushed live without a valid contract"># without contract</th>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-500 uppercase tracking-wide text-[10px]">Clients (month raised)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contractRollup.groups.map(g => (
+                    <tr key={g.rep} className="border-t border-rose-50 align-top">
+                      <td className="px-3 py-2 font-medium text-slate-800 whitespace-nowrap">{g.rep}</td>
+                      <td className="px-3 py-2">
+                        <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200 font-bold tabular-nums">{g.count}</span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {g.items.map(e => {
+                            const m = monthLabel(e.time);
+                            const label = m ? `${e.clientName} · ${m}` : e.clientName;
+                            return e.threadLink
+                              ? <a key={`${e.clientId}-${e.clientName}`} href={e.threadLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" title={`Open Slack thread. ${e.reason || ''}`}>{label} <ArrowUpRight size={9} /></a>
+                              : <span key={`${e.clientId}-${e.clientName}`} className="inline-flex items-center px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-slate-600" title={e.reason || ''}>{label}</span>;
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="px-4 py-2.5 flex flex-wrap items-center gap-2 border-b border-stone-200 bg-stone-50/60">
@@ -2965,6 +3035,7 @@ function MatrixView({
     apiName: string;
     revenue: number;
     usage: number;
+    unitPrice: number;
     currency: string;
     position: { x: number; y: number };
     prodTotal: number;
@@ -3056,18 +3127,19 @@ function MatrixView({
   // Get API revenue for a client based on selected month
   // Returns native-currency values (caller must convert for display/aggregation)
   const getClientAPIData = useCallback((client: ProcessedClient, apiName: string): {
-    revenue: number; usage: number; hasUsageNoRevenue: boolean;
+    revenue: number; usage: number; hasUsageNoRevenue: boolean; unitPrice: number;
     prodTotal: number; prodBillable: number; prodCostINR: number; prodCostUSD: number;
     stagingTotal: number; stagingBillable: number; stagingCostINR: number; stagingCostUSD: number;
   } => {
     const month = selectedMonth || allMonths[0] || '';
     const monthData = client.monthly_data?.find(m => m.month === month) || client.monthly_data?.[0];
-    if (!monthData) return { revenue: 0, usage: 0, hasUsageNoRevenue: false, prodTotal: 0, prodBillable: 0, prodCostINR: 0, prodCostUSD: 0, stagingTotal: 0, stagingBillable: 0, stagingCostINR: 0, stagingCostUSD: 0 };
+    if (!monthData) return { revenue: 0, usage: 0, hasUsageNoRevenue: false, unitPrice: 0, prodTotal: 0, prodBillable: 0, prodCostINR: 0, prodCostUSD: 0, stagingTotal: 0, stagingBillable: 0, stagingCostINR: 0, stagingCostUSD: 0 };
     const apiData = monthData.apis?.find(a => a.name === apiName);
     const usage = apiData?.usage || 0;
     const revenue = apiData?.revenue_usd || 0;
     return {
       revenue, usage, hasUsageNoRevenue: usage > 0 && revenue === 0,
+      unitPrice: apiData?.unitPrice || 0,
       prodTotal: apiData?.prodTotal || 0,
       prodBillable: apiData?.prodBillable || 0,
       prodCostINR: apiData?.prodCostINR || 0,
@@ -4331,6 +4403,7 @@ function MatrixView({
                                   apiName: api,
                                   revenue: value,
                                   usage: usage,
+                                  unitPrice: apiData.unitPrice,
                                   currency: client.profile?.billing_currency || 'USD',
                                   position: { x: rect.left, y: rect.bottom + 4 },
                                   prodTotal: apiData.prodTotal,
@@ -4626,7 +4699,7 @@ function CellPopupWithComments({
   crossSellOpp,
   selectedSegment,
 }: {
-  cellPopup: { clientName: string; apiName: string; revenue: number; usage: number; currency: string; position: { x: number; y: number }; prodTotal: number; prodBillable: number; prodCostINR: number; prodCostUSD: number; stagingTotal: number; stagingBillable: number; stagingCostINR: number; stagingCostUSD: number };
+  cellPopup: { clientName: string; apiName: string; revenue: number; usage: number; unitPrice: number; currency: string; position: { x: number; y: number }; prodTotal: number; prodBillable: number; prodCostINR: number; prodCostUSD: number; stagingTotal: number; stagingBillable: number; stagingCostINR: number; stagingCostUSD: number };
   onClose: () => void;
   formatCurrency: (n: number, currency?: string) => string;
   onStartEdit: () => void;
@@ -4712,6 +4785,14 @@ function CellPopupWithComments({
           <span className="text-[12px] text-slate-400 tracking-wide">Cost / Call</span>
           <span className="text-[14px] font-semibold text-slate-600 rev-num">
             {cellPopup.usage > 0 && cellPopup.revenue > 0 ? `$${(cellPopup.revenue / cellPopup.usage).toFixed(2)}` : '-'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[12px] text-slate-400 tracking-wide">Unit Price</span>
+          <span className="text-[14px] font-semibold text-slate-600 rev-num" title="Per-unit price from the pricing table (first slab), in the client's billing currency">
+            {cellPopup.unitPrice > 0
+              ? `${cellPopup.currency === 'INR' ? '₹' : cellPopup.currency === 'USD' ? '$' : cellPopup.currency + ' '}${cellPopup.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : '-'}
           </span>
         </div>
       </div>
